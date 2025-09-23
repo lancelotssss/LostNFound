@@ -1,11 +1,12 @@
 import './App.css';
-import LoginPage from './Pages/LoginPage';
+
+import LostNFoundForm from './Pages/Report_Item';
 
 function App() {
   return (
-    <>
-      <LoginPage/>
-    </>
+   <>
+   <LostNFoundForm/>
+   </>
   );
 }
 
