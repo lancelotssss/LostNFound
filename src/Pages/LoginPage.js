@@ -1,24 +1,39 @@
-function LoginPage() {
+const LoginPage = () => {
+
+    const [loginData, setLoginData] = useState({
+        email: "",
+        password: "",
+    })
+
+    const handleChange = (e) => {
+    const { name, value } = e.target;
+    setLoginData({ ...loginData, [name]: value });
+    };
+
+    const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Register Form submitted:", loginData);
+    };
+
 
     return(
         <>
-        <form method="POST">
 
-        
+            <form onSubmit={handleSubmit}>
+
             <div>
-                <label>Email: </label>
-                <input type="email"  placeholder="Enter email here"></input>
+                <p>Email:<input type="text" name="email" placeholder="Email" value={loginData.email} onChange={handleChange}/></p>
             </div>
             
             <div>
-                <label>Password: </label>
-                <input type="password"  placeholder="Enter password here"></input>
+                <p>Password:<input type="password" name="password" placeholder="Password" value={loginData.password} onChange={handleChange}/></p>
             </div>
 
             <div>
                 <button type="submit" >LOGIN</button>
             </div>
-        </form>
+            
+            </form>
     </>
     )
 }
