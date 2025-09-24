@@ -20,7 +20,7 @@ const LoginPage = () => {
         <>
 
             <form onSubmit={handleSubmit}>
-
+            <h1>Login</h1>
             <div>
                 <p>Email:<input type="text" name="email" placeholder="Email" value={loginData.email} onChange={handleChange}/></p>
             </div>
