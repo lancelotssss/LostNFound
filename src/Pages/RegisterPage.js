@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import { createUser } from "../api";
 
-const RegisterForm = () => {
+
+export function RegisterForm () {
+
   const [registerData, setRegisterData] = useState({
     studentid: "",
     fname: "",
@@ -11,17 +14,21 @@ const RegisterForm = () => {
     email: "",
     mobileNumber:"",
     password: ""
-  });
+  })
 
-  const handleChange = (e) => {
+  function handleChange(e) {
     const { name, value } = e.target;
     setRegisterData({ ...registerData, [name]: value });
-  };
+  }
 
-  const handleSubmit = (e) => {
+  async function handleSubmit () {
     e.preventDefault();
     console.log("Register Form submitted:", registerData);
-  };
+    let response = await createUser(registerData)
+    if (response.status !== 200){
+        alert("User account could not be created")
+    }
+  }
 
 return(
     <form onSubmit={handleSubmit}>
@@ -70,7 +77,7 @@ return(
                 <button type="submit" >REGISTER</button>
             </div>
         </form>
-    );
-};
+    )
+}
 
-export default RegisterForm;
+

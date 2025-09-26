@@ -60,7 +60,7 @@ postRoutes.route("/cli/report").post(async (request, response) => {
     let db = database.getDb()
 
     let mongoObject = {
-        
+
     }
 })
 
@@ -75,10 +75,9 @@ postRoutes.route("/posts").get(async (request, response) => {
     else {
         throw new Error ("Data was not found")
     }
-
- 
     
 })
+
 //#2 Retrieve One
 //http://localhost"3000/posts/12345
 postRoutes.route("/posts/:id").get(async (request, response) => {
