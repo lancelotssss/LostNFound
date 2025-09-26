@@ -21,6 +21,7 @@ let postRoutes = express.Router()
             name: request.body.name,
             password: request.body.password,
             studentId: request.body.studentId,
+            email: request.body.email,
             phone: request.body.phone,
             status: request.body.status,
             lastLogin: request.body.lastLogin,

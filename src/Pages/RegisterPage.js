@@ -1,20 +1,21 @@
 import React, { useState } from "react";
 import { createUser } from "../api";
 
-
-export default function RegisterPage () {
-
+export default function RegisterPage() {
   const [audit, setAudit] = useState({
     uid: "",
-    action: "",
+    action: "NEW_USER",
     targetUser: "",
-    performedBy: "",
-    timestamp: Date.now(),
-    tickedId: "",
-    details: "",
-    })
+    performedBy: null,
+    timestamp: new Date(),
+    tickedId: null,
+    details: "A user has created an account",
+  });
 
   const [registerData, setRegisterData] = useState({
+    fname: "",
+    mname: "",
+    lname: "",
     name: "",
     studentId: "",
     phone: "",
@@ -23,34 +24,58 @@ export default function RegisterPage () {
     confirmPassword: "",
     birthday: "",
     gender: "",
+    role: "student",
+    status: "active",
+    lastLogin: new Date(),
+    availableClaim: 3,
+    availableFound: 5,
+    availableMissing: 5,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    uid: "",
   });
-
 
   function handleChange(e) {
     const { name, value } = e.target;
     setRegisterData({ ...registerData, [name]: value });
   }
 
-  async function handleSubmit (e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    console.log("Register Form submitted:", registerData);
 
-    registerData.name = [registerData.fname, registerData.mname, registerData.lname]
-        .filter(Boolean)
-        .join(" ");
+    // Combine names into full name
+    const fullName = [registerData.fname, registerData.mname, registerData.lname]
+      .filter(Boolean)
+      .join(" ");
 
-    let response = await createUser(registerData);
+    // Prepare new register data
+    const newRegisterData = {
+      ...registerData,
+      name: fullName,
+    };
 
-    
+    // Prepare new audit object
+    const newAudit = {
+      ...audit,
+      timestamp: new Date(),
+      details: `A user has created an account for ${fullName}`,
+    };
 
-    if (response.status !== 200) {
-        alert("User account could not be created");
+    // Send data to backend
+    const response = await createUser(newRegisterData);
+    const auditResponse = await createUser(newAudit);
+
+    if (response.status !== 200 || auditResponse.status !== 200) {
+      alert("User account or audit log could not be created");
     } else {
-        alert("Registration successful!");
-        setRegisterData({
+      alert("Registration successful!");
+
+      // Reset form
+      setRegisterData({
         fname: "",
         mname: "",
         lname: "",
+        name: "",
         studentId: "",
         phone: "",
         email: "",
@@ -58,11 +83,30 @@ export default function RegisterPage () {
         confirmPassword: "",
         birthday: "",
         gender: "",
+        role: "student",
+        status: "active",
+        lastLogin: new Date(),
+        availableClaim: 3,
+        availableFound: 5,
+        availableMissing: 5,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        uid: "",
+      });
+
+      setAudit({
+        uid: "",
+        action: "NEW_USER",
+        targetUser: "",
+        performedBy: null,
+        timestamp: new Date(),
+        tickedId: null,
+        details: "A user has created an account",
       });
     }
   }
 
-return (
+  return (
     <form onSubmit={handleSubmit}>
       <h1>Register</h1>
 
@@ -71,13 +115,13 @@ return (
         <input
           type="text"
           name="fname"
-          placeholder="Full Name"
+          placeholder="First Name"
           value={registerData.fname}
           onChange={handleChange}
         />
       </p>
 
-       <p>
+      <p>
         Middle Name:
         <input
           type="text"
@@ -88,7 +132,7 @@ return (
         />
       </p>
 
-       <p>
+      <p>
         Last Name:
         <input
           type="text"
@@ -98,7 +142,6 @@ return (
           onChange={handleChange}
         />
       </p>
-
 
       <p>
         Student ID:
