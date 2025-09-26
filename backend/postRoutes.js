@@ -11,58 +11,136 @@ let postRoutes = express.Router()
 
 
 //Register Student
-//Pass the data to MongoDb
+    //Pass the data to MongoDb
+    postRoutes.route("/register").post(async (request, response) => {
+        let db = database.getDb()
 
-postRoutes.route("/register").post(async (request, response) => {
-    let db = database.getDb()
+        let mongoObject = { 
+            uid: request.body.uid,
+            role: request.body.role,
+            name: request.body.name,
+            password: request.body.password,
+            studentId: request.body.studentId,
+            phone: request.body.phone,
+            status: request.body.status,
+            lastLogin: request.body.lastLogin,
+            availableClaim: request.body.availableClaim,
+            availableFound: request.body.availableFound,
+            availableMissing: request.body.availableMissing,
+            createdAt: request.body.createdAt,
+            updatedAt: request.body.updatedAt 
+        }
 
-    let mongoObject = { 
-        uid: request.body.uid,
-        role: request.body.role,
-        name: request.body.name,
-        password: request.body.password,
-        studentId: request.body.studentId,
-        phone: request.body.phone,
-        status: request.body.status,
-        lastLogin: request.body.lastLogin,
-        availableClaim: request.body.availableClaim,
-        availableFound: request.body.availableFound,
-        availableMissing: request.body.availableMissing,
-        createdAt: request.body.createdAt,
-        updatedAt: request.body.updatedAt 
-    }
+        let mongoAuditObject = { 
+            uid: request.body.uid,
+            action: request.body.action,
+            targetUser: request.body.targetUser,
+            performedBy: request.body.performedBy,
+            timestamp: request.body.timestamp,
+            ticketId: request.body.ticketId,
+            details: request.body.details 
+        }
 
-    let mongoAuditObject = { 
-        uid: request.body.uid,
-        action: request.body.action,
-        targetUser: request.body.targetUser,
-        performedBy: request.body.performedBy,
-        timestamp: request.body.timestamp,
-        ticketId: request.body.ticketId,
-        details: request.body.details 
-    }
+        try {
+            let data = await db.collection("student_db").insertOne(mongoObject)
+            let auditData = await db.collection("audit_db").insertOne(mongoAuditObject)
 
-    try {
-        let data = await db.collection("student_db").insertOne(mongoObject)
-        let auditData = await db.collection("audit_db").insertOne(mongoAuditObject)
+            response.json({ student: data, audit: auditData })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
+//Client Side
 
-        response.json({ student: data, audit: auditData })
+    //Report
+    postRoutes.route("/cli/report").post(async (request, response) => {
+        let db = database.getDb()
+
+        let mongoObject = {
+            uid: request.body.uid,
+            title: request.body.title,
+            keyItem: request.body.keyItem,
+            itemBrand: request.body.itemBrand,
+            description: request.body.description,
+            status: request.body.status,
+            reportType: request.body.reportType,
+            reportedBy: request.body.reportedBy,
+            approvedBy: request.body.approvedBy,
+            location: request.body.location,
+            dateReported: request.body.dateReported,
+            dateLostOrFound: request.body.dateLostOrFound,
+            photoUrl: request.body.photoUrl,
+        }
+
+        let mongoAuditObject = { 
+            uid: request.body.uid,
+            action: request.body.action,
+            targetUser: request.body.targetUser,
+            performedBy: request.body.performedBy,
+            timestamp: request.body.timestamp,
+            ticketId: request.body.ticketId,
+            details: request.body.details 
+        }
+        try {
+            let data = await db.collection("lost_found_db").insertOne(mongoObject)
+            let auditData = await db.collection("audit_db").insertOne(mongoAuditObject)
+
+            response.json({ student: data, audit: auditData })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
+
+    //Claim
+    postRoutes.route("/claim").post(async (request, response) => {
+        let db = database.getDb()
+        let mongoObject = {
+            uid: request.body.uid,
+            itemId: request.body.itemId,
+            claimerId: request.body.claimerId,
+            claimStatus: request.body.claimStatus,
+            reason: request.body.reason,
+            createdAt: request.body.createdAt,
+            updatedAt: request.body.updatedAt,
+            photoUrl: request.body.photoUrl,
+        }
+
+        let mongoAuditObject = { 
+            uid: request.body.uid,
+            action: request.body.action,
+            targetUser: request.body.targetUser,
+            performedBy: request.body.performedBy,
+            timestamp: request.body.timestamp,
+            ticketId: request.body.ticketId,
+            details: request.body.details 
+        }
+        try {
+            let data = await db.collection("claims_db").insertOne(mongoObject)
+            let auditData = await db.collection("audit_db").insertOne(mongoAuditObject)
+
+            response.json({ student: data, audit: auditData })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+
+    })
+
+    //Profile
+    postRoutes.route("/cli/profile/:id").get(async (request, response) => {
+        try {
+        let db = database.getDb()
+        let data = await db.collection("student_db").findOne({ _id: new ObjectId(request.params.id) })
+        
+        if (!data) {
+            return response.status(404).json({ error: "Data was not found" })
+        }
+
+        response.json(data) // parang return statement
     } catch (err) {
         response.status(500).json({ error: err.message })
     }
-})
+    })
 
-
-//Client Side
-
-//Report
-postRoutes.route("/cli/report").post(async (request, response) => {
-    let db = database.getDb()
-
-    let mongoObject = {
-
-    }
-})
 
 //#1 Retrieve All
 //http://localhost"3000/posts
