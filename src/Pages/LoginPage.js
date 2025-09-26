@@ -1,4 +1,6 @@
 import {useState} from "react"
+import { verifyUser } from "../api";
+
 
 const LoginPage = () => {
 
@@ -15,7 +17,7 @@ const LoginPage = () => {
     async function handleSubmit(e){
     e.preventDefault();
     console.log("Register Form submitted:", loginData);
-    let response = await verifyUser(registerData)
+    let response = await verifyUser(loginData)
     console.log(response)
     }
 

@@ -36,40 +36,51 @@ userRoutes.route("/users/:id").get(async (request, response) => {
 
 //#3 Create One
 //http://localhost"3000/users/
-userRoutes.route("/users").post(async (request, response) => {
-    let db = database.getDb()
+userRoutes.route("/register").post(async (request, response) => {
+        let db = database.getDb();
 
-    const takenEmail = await db.collection("users").findOne({email: request.body.email})
-    
-    if (takenEmail){
-        response.json({message: "The email is taken"})
-    } 
-    else
-    {
-    const hash = await bcrypt.hash(request.body.password, SALT_ROUNDS)
+    try {
+        const hash = await bcrypt.hash(request.body.password, SALT_ROUNDS);
 
-    let mongoObject = {
-        uid: request.body.uid,
-        role: request.body.role,
-        name: request.body.name,
-        password: hash,
-        studentId: request.body.studentId,
-        phone: request.body.phone,
-        status: request.body.status,
-        lastLogin: request.body.lastLogin,
-        availableClaim: request.body.availableClaim,
-        availableFound: request.body.availableFound,
-        availableMissing: request.body.availableMissing,
-        createdAt: request.body.createdAt,
-        updatedAt: request.body.updatedAt
+        // Create the user object
+        let mongoObject = { 
+            uid: Date.now().toString(), // or UUID
+            role: "student",
+            name: request.body.name,
+            email: request.body.email,
+            password: hash,
+            studentId: request.body.studentId,
+            phone: request.body.phone,
+            status: "active",
+            lastLogin: null,
+            availableClaim: 0,
+            availableFound: 0,
+            availableMissing: 0,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        // Insert user into student_db
+        let data = await db.collection("student_db").insertOne(mongoObject);
+
+        // Automatically create audit record
+        let mongoAuditObject = { 
+            uid: mongoObject.uid,
+            action: "REGISTER",
+            targetUser: mongoObject.email,
+            performedBy: "system",
+            timestamp: new Date(),
+            ticketId: null,
+            details: `User ${mongoObject.email} registered successfully.`
+        };
+
+        let auditData = await db.collection("audit_db").insertOne(mongoAuditObject);
+
+        response.json({ student: data, audit: auditData });
+    } catch (err) {
+        response.status(500).json({ error: err.message });
     }
-    let data = await db.collection("student_db").insertOne(mongoObject)      //add data sa mongodb  
-    response.json(data)
-    }
-    
-})
-    
-
+});
     
 
 //#4 Update One
@@ -109,13 +120,12 @@ userRoutes.route("/users/:id").delete(async (request, response) => {
 })
 
 //#6 Login
-userRoutes.route("/users").post(async (request, response) => {
+userRoutes.route("/users/login").post(async (request, response) => {
     let db = database.getDb()
 
-    const user = await db.collection("users").findOne({email: request.body.email})
+    const user = await db.collection("student_db").findOne({email: request.body.email})
     
-    if (user)
-    {
+    if (user){
         let confirmation = await bcrypt.compare(request.body.password, user.password)
         if (confirmation) {
             response.json({success:true, user})
@@ -125,8 +135,7 @@ userRoutes.route("/users").post(async (request, response) => {
         }
 
     }
-    else 
-    {
+    else {
         response.json({success: false, message: "User not found"})
     }
     
