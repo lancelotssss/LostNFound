@@ -1,14 +1,17 @@
 import './App.css';
+import {HashRouter as Router, Routes, Route} from "react-router-dom"
 
-import LostNFoundForm from './Pages/Report_Item';
-import Claim_Form from './Pages/Claim_Form';
-import RegisterForm from './Pages/RegisterPage';
+import LoginPage from './Pages/LoginPage'; 
 
 
 function App() {
   return (
    <>
-     <RegisterForm/>
+     <Router>
+        <Routes>
+          <Route path="/" element={<LoginPage/>}/>
+        </Routes>
+     </Router>
    </>
   );
 }
