@@ -1,7 +1,6 @@
 import {useState} from "react"
 import { verifyUser } from "../api";
 
-
 const LoginPage = () => {
 
     const [loginData, setLoginData] = useState({
