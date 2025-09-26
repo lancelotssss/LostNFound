@@ -5,15 +5,17 @@ const LoginPage = () => {
         password: "",
     })
 
-    const handleChange = (e) => {
+    function handleChange(e) {
     const { name, value } = e.target;
     setLoginData({ ...loginData, [name]: value });
-    };
+    }
 
-    const handleSubmit = (e) => {
+    async function handleSubmit(e){
     e.preventDefault();
     console.log("Register Form submitted:", loginData);
-    };
+    let response = await verifyUser(registerData)
+    console.log(response)
+    }
 
 
     return(
