@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { createUser } from "../api";
 
 
-export function RegisterForm () {
+export default function RegisterPage () {
 
   const [registerData, setRegisterData] = useState({
     studentid: "",
@@ -21,7 +21,7 @@ export function RegisterForm () {
     setRegisterData({ ...registerData, [name]: value });
   }
 
-  async function handleSubmit () {
+  async function handleSubmit (e) {
     e.preventDefault();
     console.log("Register Form submitted:", registerData);
     let response = await createUser(registerData)

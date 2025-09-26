@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 export async function getPosts(){
     //"http//localhost:3000/posts"
     const response = await axios.get('${URL}/posts')

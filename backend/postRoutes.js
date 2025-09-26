@@ -67,9 +67,11 @@ let postRoutes = express.Router()
             reportedBy: request.body.reportedBy,
             approvedBy: request.body.approvedBy,
             location: request.body.location,
-            dateReported: request.body.dateReported,
-            dateLostOrFound: request.body.dateLostOrFound,
+            dateReported: request.body.dateReported,                //for found item
+            startDate: request.body.startDate,                      //for lost item
+            endDate: request.body.endDate,                          //for lost item
             photoUrl: request.body.photoUrl,
+            updatedAt: request.body.updatedAt
         }
 
         let mongoAuditObject = { 
@@ -85,7 +87,7 @@ let postRoutes = express.Router()
             let data = await db.collection("lost_found_db").insertOne(mongoObject)
             let auditData = await db.collection("audit_db").insertOne(mongoAuditObject)
 
-            response.json({ student: data, audit: auditData })
+            response.json({ report: data, audit: auditData })
         } catch (err) {
             response.status(500).json({ error: err.message })
         }
@@ -125,7 +127,7 @@ let postRoutes = express.Router()
 
     })
 
-    //Profile
+    //getting Profile settings
     postRoutes.route("/cli/profile/:id").get(async (request, response) => {
         try {
         let db = database.getDb()
@@ -141,7 +143,153 @@ let postRoutes = express.Router()
     }
     })
 
+    //changing new profile settings
+    postRoutes.route("/cli/profile/:id").put(async (request, response) => {
+        let db = database.getDb()
+        let mongoObject = { 
+            $set :{
+                uid: request.body.uid,
+                role: request.body.role,
+                name: request.body.name,
+                password: request.body.password,
+                studentId: request.body.studentId,
+                phone: request.body.phone,
+                status: request.body.status,
+                lastLogin: request.body.lastLogin,
+                availableClaim: request.body.availableClaim,
+                availableFound: request.body.availableFound,
+                availableMissing: request.body.availableMissing,
+                createdAt: request.body.createdAt,
+                updatedAt: request.body.updatedAt 
+            }
+            
+        }
 
+        let mongoAuditObject = { 
+            uid: request.body.uid,
+            action: request.body.action,
+            targetUser: request.body.targetUser,
+            performedBy: request.body.performedBy,
+            timestamp: request.body.timestamp,
+            ticketId: request.body.ticketId,
+            details: request.body.details 
+        }
+        try {
+            let data = await db.collection("student_db").updateOne({_id: new ObjectId(request.params.id)}, mongoObject)
+            let auditData = await db.collection("audit_db").insertOne(mongoAuditObject)
+            response.json({ student: data, audit: auditData })
+            
+        }
+        catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
+
+    // Get report history by student _id
+    postRoutes.route("/cli/history/:id").get(async (request, response) => {
+        try {
+            let db = database.getDb()
+
+            // 1. Find the student in student_db
+            let student = await db.collection("student_db").findOne({ _id: new ObjectId(request.params.id) })
+            if (!student) {
+                return response.status(404).json({ error: "Student not found" })
+            }
+
+            // 2. Find all history from lost_found_db using the student's uid
+            let history = await db.collection("lost_found_db")
+                                .find({ uid: student.uid })
+                                .toArray()
+
+            // 3. Return both student + their history
+            response.json({ student, history })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
+
+
+    //Admin Side
+    // Get all Found reports
+postRoutes.route("/main/lost-items").get(async (request, response) => {
+    try {
+        let db = database.getDb()
+
+        // Filter reports where reportType = "Found"
+        let foundReports = await db.collection("lost_found_db")
+                                   .find({ reportType: "Found" })
+                                   .toArray()
+
+        // Return results safely
+        response.json({ count: foundReports.length, results: foundReports })
+    } catch (err) {
+        response.status(500).json({ error: err.message })
+    }
+})
+
+    /*
+    postRoutes.route("/main/lost-items").get(async (request, response) => {
+    try {
+        let db = database.getDb()
+
+        // Aggregation pipeline to sort "pending" first
+        let foundReports = await db.collection("lost_found_db").aggregate([
+            { $match: { reportType: "Found" } },
+            { 
+                $addFields: { 
+                    priority: { $cond: [{ $eq: ["$status", "pending"] }, 1, 2] } 
+                } 
+            },
+            { $sort: { priority: 1, dateReported: -1 } }, // pending first, then most recent
+            { $project: { priority: 0 } } // remove temporary field
+        ]).toArray()
+
+        response.json({ count: foundReports.length, results: foundReports })
+    } catch (err) {
+        response.status(500).json({ error: err.message })
+    }
+})
+*/
+
+/*
+    //Search for reports
+    // Search reports by category + status + date range
+postRoutes.route("/cli/search").post(async (request, response) => {
+    try {
+        let db = database.getDb()
+
+        const { status, category, startDate, endDate } = request.body
+
+        // Build the filter object
+        let filter = {}
+
+        if (status) filter.status = status
+
+        if (category) {
+            // case-insensitive match
+            filter.category = { $regex: category, $options: "i" }
+        }
+
+        if (startDate && endDate) {
+            // filter where dateLostOrFound falls within the range
+            filter.dateLostOrFound = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            }
+        }
+
+        // Query the collection
+        let results = await db.collection("lost_found_db").find(filter).toArray()
+
+        // Always return a safe response
+        response.json({ count: results.length, results })
+    } catch (err) {
+        response.status(500).json({ error: err.message })
+    }
+})
+
+
+/*
 //#1 Retrieve All
 //http://localhost"3000/posts
 postRoutes.route("/posts").get(async (request, response) => {
@@ -156,6 +304,7 @@ postRoutes.route("/posts").get(async (request, response) => {
     
 })
 
+
 //#2 Retrieve One
 //http://localhost"3000/posts/12345
 postRoutes.route("/posts/:id").get(async (request, response) => {
@@ -169,8 +318,13 @@ postRoutes.route("/posts/:id").get(async (request, response) => {
     }
     
 })
-
-
+//#5 Delete One
+//http://localhost"3000/posts/12345
+postRoutes.route("/posts/:id").delete(async (request, response) => {
+    let db = database.getDb()
+    let data = await db.collection("student_db").deleteOne({_id: new ObjectId(request.params.id)})        //{} - one data of from the _id from the mongo
+    response.json(data)    
+})
 
 //#4 Update One
 //http://localhost"3000/register/
@@ -199,18 +353,8 @@ postRoutes.route("/register/:id").put(async (request, response) => {
     response.json(data)
     
 })
-
-//#5 Delete One
-//http://localhost"3000/posts/12345
-postRoutes.route("/posts/:id").delete(async (request, response) => {
-    let db = database.getDb()
-    let data = await db.collection("student_db").deleteOne({_id: new ObjectId(request.params.id)})        //{} - one data of from the _id from the mongo
-    response.json(data)    
-})
+    */
 
 
-
-
-//Admin Side
 
 module.exports = postRoutes
