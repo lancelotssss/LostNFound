@@ -10,6 +10,11 @@ import { NavBar } from './components/NavBar';
 import { Layout } from './components/Layout';
 import { AdminDisplayData } from "./Pages/AdminDisplayData";
 import { useEffect } from 'react';
+import { AdminLost } from './Pages/AdminLost';
+import { AdminClaims } from './Pages/AdminClaims';
+import { AdminFound } from './Pages/AdminFound';
+import {AdminLayout} from './components/AdminLayout';
+import { NavBarAdmin } from './components/NavBarAdmin';
 
 function App() {
 
@@ -24,14 +29,17 @@ function App() {
    <>
      <Router>
         <Routes>
-          
           <Route path="/" element={<LoginPage/>}/>
           <Route element={<Layout/>}>
             <Route path="/cli/report" element={<ReportItem/>}/>
             <Route path="/cli/claim" element={<ClaimForm/>}/>
-          
             <Route path="/register" element={<RegisterPage/>}/>
-            <Route path="/main/lost-items" element={<AdminDisplayData/>}/>
+          </Route>
+
+          <Route element={<AdminLayout/>}>
+              <Route path="/main/lost-items" element={<AdminLost/>}/>
+              <Route path="/main/found-items" element={<AdminFound/>}/>
+              <Route path="/main/claim-items" element={<AdminClaims/>}/>
           </Route>
 
           

@@ -219,14 +219,47 @@ let postRoutes = express.Router()
 
 
     //Admin Side
-    // Get all Found reports
+    // Get all Lost reports
     postRoutes.route("/main/lost-items").get(verifyToken, async (request, response) => {
         try {
             let db = database.getDb()
 
             // Filter reports where reportType = "Found"
             let foundReports = await db.collection("lost_found_db")
-                                    .find({ reportType: "Found" })
+                                    .find({})
+                                    .toArray()
+
+            // Return results safely
+            response.json({ count: foundReports.length, results: foundReports })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
+    //Found
+    postRoutes.route("/main/found-items").get(verifyToken, async (request, response) => {
+        try {
+            let db = database.getDb()
+
+            // Filter reports where reportType = "Found"
+            let foundReports = await db.collection("lost_found_db")
+                                    .find({})
+                                    .toArray()
+
+            // Return results safely
+            response.json({ count: foundReports.length, results: foundReports })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
+
+    //Found
+    postRoutes.route("/main/claim-items").get(verifyToken, async (request, response) => {
+        try {
+            let db = database.getDb()
+
+            // Filter reports where reportType = "Found"
+            let foundReports = await db.collection("claims_db")
+                                    .find({})
                                     .toArray()
 
             // Return results safely

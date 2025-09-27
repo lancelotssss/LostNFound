@@ -12,7 +12,6 @@ export const pageDataClient = [
         name: "Register",
         path: "/register"
     },
-
     {
         name: "Admin Display Data",
         path: "/main/lost-items"

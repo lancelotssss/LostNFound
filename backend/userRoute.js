@@ -102,7 +102,7 @@ userRoutes.route("/register").post(async (req, res) => {
     const db = database.getDb();
 
     // Return all documents, no filter
-    const allReports = await db.collection("lost_found_db").find({reportType:"found"}).toArray();
+    const allReports = await db.collection("lost_found_db").find({}).toArray();
 
     console.log("Reports fetched:", allReports.length);
     res.json({ count: allReports.length, results: allReports });
@@ -112,6 +112,39 @@ userRoutes.route("/register").post(async (req, res) => {
   }
 });
 
+//Found
+    userRoutes.route("/main/found-items").get(verifyToken, async (request, response) => {
+        try {
+            let db = database.getDb()
+
+            // Filter reports where reportType = "Found"
+            let foundReports = await db.collection("lost_found_db")
+                                    .find({})
+                                    .toArray()
+
+            // Return results safely
+            response.json({ count: foundReports.length, results: foundReports })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
+
+    //Found
+    userRoutes.route("/main/claim-items").get(verifyToken, async (request, response) => {
+        try {
+            let db = database.getDb()
+
+            // Filter reports where reportType = "Found"
+            let foundReports = await db.collection("claims_db")
+                                    .find({})
+                                    .toArray()
+
+            // Return results safely
+            response.json({ count: foundReports.length, results: foundReports })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
 
     /*
 //#1 Retrieve All
