@@ -18,7 +18,7 @@ let postRoutes = express.Router()
         let mongoObject = { 
             uid: request.body.uid,
             role: request.body.role,
-            name: request.body.name,
+            name: request.body.name, 
             password: request.body.password,
             studentId: request.body.studentId,
             email: request.body.email,
