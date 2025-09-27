@@ -127,5 +127,21 @@ export async function verifyUser(user) {
 
 */
 
+export async function verifyUser(user) {
+  try {
+    const response = await axios.post(`${URL}/users/login`, user);
+    console.log("Raw response:", response);
+    console.log("Response data:", response.data);
+
+    if (response.data.success) {
+      return response.data; 
+    } else {
+      throw new Error(response.data.message || "Login failed");
+    }
+  } catch (err) {
+    console.error("verifyUser error:", err);
+    throw err;
+  }
+}
 
 
