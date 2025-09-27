@@ -3,6 +3,8 @@ const database = require("./connect")
 const ObjectId = require("mongodb").ObjectId
 const jwt = require ('jsonwebtoken')
 require("dotenv").config({path: "./config.env"}) //Access sa config.env (for SECRETKEY)
+const bcrypt = require("bcrypt");
+const SALT_ROUNDS = 6;
 
 let postRoutes = express.Router()
 
@@ -14,7 +16,7 @@ let postRoutes = express.Router()
 
 //Register Student
     //Pass the data to MongoDb
-    postRoutes.route("/register").post(async (request, response) => {
+    /*postRoutes.route("/register").post(async (request, response) => {
     const db = database.getDb();
     try {
         const hash = await bcrypt.hash(request.body.password, SALT_ROUNDS);
@@ -58,6 +60,7 @@ let postRoutes = express.Router()
         response.status(500).json({ error: err.message });
     }
 });
+*/
 
 //Client Side
 

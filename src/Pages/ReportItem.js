@@ -46,6 +46,7 @@ export default function ReportItem() {
         }
       });
   }, []);
+  
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -71,7 +72,7 @@ export default function ReportItem() {
         if (response.status !== 200 || auditResponse.status !== 200) {
           alert("User account or audit log could not be created");
         } else {
-          alert("Registration successful!");
+          alert("Report successful!");
   }
   
 }

@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import { createUser } from "../api";
+import { useNavigate } from "react-router-dom";
+
 
 export default function RegisterPage() {
   
+  const navigate = useNavigate()
 
   const [registerData, setRegisterData] = useState({
     fname: "",
     mname: "",
     lname: "",
+    suffix: "",
     name: "",
     suffix: "",
     studentId: "",
@@ -56,37 +60,36 @@ export default function RegisterPage() {
     const response = await createUser(newRegisterData);
  
 
-    if (response.status !== 200) {
-      alert("User account or audit log could not be created");
-    } else {
-      alert("Registration successful!");
+    if (response?.student && response?.audit) {
+      alert("Account added!");
+        setRegisterData({
+          fname: "",
+          mname: "",
+          lname: "",
+          name: "",
+          suffix: "",
+          studentId: "",
+          phone: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          birthday: "",
+          gender: "",
+          role: "",
+          status: "",
+          lastLogin: "",
+          availableClaim: "",
+          availableFound: "",
+          availableMissing: "",
+          createdAt: "",
+          updatedAt: "",
+          uid: "",
+        });
+        navigate("/")
 
-      // Reset form
-      setRegisterData({
-        fname: "",
-        mname: "",
-        lname: "",
-        name: "",
-        suffix: "",
-        studentId: "",
-        phone: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        birthday: "",
-        gender: "",
-        role: "",
-        status: "",
-        lastLogin: "",
-        availableClaim: "",
-        availableFound: "",
-        availableMissing: "",
-        createdAt: "",
-        updatedAt: "",
-        uid: "",
-      });
-
-    }
+      } else {
+        alert("Registration unsuccessful!");
+      }
   }
 
   return (

@@ -12,8 +12,15 @@ app.use(express.json());
 app.use(posts);
 app.use(users);
 
-// Start server after DB connection
-(async () => {
-  await connect.connectToServer();
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-})();
+app.use(cors())
+app.use(express.json())
+app.use(posts)
+app.use(users) //added for login register
+app.use("/users", users);  // -> /users/register, /users/login, etc.
+app.use("/cli", posts);
+
+
+app.listen(PORT, () => {
+    connect.connectToServer()
+    console.log(`Server is running in port ${PORT}`)
+})
