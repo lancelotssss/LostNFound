@@ -2,15 +2,7 @@ import React, { useState } from "react";
 import { createUser } from "../api";
 
 export default function RegisterPage() {
-  const [audit, setAudit] = useState({
-    uid: "",
-    action: "NEW_USER",
-    targetUser: "",
-    performedBy: null,
-    timestamp: new Date(),
-    tickedId: null,
-    details: "A user has created an account",
-  });
+  
 
   const [registerData, setRegisterData] = useState({
     fname: "",
@@ -32,7 +24,14 @@ export default function RegisterPage() {
     availableMissing: 5,
     createdAt: new Date(),
     updatedAt: new Date(),
-    uid: "",
+    uid: Date.now().toString(),
+    action: "REGISTER",
+    targetUser: "",
+    performedBy: "System",
+    timestamp: new Date(),
+    ticketId: null,
+    details: `User registered successfully.`
+
   });
 
   function handleChange(e) {
@@ -43,29 +42,20 @@ export default function RegisterPage() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    // Combine names into full name
-    const fullName = [registerData.fname, registerData.mname, registerData.lname]
-      .filter(Boolean)
-      .join(" ");
+  
 
-    // Prepare new register data
     const newRegisterData = {
-      ...registerData,
-      name: fullName,
-    };
-
-    // Prepare new audit object
-    const newAudit = {
-      ...audit,
-      timestamp: new Date(),
-      details: `A user has created an account for ${fullName}`,
-    };
+  ...registerData,
+  name: [registerData.fname, registerData.mname, registerData.lname]
+    .filter(Boolean)
+    .join(" ")};
+    console.log(newRegisterData)
 
     // Send data to backend
     const response = await createUser(newRegisterData);
-    const auditResponse = await createUser(newAudit);
+ 
 
-    if (response.status !== 200 || auditResponse.status !== 200) {
+    if (response.status !== 200) {
       alert("User account or audit log could not be created");
     } else {
       alert("Registration successful!");
@@ -94,15 +84,6 @@ export default function RegisterPage() {
         uid: "",
       });
 
-      setAudit({
-        uid: "",
-        action: "NEW_USER",
-        targetUser: "",
-        performedBy: null,
-        timestamp: new Date(),
-        tickedId: null,
-        details: "A user has created an account",
-      });
     }
   }
 

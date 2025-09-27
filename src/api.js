@@ -71,6 +71,11 @@ export async function createUser(user){
     return response
 }
 
+export async function createReport(report){
+    const response = await axios.post(`${URL}/cli/report`, report)
+    return response
+}
+
 export async function updateUser(id, user){
     //"http://localhost:3000/users/12345"
     const response = await axios.put(`${URL}/users/${id}`, user)

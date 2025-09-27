@@ -9,48 +9,54 @@ let postRoutes = express.Router()
 //Login
 //postRoutes.route("")
 
-
+/*
 //Register Student
     //Pass the data to MongoDb
     postRoutes.route("/register").post(async (request, response) => {
-        let db = database.getDb()
+    const db = database.getDb();
+    try {
+        const hash = await bcrypt.hash(request.body.password, SALT_ROUNDS);
 
-        let mongoObject = { 
-            uid: request.body.uid,
-            role: request.body.role,
-            name: request.body.name, 
-            password: request.body.password,
+        // Create user object
+        const mongoObject = { 
+            uid: Date.now().toString(),
+            role: request.body.role || "student",
+            name: request.body.name,
+            password: hash,
             studentId: request.body.studentId,
             email: request.body.email,
             phone: request.body.phone,
-            status: request.body.status,
-            lastLogin: request.body.lastLogin,
-            availableClaim: request.body.availableClaim,
-            availableFound: request.body.availableFound,
-            availableMissing: request.body.availableMissing,
-            createdAt: request.body.createdAt,
-            updatedAt: request.body.updatedAt 
-        }
+            status: request.body.status || "active",
+            lastLogin: null,
+            availableClaim: request.body.availableClaim || 0,
+            availableFound: request.body.availableFound || 0,
+            availableMissing: request.body.availableMissing || 0,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
 
-        let mongoAuditObject = { 
-            uid: request.body.uid,
-            action: request.body.action,
-            targetUser: request.body.targetUser,
-            performedBy: request.body.performedBy,
-            timestamp: request.body.timestamp,
-            ticketId: request.body.ticketId,
-            details: request.body.details 
-        }
+        await db.collection("student_db").insertOne(mongoObject);
 
-        try {
-            let data = await db.collection("student_db").insertOne(mongoObject)
-            let auditData = await db.collection("audit_db").insertOne(mongoAuditObject)
+        // Create audit log automatically
+        const mongoAuditObject = { 
+            uid: `A-${Date.now()}`, // unique audit ID
+            action: "REGISTER",
+            targetUser: mongoObject.email,
+            performedBy: "system",
+            timestamp: new Date(),
+            ticketId: null,
+            details: `User ${mongoObject.email} registered successfully.`
+        };
 
-            response.json({ student: data, audit: auditData })
-        } catch (err) {
-            response.status(500).json({ error: err.message })
-        }
-    })
+        await db.collection("audit_db").insertOne(mongoAuditObject);
+
+        response.json({ student: mongoObject, audit: mongoAuditObject });
+
+    } catch (err) {
+        response.status(500).json({ error: err.message });
+    }
+});
+*/
 //Client Side
 
     //Report
