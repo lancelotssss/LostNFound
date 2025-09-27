@@ -9,7 +9,7 @@ import ClaimForm from './Pages/ClaimForm';
 import { NavBar } from './components/NavBar';
 import { Layout } from './components/Layout';
 import { AdminDisplayData } from "./Pages/AdminDisplayData";
-
+import { useEffect } from 'react';
 
 function App() {
 
@@ -24,11 +24,11 @@ function App() {
    <>
      <Router>
         <Routes>
-          
+          <Route path="/" element={<LoginPage/>}/>
           <Route element={<Layout/>}>
             <Route path="/cli/report" element={<ReportItem/>}/>
             <Route path="/cli/claim" element={<ClaimForm/>}/>
-            <Route path="/" element={<LoginPage/>}/>
+            
             <Route path="/register" element={<RegisterPage/>}/>
             <Route path="/main/lost-items" element={<AdminDisplayData/>}/>
           </Route>

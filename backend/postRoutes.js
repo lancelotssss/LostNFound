@@ -226,7 +226,7 @@ let postRoutes = express.Router()
 
             // Filter reports where reportType = "Found"
             let foundReports = await db.collection("lost_found_db")
-                                    .find({ reportType: "Found" })
+                                    .find({})
                                     .toArray()
 
             // Return results safely

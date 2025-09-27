@@ -102,7 +102,7 @@ userRoutes.route("/register").post(async (req, res) => {
     const db = database.getDb();
 
     // Return all documents, no filter
-    const allReports = await db.collection("lost_found_db").find({reportType:"found"}).toArray();
+    const allReports = await db.collection("lost_found_db").find({}).toArray();
 
     console.log("Reports fetched:", allReports.length);
     res.json({ count: allReports.length, results: allReports });
