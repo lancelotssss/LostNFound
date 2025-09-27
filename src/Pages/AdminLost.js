@@ -4,7 +4,7 @@ import { getLostReport } from "../api";
 
 const { Column } = Table;
 
-export const AdminDisplayData = () => {
+export const AdminLost = () => {
   const [data, setData] = useState([]);
 
   const fetchData = async () => {

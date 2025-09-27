@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Space, Table, Button } from "antd";
-import { getLostReport } from "../api";
+import { getClaimReport } from "../api";
 
 const { Column } = Table;
 
-export const AdminDisplayData = () => {
+export const AdminClaims = () => {
   const [data, setData] = useState([]);
 
   const fetchData = async () => {
     try {
-      const res = await getLostReport();
+      const res = await getClaimReport();
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
         key: item._id ? item._id.toString() : `row-${index}`,

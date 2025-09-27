@@ -112,6 +112,39 @@ userRoutes.route("/register").post(async (req, res) => {
   }
 });
 
+//Found
+    userRoutes.route("/main/found-items").get(verifyToken, async (request, response) => {
+        try {
+            let db = database.getDb()
+
+            // Filter reports where reportType = "Found"
+            let foundReports = await db.collection("lost_found_db")
+                                    .find({})
+                                    .toArray()
+
+            // Return results safely
+            response.json({ count: foundReports.length, results: foundReports })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
+
+    //Found
+    userRoutes.route("/main/claim-items").get(verifyToken, async (request, response) => {
+        try {
+            let db = database.getDb()
+
+            // Filter reports where reportType = "Found"
+            let foundReports = await db.collection("claims_db")
+                                    .find({})
+                                    .toArray()
+
+            // Return results safely
+            response.json({ count: foundReports.length, results: foundReports })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
 
     /*
 //#1 Retrieve All
