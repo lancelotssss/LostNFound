@@ -1,7 +1,12 @@
 import {useState} from "react"
 import { verifyUser } from "../api";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
 
 const LoginPage = () => {
+
+   const navigate = useNavigate()
 
     const [loginData, setLoginData] = useState({
         email: "",
@@ -17,7 +22,17 @@ const LoginPage = () => {
     e.preventDefault();
     console.log("Register Form submitted:", loginData);
     let response = await verifyUser(loginData)
-    console.log(response)
+        if (response)
+        {
+            sessionStorage.setItem("User", response)
+            axios.defaults.headers.common["Authorization"] = `Bearer ${response}`
+            navigate("/cli/report")
+        }
+        else
+        {
+            alert("Login failed")
+        }
+
     }
 
 

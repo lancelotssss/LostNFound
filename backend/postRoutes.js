@@ -1,6 +1,8 @@
 const express = require("express")
 const database = require("./connect")
 const ObjectId = require("mongodb").ObjectId
+const jwt = require ('jsonwebtoken')
+require("dotenv").config({path: "./config.env"}) //Access sa config.env (for SECRETKEY)
 
 let postRoutes = express.Router()
 
@@ -60,7 +62,7 @@ let postRoutes = express.Router()
 //Client Side
 
     //Report
-    postRoutes.route("/cli/report").post(async (request, response) => {
+    postRoutes.route("/cli/report").post(verifyToken, async (request, response) => {
         let db = database.getDb()
 
         let mongoObject = {
@@ -101,7 +103,7 @@ let postRoutes = express.Router()
     })
 
     //Claim
-    postRoutes.route("/claim").post(async (request, response) => {
+    postRoutes.route("/claim").post(verifyToken, async (request, response) => {
         let db = database.getDb()
         let mongoObject = {
             uid: request.body.uid,
@@ -135,7 +137,7 @@ let postRoutes = express.Router()
     })
 
     //getting Profile settings
-    postRoutes.route("/cli/profile/:id").get(async (request, response) => {
+    postRoutes.route("/cli/profile/:id").get(verifyToken, async (request, response) => {
         try {
         let db = database.getDb()
         let data = await db.collection("student_db").findOne({ _id: new ObjectId(request.params.id) })
@@ -151,7 +153,7 @@ let postRoutes = express.Router()
     })
 
     //changing new profile settings
-    postRoutes.route("/cli/profile/:id").put(async (request, response) => {
+    postRoutes.route("/cli/profile/:id").put(verifyToken, async (request, response) => {
         let db = database.getDb()
         let mongoObject = { 
             $set :{
@@ -193,7 +195,7 @@ let postRoutes = express.Router()
     })
 
     // Get report history by student _id
-    postRoutes.route("/cli/history/:id").get(async (request, response) => {
+    postRoutes.route("/cli/history/:id").get(verifyToken, async (request, response) => {
         try {
             let db = database.getDb()
 
@@ -218,21 +220,21 @@ let postRoutes = express.Router()
 
     //Admin Side
     // Get all Found reports
-postRoutes.route("/main/lost-items").get(async (request, response) => {
-    try {
-        let db = database.getDb()
+    postRoutes.route("/main/lost-items").get(verifyToken, async (request, response) => {
+        try {
+            let db = database.getDb()
 
-        // Filter reports where reportType = "Found"
-        let foundReports = await db.collection("lost_found_db")
-                                   .find({ reportType: "Found" })
-                                   .toArray()
+            // Filter reports where reportType = "Found"
+            let foundReports = await db.collection("lost_found_db")
+                                    .find({ reportType: "Found" })
+                                    .toArray()
 
-        // Return results safely
-        response.json({ count: foundReports.length, results: foundReports })
-    } catch (err) {
-        response.status(500).json({ error: err.message })
-    }
-})
+            // Return results safely
+            response.json({ count: foundReports.length, results: foundReports })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
 
     /*
     postRoutes.route("/main/lost-items").get(async (request, response) => {
@@ -362,6 +364,27 @@ postRoutes.route("/register/:id").put(async (request, response) => {
 })
     */
 
+function verifyToken(request, response, next){
+     console.log("verifyToken middleware triggered");
+    const authHeaders = request.headers["authorization"]
+    const token = authHeaders && authHeaders.split(' ')[1]
+    if (!token) {
+        return response.status(401).json({message: "Authentication token is missing"}) //401 means you're not authenticated
+    }
+
+    jwt.verify(token, process.env.SECRETKEY, (error,user) => {
+        if (error) {
+        return response.status(403).json({message: "Invalid token"}) //403 may token pero hindi valid
+        }
+
+        request.user = user;
+        next()
+
+        /*mag vvalidate muna ung verify token bago magawa ung functions, 
+        pag hindi nag run hindi mag rrun ung buong code, pero pag successful
+        mapupunta siya sa next() which is itutuloy niya ung function */
+    })
+}
 
 
 module.exports = postRoutes
