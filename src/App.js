@@ -1,8 +1,6 @@
-import './App.css';
-import {HashRouter as Router, Routes, Route} from "react-router-dom"
-import axios from 'axios';
-
 import LoginPage from './Pages/LoginPage'; 
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import axios from 'axios'
 import RegisterPage from './Pages/RegisterPage';
 import ReportItem from './Pages/ReportItem';
 import ClaimForm from './Pages/ClaimForm';

@@ -13,6 +13,7 @@ export default function RegisterPage() {
     lname: "",
     suffix: "",
     name: "",
+    suffix: "",
     studentId: "",
     phone: "",
     email: "",

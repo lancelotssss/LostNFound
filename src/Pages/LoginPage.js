@@ -39,7 +39,7 @@ const LoginPage = () => {
 
     return(
         <>
-
+            <a href="/#/register">Register</a>
             <form onSubmit={handleSubmit}>
             <h1>Login</h1>
             <div>
