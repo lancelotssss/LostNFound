@@ -24,14 +24,14 @@ export default function RegisterPage() {
     availableMissing: 5,
     createdAt: new Date(),
     updatedAt: new Date(),
+    aid: Date.now().toString(),
     uid: Date.now().toString(),
     action: "REGISTER",
     targetUser: "",
     performedBy: "System",
     timestamp: new Date(),
-    ticketId: null,
+    ticketId: "",
     details: `User registered successfully.`
-
   });
 
   function handleChange(e) {
@@ -46,7 +46,7 @@ export default function RegisterPage() {
 
     const newRegisterData = {
   ...registerData,
-  name: [registerData.fname, registerData.mname, registerData.lname]
+  name: [registerData.fname, registerData.mname, registerData.lname, registerData.suffix]
     .filter(Boolean)
     .join(" ")};
     console.log(newRegisterData)
@@ -66,6 +66,7 @@ export default function RegisterPage() {
         mname: "",
         lname: "",
         name: "",
+        suffix: "",
         studentId: "",
         phone: "",
         email: "",
@@ -73,14 +74,14 @@ export default function RegisterPage() {
         confirmPassword: "",
         birthday: "",
         gender: "",
-        role: "student",
-        status: "active",
-        lastLogin: new Date(),
-        availableClaim: 3,
-        availableFound: 5,
-        availableMissing: 5,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        role: "",
+        status: "",
+        lastLogin: "",
+        availableClaim: "",
+        availableFound: "",
+        availableMissing: "",
+        createdAt: "",
+        updatedAt: "",
         uid: "",
       });
 
@@ -120,6 +121,17 @@ export default function RegisterPage() {
           name="lname"
           placeholder="Last Name"
           value={registerData.lname}
+          onChange={handleChange}
+        />
+      </p>
+
+      <p>
+        Suffix:
+        <input
+          type="text"
+          name="suffix"
+          placeholder="Name Suffix"
+          value={registerData.suffix}
           onChange={handleChange}
         />
       </p>
