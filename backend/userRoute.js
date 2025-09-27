@@ -102,7 +102,7 @@ userRoutes.route("/register").post(async (req, res) => {
     const db = database.getDb();
 
     // Return all documents, no filter
-    const allReports = await db.collection("lost_found_db").find({}).toArray();
+    const allReports = await db.collection("lost_found_db").find({reportType: "lost"}).toArray();
 
     console.log("Reports fetched:", allReports.length);
     res.json({ count: allReports.length, results: allReports });
@@ -240,6 +240,28 @@ userRoutes.route("/users/login").post(async (request, response) => {
     
 })
 
+
+function verifyToken(request, response, next){
+     console.log("verifyToken middleware triggered");
+    const authHeaders = request.headers["authorization"]
+    const token = authHeaders && authHeaders.split(' ')[1]
+    if (!token) {
+        return response.status(401).json({message: "Authentication token is missing"}) //401 means you're not authenticated
+    }
+
+    jwt.verify(token, process.env.SECRETKEY, (error,user) => {
+        if (error) {
+        return response.status(403).json({message: "Invalid token"}) //403 may token pero hindi valid
+        }
+
+        request.user = user;
+        next()
+
+        /*mag vvalidate muna ung verify token bago magawa ung functions, 
+        pag hindi nag run hindi mag rrun ung buong code, pero pag successful
+        mapupunta siya sa next() which is itutuloy niya ung function */
+    })
+}
 
 
 module.exports = userRoutes

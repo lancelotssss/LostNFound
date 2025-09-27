@@ -9,6 +9,7 @@ export default function RegisterPage() {
     mname: "",
     lname: "",
     name: "",
+    suffix: "",
     studentId: "",
     phone: "",
     email: "",

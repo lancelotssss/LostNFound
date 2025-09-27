@@ -224,9 +224,9 @@ let postRoutes = express.Router()
         try {
             let db = database.getDb()
 
-            // Filter reports where reportType = "Found"
+            // Filter reports where reportType = "lost"
             let foundReports = await db.collection("lost_found_db")
-                                    .find({})
+                                    .find({reportType: "lost"})
                                     .toArray()
 
             // Return results safely
@@ -235,6 +235,8 @@ let postRoutes = express.Router()
             response.status(500).json({ error: err.message })
         }
     })
+
+    
     //Found
     postRoutes.route("/main/found-items").get(verifyToken, async (request, response) => {
         try {

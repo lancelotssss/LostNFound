@@ -5,7 +5,7 @@ const URL = "http://localhost:3110"
 
 
 export async function createUser(user){
-    const response = await axios.post(`${URL}/register`, user)
+    const response = await axios.post(`${URL}/#/register`, user)
     return response
 }
 
