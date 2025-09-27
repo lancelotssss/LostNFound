@@ -20,21 +20,19 @@ const LoginPage = () => {
 
     async function handleSubmit(e){
     e.preventDefault();
-    console.log("Register Form submitted:", loginData);
-    let response = await verifyUser(loginData)
-        if (response)
-        {
-            sessionStorage.setItem("User", response)
-            axios.defaults.headers.common["Authorization"] = `Bearer ${response}`
-            navigate("/cli/report")
-        }
-        else
-        {
-            alert("Login failed")
-        }
+    console.log("Login Form submitted:", loginData);
 
+    let response = await verifyUser(loginData);
+
+    if (response && response.token) {
+        
+        sessionStorage.setItem("User", response.token);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${response.token}`;
+        navigate("/cli/report");
+    } else {
+        alert("Login failed");
     }
-
+    }
 
     return(
         <>
