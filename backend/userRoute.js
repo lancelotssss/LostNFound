@@ -24,9 +24,9 @@ userRoutes.route("/register").post(async (req, res) => {
       phone: req.body.phone || "",
       status: "active",
       lastLogin: null,
-      availableClaim: 0,
-      availableFound: 0,
-      availableMissing: 0,
+      availableClaim: 3,
+      availableFound: 5,
+      availableMissing: 5,
       createdAt: new Date(),
       updatedAt: new Date()
       
@@ -35,7 +35,7 @@ userRoutes.route("/register").post(async (req, res) => {
     await db.collection("student_db").insertOne(mongoObject);
 
     const mongoAuditObject = {
-      uid: `A-${Date.now()}`,
+      aid: `A-${Date.now()}`,
       action: "REGISTER",
       targetUser: mongoObject.email,  // now guaranteed to have value
       performedBy: "system",
@@ -95,6 +95,22 @@ userRoutes.route("/register").post(async (req, res) => {
             response.status(500).json({ error: err.message })
         }
     })
+
+    //Admin Get Lost-items
+    userRoutes.route("/main/lost-items").get(async (req, res) => {
+  try {
+    const db = database.getDb();
+
+    // Return all documents, no filter
+    const allReports = await db.collection("lost_found_db").find({reportType:"found"}).toArray();
+
+    console.log("Reports fetched:", allReports.length);
+    res.json({ count: allReports.length, results: allReports });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
     /*

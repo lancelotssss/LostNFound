@@ -11,7 +11,7 @@ let postRoutes = express.Router()
 //Login
 //postRoutes.route("")
 
-/*
+
 //Register Student
     //Pass the data to MongoDb
     postRoutes.route("/register").post(async (request, response) => {
@@ -58,7 +58,7 @@ let postRoutes = express.Router()
         response.status(500).json({ error: err.message });
     }
 });
-*/
+
 //Client Side
 
     //Report
@@ -66,7 +66,7 @@ let postRoutes = express.Router()
         let db = database.getDb()
 
         let mongoObject = {
-            uid: request.body.uid,
+            tid: request.body.uid,
             title: request.body.title,
             keyItem: request.body.keyItem,
             itemBrand: request.body.itemBrand,
