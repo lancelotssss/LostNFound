@@ -24,16 +24,17 @@ function App() {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
     }
   }, []) //Kahit nag r-refresh nag s-store parin ung token
+  
 
   return (
    <>
      <Router>
         <Routes>
           <Route path="/" element={<LoginPage/>}/>
+          <Route path="/register" element={<RegisterPage/>}/>
           <Route element={<Layout/>}>
             <Route path="/cli/report" element={<ReportItem/>}/>
             <Route path="/cli/claim" element={<ClaimForm/>}/>
-            <Route path="/register" element={<RegisterPage/>}/>
           </Route>
 
           <Route element={<AdminLayout/>}>

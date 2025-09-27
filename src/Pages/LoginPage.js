@@ -1,7 +1,9 @@
 import {useState} from "react"
-import { verifyUser } from "../api";
+//import { verifyUser } from "../api";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { verifyUser } from "../api";
+
 
 
 const LoginPage = () => {
@@ -25,13 +27,14 @@ const LoginPage = () => {
     let response = await verifyUser(loginData);
 
     if (response && response.token) {
-        
+
         sessionStorage.setItem("User", response.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${response.token}`;
         navigate("/cli/report");
     } else {
         alert("Login failed");
     }
+    
     }
 
     return(
@@ -49,6 +52,7 @@ const LoginPage = () => {
 
             <div>
                 <button type="submit" >LOGIN</button>
+                <a href="/#/register">Register</a>
             </div>
             
             </form>

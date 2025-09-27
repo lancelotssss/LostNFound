@@ -4,47 +4,50 @@ const URL = "http://localhost:3110"
 
 
 
-export async function createUser(user){
-    const response = await axios.post(`${URL}/register`, user)
-    return response
-}
-
-export async function createReport(report){
-    const response = await axios.post(`${URL}/cli/report`, report)
-    return response
-}
-
-export async function getLostReport(){
-    const response = await axios.get(`${URL}/main/lost-items`)
-    if (response.status === 200){
-        return response.data
-    }
-    else {
-        return
-    }
-}
-
-export async function getFoundReport(){
-    const response = await axios.get(`${URL}/main/found-items`)
-    if (response.status === 200){
-        return response.data
-    }
-    else {
-        return
-    }
-}
-
-export async function getClaimReport(){
-    const response = await axios.get(`${URL}/main/claim-items`)
-    if (response.status === 200){
-        return response.data
-    }
-    else {
-        return
-    }
+export async function createUser(user) {
+  const response = await axios.post(`${URL}/users/register`, user);
+  return response.data;
 }
 
 export async function verifyUser(user) {
+  try {
+    const response = await axios.post(`${URL}/users/login`, user);
+    console.log("Raw response:", response);
+    console.log("Response data:", response.data);
+
+    if (response.data.success) {
+      return response.data; // token + success
+    } else {
+      throw new Error(response.data.message || "Login failed");
+    }
+  } catch (err) {
+    console.error("verifyUser error:", err);
+    throw err;
+  }
+}
+
+// --- REPORTS ---
+export async function createReport(report) {
+  const response = await axios.post(`${URL}/cli/report`, report);
+  return response.data;
+}
+
+export async function getLostReport() {
+  const response = await axios.get(`${URL}/cli/main/lost-items`);
+  return response.data;
+}
+
+export async function getFoundReport() {
+  const response = await axios.get(`${URL}/cli/main/found-items`);
+  return response.data;
+}
+
+export async function getClaimReport() {
+  const response = await axios.get(`${URL}/cli/main/claim-items`);
+  return response.data;
+}
+
+/*export async function verifyUser(user) {
   try {
     const response = await axios.post(`${URL}/users/login`, user);
     console.log("Raw response:", response);
@@ -61,6 +64,7 @@ export async function verifyUser(user) {
     throw err;
   }
 }
+  */
 
 
 

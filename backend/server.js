@@ -12,6 +12,8 @@ app.use(cors())
 app.use(express.json())
 app.use(posts)
 app.use(users) //added for login register
+app.use("/users", users);  // -> /users/register, /users/login, etc.
+app.use("/cli", posts);
 
 
 app.listen(PORT, () => {

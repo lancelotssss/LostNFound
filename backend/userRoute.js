@@ -28,8 +28,7 @@ userRoutes.route("/register").post(async (req, res) => {
       availableFound: 5,
       availableMissing: 5,
       createdAt: new Date(),
-      updatedAt: new Date()
-      
+      updatedAt: new Date(),
     };
 
     await db.collection("student_db").insertOne(mongoObject);
@@ -37,77 +36,17 @@ userRoutes.route("/register").post(async (req, res) => {
     const mongoAuditObject = {
       aid: `A-${Date.now()}`,
       action: "REGISTER",
-      targetUser: mongoObject.email,  // now guaranteed to have value
+      targetUser: mongoObject.email,
       performedBy: "system",
       timestamp: new Date(),
       ticketId: null,
-      details: `User ${mongoObject.email} registered successfully.`
+      details: `User ${mongoObject.email} registered successfully.`,
     };
 
     await db.collection("audit_db").insertOne(mongoAuditObject);
 
     res.json({ student: mongoObject, audit: mongoAuditObject });
-    
   } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-    
-
-//Report
-    userRoutes.route("/cli/report").post(async (request, response) => {
-        let db = database.getDb()
-
-        let mongoObject = {
-            uid: request.body.uid,
-            title: request.body.title,
-            keyItem: request.body.keyItem,
-            itemBrand: request.body.itemBrand,
-            description: request.body.description,
-            status: request.body.status,
-            reportType: request.body.reportType,
-            reportedBy: request.body.reportedBy,
-            approvedBy: request.body.approvedBy,
-            location: request.body.location,
-            dateReported: request.body.dateReported,                //for found item
-            startDate: request.body.startDate,                      //for lost item
-            endDate: request.body.endDate,                          //for lost item
-            photoUrl: request.body.photoUrl,
-            updatedAt: request.body.updatedAt
-        }
-
-        let mongoAuditObject = { 
-            uid: request.body.uid,
-            action: request.body.action,
-            targetUser: request.body.targetUser,
-            performedBy: request.body.performedBy,
-            timestamp: request.body.timestamp,
-            ticketId: request.body.ticketId,
-            details: request.body.details 
-        }
-        try {
-            let data = await db.collection("lost_found_db").insertOne(mongoObject)
-            let auditData = await db.collection("audit_db").insertOne(mongoAuditObject)
-
-            response.json({ report: data, audit: auditData })
-        } catch (err) {
-            response.status(500).json({ error: err.message })
-        }
-    })
-
-    //Admin Get Lost-items
-    userRoutes.route("/main/lost-items").get(async (req, res) => {
-  try {
-    const db = database.getDb();
-
-    // Return all documents, no filter
-    const allReports = await db.collection("lost_found_db").find({}).toArray();
-
-    console.log("Reports fetched:", allReports.length);
-    res.json({ count: allReports.length, results: allReports });
-  } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -145,6 +84,28 @@ userRoutes.route("/register").post(async (req, res) => {
             response.status(500).json({ error: err.message })
         }
     })
+
+    function verifyToken(request, response, next){
+         console.log("verifyToken middleware triggered");
+        const authHeaders = request.headers["authorization"]
+        const token = authHeaders && authHeaders.split(' ')[1]
+        if (!token) {
+            return response.status(401).json({message: "Authentication token is missing"}) //401 means you're not authenticated
+        }
+    
+        jwt.verify(token, process.env.SECRETKEY, (error,user) => {
+            if (error) {
+            return response.status(403).json({message: "Invalid token"}) //403 may token pero hindi valid
+            }
+    
+            request.user = user;
+            next()
+    
+            /*mag vvalidate muna ung verify token bago magawa ung functions, 
+            pag hindi nag run hindi mag rrun ung buong code, pero pag successful
+            mapupunta siya sa next() which is itutuloy niya ung function */
+        })
+    }
 
     /*
 //#1 Retrieve All
