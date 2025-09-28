@@ -25,11 +25,13 @@ function App() {
   }, []) //Kahit nag r-refresh nag s-store parin ung token
 
   function ProtectedRoute({ children }) {
-  const user = sessionStorage.getItem("User"); 
+  const user = sessionStorage.getItem("User");
+  const admin = sessionStorage.getItem("Admin");  
 
     if (!user) {
       return <Navigate to="/" replace />;
     }
+   
 
   return children;
   }

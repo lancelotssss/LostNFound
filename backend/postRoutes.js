@@ -65,7 +65,7 @@ let postRoutes = express.Router()
 */
 
 //Client Side
-/*
+
     //Report
     postRoutes.route("/cli/report").post(verifyToken, async (request, response) => {
         let db = database.getDb()
@@ -106,7 +106,7 @@ let postRoutes = express.Router()
             response.status(500).json({ error: err.message })
         }
     })
-*/
+
     //Claim
     postRoutes.route("/claim").post(verifyToken, async (request, response) => {
         let db = database.getDb()
@@ -449,14 +449,6 @@ function verifyToken(request, response, next){
     })
 }
 
-function authorizeRoles(...allowedRoles) {
-    return (req, res, next) => {
-        if (!allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({ message: "Forbidden: insufficient role" });
-        }
-        next();
-    };
-}
 
 
 
