@@ -32,6 +32,7 @@ export default function ReportItem() {
     photoUrl: "",
   });
 
+  /*
   useEffect(() => {
     axios
       .post("http://localhost:3110/cli/report", {
@@ -46,7 +47,7 @@ export default function ReportItem() {
         }
       });
   }, []);
-  
+  */
 
   function handleChange(e) {
     const { name, value } = e.target;

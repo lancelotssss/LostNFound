@@ -15,7 +15,7 @@ userRoutes.route("/register").post(async (req, res) => {
     const hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
 
     const mongoObject = {
-      uid: Date.now().toString(),
+      aid: Date.now().toString(),
       role: "student",
       name: req.body.name || "Unknown",
       email: req.body.email || "unknown@example.com",
@@ -85,6 +85,7 @@ userRoutes.route("/register").post(async (req, res) => {
         }
     })
 
+    
     function verifyToken(request, response, next){
          console.log("verifyToken middleware triggered");
         const authHeaders = request.headers["authorization"]
@@ -103,7 +104,7 @@ userRoutes.route("/register").post(async (req, res) => {
     
             /*mag vvalidate muna ung verify token bago magawa ung functions, 
             pag hindi nag run hindi mag rrun ung buong code, pero pag successful
-            mapupunta siya sa next() which is itutuloy niya ung function */
+            mapupunta siya sa next() which is itutuloy niya ung function  */
         })
     }
 
@@ -179,29 +180,51 @@ userRoutes.route("/users/:id").delete(async (request, response) => {
 */
 //#6 Login
 userRoutes.route("/users/login").post(async (request, response) => {
-    let db = database.getDb()
+    console.log("Login route triggered for:", request.body.email);
 
+    let db = database.getDb()
     const user = await db.collection("student_db").findOne({email: request.body.email})
-    
+
     if (user){
+        console.log("User found:", user.studentId);
+
         let confirmation = await bcrypt.compare(request.body.password, user.password)
         if (confirmation) {
-            const token = jwt.sign(user, process.env.SECRETKEY)
-            response.json({success:true, token})
+            console.log("Password correct, issuing token...");
+
+            const tokenPayLoad = {
+                id: user._id,
+                studentId: user.studentId,
+                email: user.email
+            }
+            const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
+
+            const mongoAuditObject = {
+                aid: `A-${Date.now()}`,
+                action: "Login",
+                targetUser: user.studentId,
+                performedBy: "system",
+                timestamp: new Date(),
+                ticketId: null,
+                details: `User ${user.studentId} logged in successfully.`,
+            };
+
+            console.log("Inserting audit record:", mongoAuditObject);
+
+            await db.collection("audit_db").insertOne(mongoAuditObject);
+            return response.json({success:true, token})
         }
         else {
-            response.json({success:false, message: "Incorrect Password"})
+            return response.json({success:false, message: "Incorrect Password"})
         }
-
     }
     else {
-        response.json({success: false, message: "User not found"})
+        return response.json({success: false, message: "User not found"})
     }
-    
-    
 })
 
 
+/*
 function verifyToken(request, response, next){
      console.log("verifyToken middleware triggered");
     const authHeaders = request.headers["authorization"]
@@ -220,9 +243,10 @@ function verifyToken(request, response, next){
 
         /*mag vvalidate muna ung verify token bago magawa ung functions, 
         pag hindi nag run hindi mag rrun ung buong code, pero pag successful
-        mapupunta siya sa next() which is itutuloy niya ung function */
+        mapupunta siya sa next() which is itutuloy niya ung function 
     })
 }
+    */
 
 
 module.exports = userRoutes
