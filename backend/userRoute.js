@@ -12,6 +12,24 @@ const SALT_ROUNDS = 6
 userRoutes.route("/register").post(async (req, res) => {
   const db = database.getDb();
   try {
+    // 🔍 Check for duplicate email or studentId
+    const existingUser = await db.collection("student_db").findOne({
+      $or: [
+        { email: req.body.email },
+        { studentId: req.body.studentId }
+      ]
+    });
+
+    if (existingUser) {
+        if (existingUser.email === req.body.email) {
+            return res.status(400).json({ success: false, message: "Email already exists" });
+        }
+        if (existingUser.studentId === req.body.studentId) {
+            return res.status(400).json({ success: false, message: "Student ID already exists" });
+        }
+        }
+
+    // Hash password
     const hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
 
     const mongoObject = {
@@ -45,11 +63,12 @@ userRoutes.route("/register").post(async (req, res) => {
 
     await db.collection("audit_db").insertOne(mongoAuditObject);
 
-    res.json({ student: mongoObject, audit: mongoAuditObject });
+    res.json({ success: true, student: mongoObject, audit: mongoAuditObject });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 //Found
     userRoutes.route("/main/found-items").get(verifyToken, async (request, response) => {
@@ -107,6 +126,22 @@ userRoutes.route("/register").post(async (req, res) => {
             mapupunta siya sa next() which is itutuloy niya ung function  */
         })
     }
+    function authorizeRoles(...allowedRoles) {
+    return (req, res, next) => {
+        if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({ message: "Forbidden: insufficient role" });
+        }
+        next();
+    };
+    }
+
+    userRoutes.get("/admin-stats",
+        verifyToken,
+        authorizeRoles("admin"),
+        async (req, res) => {
+            res.json({ message: "Only admins can see this" });
+        }
+        );
 
     /*
 //#1 Retrieve All
@@ -195,7 +230,10 @@ userRoutes.route("/users/login").post(async (request, response) => {
             const tokenPayLoad = {
                 id: user._id,
                 studentId: user.studentId,
-                email: user.email
+                email: user.email,
+                role: user.role,        //
+                lastLogin: user.lastLogin,                                          // sa dulo
+                status: user.status                                                 //sa dulo
             }
             const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
 
@@ -248,6 +286,8 @@ function verifyToken(request, response, next){
 }
     */
 
-
-module.exports = userRoutes
-
+module.exports = {
+  userRoutes,
+  verifyToken,
+  authorizeRoles
+};

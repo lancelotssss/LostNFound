@@ -426,5 +426,22 @@ function verifyToken(request, response, next){
     })
 }
 
+function authorizeRoles(...allowedRoles) {
+    return (req, res, next) => {
+        if (!allowedRoles.includes(req.user.role)) {
+            return res.status(403).json({ message: "Forbidden: insufficient role" });
+        }
+        next();
+    };
+}
 
-module.exports = postRoutes
+postRoutes.get("/admin-stats",
+        verifyToken,
+        authorizeRoles("admin"),
+        async (req, res) => {
+            res.json({ message: "Only admins can see this" });
+        }
+        );
+
+
+module.exports = postRoutes;
