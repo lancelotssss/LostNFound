@@ -27,10 +27,16 @@ export async function verifyUser(user) {
 }
 
 // --- REPORTS ---
-export async function createReport(report) {
-  const response = await axios.post(`${URL}/cli/report`, report);
+export async function createReport(report, token) {
+  const response = await axios.post(`${URL}/cli/report`, report, {
+    headers: {
+      Authorization: `Bearer ${token}`, // 
+    },
+  });
   return response.data;
 }
+
+
 
 export async function getLostReport() {
   const response = await axios.get(`${URL}/cli/main/lost-items`);

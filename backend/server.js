@@ -11,12 +11,12 @@ app.use(cors());
 app.use(express.json());
 
 // Mount routes with base paths
-app.use("/posts", posts);
+//app.use("/posts", posts);
 app.use("/users", userRoutes);
 
 // Role-protected routes
-app.use("/cli", verifyToken, authorizeRoles("student"), posts);
-app.use("/main", verifyToken, authorizeRoles("admin"), posts);
+app.use("/cli", verifyToken, authorizeRoles("student"), userRoutes);
+app.use("/main", verifyToken, authorizeRoles("admin"), userRoutes);
 
 app.listen(PORT, () => {
   connect.connectToServer();

@@ -8,11 +8,61 @@ require("dotenv").config({path: "./config.env"})
 let userRoutes = express.Router()
 const SALT_ROUNDS = 6
 
+//LOGIN
+userRoutes.route("/login").post(async (request, response) => {
+    console.log("Login route triggered for:", request.body.email);
 
+    let db = database.getDb()
+    const user = await db.collection("student_db").findOne({email: request.body.email})
+
+    if (user){
+        console.log("User found:", user.studentId);
+
+        let confirmation = await bcrypt.compare(request.body.password, user.password)
+        if (confirmation) {
+            console.log("Password correct, issuing token...");
+
+            const tokenPayLoad = {
+                id: user._id,
+                studentId: user.studentId,
+                email: user.email,
+                role: user.role,        //
+                lastLogin: user.lastLogin,                                          // sa dulo
+                status: user.status                                                 //sa dulo
+            }
+            const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
+
+            const mongoAuditObject = {
+                aid: `A-${Date.now()}`,
+                action: "Login",
+                targetUser: user.studentId,
+                performedBy: "system",
+                timestamp: new Date(),
+                ticketId: null,
+                details: `User ${user.studentId} logged in successfully.`,
+            };
+
+            console.log("Inserting audit record:", mongoAuditObject);
+
+            await db.collection("audit_db").insertOne(mongoAuditObject);
+            return response.json({success:true, token})
+        }
+        else {
+            return response.json({success:false, message: "Incorrect Password"})
+        }
+    }
+    else {
+        return response.json({success: false, message: "User not found"})
+    }
+})
+
+
+
+//REGISTER
 userRoutes.route("/register").post(async (req, res) => {
   const db = database.getDb();
   try {
-    // 🔍 Check for duplicate email or studentId
+    // Check for duplicate email or studentId
     const existingUser = await db.collection("student_db").findOne({
       $or: [
         { email: req.body.email },
@@ -33,7 +83,7 @@ userRoutes.route("/register").post(async (req, res) => {
     const hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
 
     const mongoObject = {
-      aid: Date.now().toString(),
+      sid: `A-${Date.now()}`,
       role: "student",
       name: req.body.name || "Unknown",
       email: req.body.email || "unknown@example.com",
@@ -68,6 +118,81 @@ userRoutes.route("/register").post(async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+
+userRoutes.route("/report").post(verifyToken, async (req, res) => {
+    const db = database.getDb()
+   
+    try {
+        const studentId = req.user?.studentId
+
+    if (!studentId) {
+            return res.status(401).json({ error: "Unauthorized: No student ID found" });
+        }
+
+        // Find the logged-in student by studentId
+        const user = await db.collection("student_db").findOne({ studentId });
+
+        if (!user) {
+            return res.status(404).json({ error: "Student not found" });
+        }
+
+    const mongoReport = {
+        tid: `T-${Date.now()}`,
+        title: req.body.title || "No title",
+        keyItem: req.body.keyItem || "No item",
+        itemBrand: req.body.itemBrand || "No brand provided",
+        description: req.body.description || "No description provided",
+        status: "pending",
+        reportType: req.body.reportType,
+        reportedBy: studentId,
+        approvedBy: "",
+        location: req.body.location || "No location provided",
+        dateReported: new Date,
+        startDate: "",
+        endDate: "",
+        photoUrl: req.body.photoUrl || "No image provided",
+        updatedAt: new Date
+    }
+    await db.collection("lost_found_db").insertOne(mongoReport);
+
+    const reportAuditMongo = {
+        aid: `A-${Date.now()}`,
+        action: req.body.reportType === "lost" 
+        ? "SUBMIT_MISSING" 
+        : req.body.reportType === "found" 
+            ? "SUBMIT_FOUND" 
+        : "UNKNOWN",
+        targetUser: studentId,
+        performedBy: "system",
+        timestamp: new Date,
+        ticketId: mongoReport.tid,
+        details: `${studentId} filed a missing item ${mongoReport.tid}`
+    }
+    await db.collection("audit_db").insertOne(reportAuditMongo);
+    res.json({ success: true, report: mongoReport, audit: reportAuditMongo });
+    }
+    
+    catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //Found
@@ -214,52 +339,7 @@ userRoutes.route("/users/:id").delete(async (request, response) => {
 })
 */
 //#6 Login
-userRoutes.route("/users/login").post(async (request, response) => {
-    console.log("Login route triggered for:", request.body.email);
 
-    let db = database.getDb()
-    const user = await db.collection("student_db").findOne({email: request.body.email})
-
-    if (user){
-        console.log("User found:", user.studentId);
-
-        let confirmation = await bcrypt.compare(request.body.password, user.password)
-        if (confirmation) {
-            console.log("Password correct, issuing token...");
-
-            const tokenPayLoad = {
-                id: user._id,
-                studentId: user.studentId,
-                email: user.email,
-                role: user.role,        //
-                lastLogin: user.lastLogin,                                          // sa dulo
-                status: user.status                                                 //sa dulo
-            }
-            const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
-
-            const mongoAuditObject = {
-                aid: `A-${Date.now()}`,
-                action: "Login",
-                targetUser: user.studentId,
-                performedBy: "system",
-                timestamp: new Date(),
-                ticketId: null,
-                details: `User ${user.studentId} logged in successfully.`,
-            };
-
-            console.log("Inserting audit record:", mongoAuditObject);
-
-            await db.collection("audit_db").insertOne(mongoAuditObject);
-            return response.json({success:true, token})
-        }
-        else {
-            return response.json({success:false, message: "Incorrect Password"})
-        }
-    }
-    else {
-        return response.json({success: false, message: "User not found"})
-    }
-})
 
 
 /*
