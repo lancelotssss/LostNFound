@@ -1,19 +1,7 @@
 import React, { useState } from "react";
 import { createReport } from "../api";
-import axios from "axios";
-import { useEffect } from "react";
 
 export default function ReportItem() {
-  const [audit, setAudit] = useState({
-    uid: "",
-    action: "NEW_REPORT",
-    targetUser: "",
-    performedBy: null,
-    timestamp: new Date(),
-    tickedId: null,
-    details: "A user has created a report",
-  });
-
   const [registerData, setRegisterData] = useState({
     title: "",
     category: "",
@@ -30,6 +18,13 @@ export default function ReportItem() {
     endDate: "",
     updatedAt: "",
     photoUrl: "",
+    aid: "",
+    action: "",
+    targetUser: "",
+    performedBy: "",
+    timestamp: "",
+    ticketId: "",
+    details: "",
   });
 
   
@@ -57,27 +52,28 @@ export default function ReportItem() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const newRegisterData = {
-      ...registerData
-      
-    };
-    const newAudit = {
-          ...audit,
-          timestamp: new Date(),
-          details: `A user reported something.`,
-        };
-    
-        // Send data to backend
-        const response = await createReport(newRegisterData);
-        const auditResponse = await createReport(newAudit);
-    
-        if (response.status !== 200 || auditResponse.status !== 200) {
-          alert("User account or audit log could not be created");
-        } else {
-          alert("Report successful!");
+
+    try {
+      // ✅ fetch token from sessionStorage
+      const token = sessionStorage.getItem("User");
+      if (!token) {
+        alert("You must be logged in before submitting a report.");
+        return;
+      }
+
+      const response = await createReport(registerData, token); // ✅ pass token
+      console.log("response: " , response)
+      if (!response.success) {
+        alert("Report could not be created.");
+        console.log(response, token, registerData)
+      } else {
+        alert("Report submitted successfully!");
+      }
+    } catch (err) {
+      console.error("Error submitting report:", err);
+      alert("Error submitting report");
+    }
   }
-  
-}
 
   return (
     <form onSubmit={handleSubmit}>
@@ -162,8 +158,8 @@ export default function ReportItem() {
             onChange={handleChange}
           >
             <option value="">Select Type</option>
-            <option>lost</option>
-            <option>found</option>
+            <option>Lost</option>
+            <option>Found</option>
           </select>
         </p>
       </div>
@@ -193,6 +189,28 @@ export default function ReportItem() {
         </p>
       </div>
 
+      <div>
+        <p>
+          Start Date{" "}
+          <input
+            type="date"
+            name="startDate"
+            value={registerData.startDate}
+            onChange={handleChange}
+          />
+        </p>
+      </div>
+      <div>
+        <p>
+          End Date{" "}
+          <input
+            type="date"
+            name="endDate"
+            value={registerData.endDate}
+            onChange={handleChange}
+          />
+        </p>
+      </div>
       <div>
         <p>
           Photo URL{" "}

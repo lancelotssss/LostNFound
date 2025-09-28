@@ -69,133 +69,6 @@ userRoutes.route("/register").post(async (req, res) => {
   }
 });
 
-//Found
-    userRoutes.route("/main/found-items").get(verifyToken, async (request, response) => {
-        try {
-            let db = database.getDb()
-
-            // Filter reports where reportType = "Found"
-            let foundReports = await db.collection("lost_found_db")
-                                    .find({})
-                                    .toArray()
-
-            // Return results safely
-            response.json({ count: foundReports.length, results: foundReports })
-        } catch (err) {
-            response.status(500).json({ error: err.message })
-        }
-    })
-
-    //Found
-    userRoutes.route("/main/claim-items").get(verifyToken, async (request, response) => {
-        try {
-            let db = database.getDb()
-
-            // Filter reports where reportType = "Found"
-            let foundReports = await db.collection("claims_db")
-                                    .find({})
-                                    .toArray()
-
-            // Return results safely
-            response.json({ count: foundReports.length, results: foundReports })
-        } catch (err) {
-            response.status(500).json({ error: err.message })
-        }
-    })
-
-    
-    function verifyToken(request, response, next){
-         console.log("verifyToken middleware triggered");
-        const authHeaders = request.headers["authorization"]
-        const token = authHeaders && authHeaders.split(' ')[1]
-        if (!token) {
-            return response.status(401).json({message: "Authentication token is missing"}) //401 means you're not authenticated
-        }
-    
-        jwt.verify(token, process.env.SECRETKEY, (error,user) => {
-            if (error) {
-            return response.status(403).json({message: "Invalid token"}) //403 may token pero hindi valid
-            }
-    
-            request.user = user;
-            next()
-    
-            /*mag vvalidate muna ung verify token bago magawa ung functions, 
-            pag hindi nag run hindi mag rrun ung buong code, pero pag successful
-            mapupunta siya sa next() which is itutuloy niya ung function  */
-        })
-    }
-
-    /*
-//#1 Retrieve All
-//http://localhost"3000/users
-userRoutes.route("/users").get(async (request, response) => {
-    let db = database.getDb()
-    let data = await db.collection("student_db").find({}).toArray()        //{} - all data dito
-    if (data.length > 0){
-        response.json(data)     //parang return statement
-    }
-    else {
-        throw new Error ("Data was not found")
-    }
-})
-
-//#2 Retrieve One
-//http://localhost"3000/users/12345
-userRoutes.route("/users/:id").get(async (request, response) => {
-    let db = database.getDb()
-    let data = await db.collection("student_db").findOne({_id: new ObjectId(request.params.id)})        //{} - one data of from the _id from the mongo
-    if (Object.keys(data).length > 0){
-        response.json(data)     //parang return statement
-    }
-    else {
-        throw new Error ("Data was not found")
-    }
-    
-})
-
-
-//#3 Create One
-//http://localhost"3000/users/
-
-*/
-/*
-//#4 Update One
-//http://localhost"3000/users/
-userRoutes.route("/users/:id").put(async (request, response) => {
-    let db = database.getDb()
-    let mongoObject = {
-        $set: 
-        {
-            uid: request.body.uid,
-            role: request.body.role,
-            name: request.body.name,
-            password: request.body.password,
-            studentId: request.body.studentId,
-            phone: request.body.phone,
-            status: request.body.status,
-            lastLogin: request.body.lastLogin,
-            availableClaim: request.body.availableClaim,
-            availableFound: request.body.availableFound,
-            availableMissing: request.body.availableMissing,
-            createdAt: request.body.createdAt,
-            updatedAt: request.body.updatedAt
-        }
-        
-    }
-    let data = await db.collection("student_db").updateOne({_id: new ObjectId(request.params.id)}, mongoObject)      //set new data sa mongodb  
-    response.json(data)
-    
-})
-
-//#5 Delete One
-//http://localhost"3000/users/12345
-userRoutes.route("/users/:id").delete(async (request, response) => {
-    let db = database.getDb()
-    let data = await db.collection("student_db").deleteOne({_id: new ObjectId(request.params.id)})        //{} - one data of from the _id from the mongo
-    response.json(data)    
-})
-*/
 //#6 Login
 userRoutes.route("/users/login").post(async (request, response) => {
     console.log("Login route triggered for:", request.body.email);
@@ -245,29 +118,168 @@ userRoutes.route("/users/login").post(async (request, response) => {
 
 
 
-/*
-function verifyToken(request, response, next){
-     console.log("verifyToken middleware triggered");
-    const authHeaders = request.headers["authorization"]
-    const token = authHeaders && authHeaders.split(' ')[1]
-    if (!token) {
-        return response.status(401).json({message: "Authentication token is missing"}) //401 means you're not authenticated
+//Users
+//HOME
+userRoutes.get("/home", verifyToken, async (req, res) => {
+  try {
+    console.log("Backend /cli/home hit!", req.user); // <-- check if this logs
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+
+    if (!studentId) {
+      return res.status(401).json({ error: "Unauthorized: No student ID" });
     }
 
-    jwt.verify(token, process.env.SECRETKEY, (error,user) => {
-        if (error) {
-        return response.status(403).json({message: "Invalid token"}) //403 may token pero hindi valid
+    const studentReports = await db
+      .collection("lost_found_db")
+      .find({ reportedBy: studentId })
+      .toArray();
+
+    console.log("Found reports:", studentReports); // <-- check what's returned
+
+    res.json({ count: studentReports.length, results: studentReports });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
+
+//REPORT
+
+userRoutes.route("/report").post(verifyToken, async (req, res) => {
+    try {
+    const db = database.getDb()
+        const studentId = req.user?.studentId;
+
+    const mongoReport = {
+        tid: `T-${Date.now()}`,
+        title: req.body.title || "No title",
+        keyItem: req.body.keyItem || "No item",
+        itemBrand: req.body.itemBrand || "No brand provided",
+        description: req.body.description || "No description provided",
+        status: "pending",
+        reportType: req.body.reportType,
+        reportedBy: studentId,
+        approvedBy: "",
+        location: req.body.location || "No location provided",
+        dateReported: new Date,
+        startDate: req.body.startDate,
+        endDate: req.body.endDate,
+        photoUrl: req.body.photoUrl || "No image provided",
+        updatedAt: new Date
+    }
+    await db.collection("lost_found_db").insertOne(mongoReport);
+    const reportType = req.body.reportType?.toLowerCase();
+    const reportAuditMongo = {
+        aid: `A-${Date.now()}`,
+        action: reportType === "lost"
+        ? "SUBMIT_MISSING"
+        : reportType === "found"
+            ? "SUBMIT_FOUND"
+            : "UNKNOWN",
+        targetUser: "",
+        performedBy: "system",
+        timestamp: new Date,
+        ticketId: mongoReport.tid,
+        details: `${studentId} filed a missing item ${mongoReport.tid}`
+    }
+    await db.collection("audit_db").insertOne(reportAuditMongo);
+    res.json({ success: true, report: mongoReport, audit: reportAuditMongo });
+    }
+    catch (err)
+    {
+         console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+    }
+    })
+
+//Found
+    userRoutes.route("/user-items").get(verifyToken, async (req, res) => {
+    try {
+        let db = database.getDb();
+        const studentId = req.user?.studentId; // use req, not request
+
+        if (!studentId) {
+            return res.status(401).json({ error: "Unauthorized: No student ID" });
         }
 
-        request.user = user;
-        next()
+        // Fetch reports for this student
+        let foundReports = await db
+            .collection("lost_found_db")
+            .find({ studentId })
+            .toArray();
 
-        /*mag vvalidate muna ung verify token bago magawa ung functions, 
-        pag hindi nag run hindi mag rrun ung buong code, pero pag successful
-        mapupunta siya sa next() which is itutuloy niya ung function 
+        res.json({ count: foundReports.length, results: foundReports });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+
+    //Found
+    userRoutes.route("/claim-items").get(verifyToken, async (request, response) => {
+        try {
+            let db = database.getDb()
+
+            // Filter reports where reportType = "Found"
+            let foundReports = await db.collection("claims_db")
+                                    .find({})
+                                    .toArray()
+
+            // Return results safely
+            response.json({ count: foundReports.length, results: foundReports })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
     })
-}
-    */
+
+    
+    function verifyToken(request, response, next){
+         console.log("verifyToken middleware triggered");
+        const authHeaders = request.headers["authorization"]
+        const token = authHeaders && authHeaders.split(' ')[1]
+        if (!token) {
+            return response.status(401).json({message: "Authentication token is missing"}) //401 means you're not authenticated
+        }
+    
+        jwt.verify(token, process.env.SECRETKEY, (error,user) => {
+            if (error) {
+            return response.status(403).json({message: "Invalid token"}) //403 may token pero hindi valid
+            }
+    
+            request.user = user;
+            next()
+    
+            /*mag vvalidate muna ung verify token bago magawa ung functions, 
+            pag hindi nag run hindi mag rrun ung buong code, pero pag successful
+            mapupunta siya sa next() which is itutuloy niya ung function  */
+        })
+    }
+
+
+
+    //Found
+    userRoutes.route("/main/found-items").get(verifyToken, async (request, response) => {
+        try {
+            let db = database.getDb()
+
+            // Filter reports where reportType = "Found"
+            let foundReports = await db.collection("lost_found_db")
+                                    .find({})
+                                    .toArray()
+
+            // Return results safely
+            response.json({ count: foundReports.length, results: foundReports })
+        } catch (err) {
+            response.status(500).json({ error: err.message })
+        }
+    })
+
 
 
 module.exports = userRoutes

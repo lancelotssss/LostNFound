@@ -65,7 +65,7 @@ let postRoutes = express.Router()
 */
 
 //Client Side
-
+/*
     //Report
     postRoutes.route("/cli/report").post(verifyToken, async (request, response) => {
         let db = database.getDb()
@@ -106,7 +106,7 @@ let postRoutes = express.Router()
             response.status(500).json({ error: err.message })
         }
     })
-
+*/
     //Claim
     postRoutes.route("/claim").post(verifyToken, async (request, response) => {
         let db = database.getDb()
@@ -275,7 +275,7 @@ let postRoutes = express.Router()
             response.status(500).json({ error: err.message })
         }
     })
-
+/*
     postRoutes.route("/cli/home").get(verifyToken, async (request, response) => {
     try {
         // Example: get current logged-in user from token
@@ -298,7 +298,7 @@ let postRoutes = express.Router()
         response.status(500).json({ error: err.message });
     }
 });
-
+*/
     /*
     postRoutes.route("/main/lost-items").get(async (request, response) => {
     try {
