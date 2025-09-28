@@ -12,10 +12,28 @@ const SALT_ROUNDS = 6
 userRoutes.route("/register").post(async (req, res) => {
   const db = database.getDb();
   try {
+    // Check for duplicate email or studentId
+    const existingUser = await db.collection("student_db").findOne({
+      $or: [
+        { email: req.body.email },
+        { studentId: req.body.studentId }
+      ]
+    });
+
+    if (existingUser) {
+        if (existingUser.email === req.body.email) {
+            return res.status(400).json({ success: false, message: "Email already exists" });
+        }
+        if (existingUser.studentId === req.body.studentId) {
+            return res.status(400).json({ success: false, message: "Student ID already exists" });
+        }
+        }
+
+    // Hash password
     const hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
 
     const mongoObject = {
-      aid: Date.now().toString(),
+      sid: `A-${Date.now()}`,
       role: "student",
       name: req.body.name || "Unknown",
       email: req.body.email || "unknown@example.com",
@@ -45,9 +63,9 @@ userRoutes.route("/register").post(async (req, res) => {
 
     await db.collection("audit_db").insertOne(mongoAuditObject);
 
-    res.json({ student: mongoObject, audit: mongoAuditObject });
+    res.json({ success: true, student: mongoObject, audit: mongoAuditObject });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -194,6 +212,8 @@ userRoutes.route("/users/login").post(async (request, response) => {
 
             const tokenPayLoad = {
                 id: user._id,
+                name: user.name,
+                password: user.password,
                 studentId: user.studentId,
                 email: user.email
             }
@@ -222,6 +242,7 @@ userRoutes.route("/users/login").post(async (request, response) => {
         return response.json({success: false, message: "User not found"})
     }
 })
+
 
 
 /*

@@ -13,7 +13,6 @@ export default function RegisterPage() {
     lname: "",
     suffix: "",
     name: "",
-    suffix: "",
     studentId: "",
     phone: "",
     email: "",
@@ -30,7 +29,7 @@ export default function RegisterPage() {
     createdAt: new Date(),
     updatedAt: new Date(),
     aid: Date.now().toString(),
-    uid: Date.now().toString(),
+    sid: Date.now().toString(),
     action: "REGISTER",
     targetUser: "",
     performedBy: "System",
@@ -39,28 +38,33 @@ export default function RegisterPage() {
     details: `User registered successfully.`
   });
 
+  const [errors, setErrors] = useState({
+  email: "",
+  studentId: "",
+  general: ""
+});
+
   function handleChange(e) {
     const { name, value } = e.target;
     setRegisterData({ ...registerData, [name]: value });
   }
 
   async function handleSubmit(e) {
-    e.preventDefault();
+  e.preventDefault();
 
-  
+  const newRegisterData = {
+    ...registerData,
+    name: [registerData.fname, registerData.mname, registerData.lname, registerData.suffix]
+      .filter(Boolean)
+      .join(" ")
+  };
 
-    const newRegisterData = {
-  ...registerData,
-  name: [registerData.fname, registerData.mname, registerData.lname, registerData.suffix]
-    .filter(Boolean)
-    .join(" ")};
-    console.log(newRegisterData)
+  setErrors({ email: "", studentId: "", general: "" }); // reset errors
 
-    // Send data to backend
+  try {
     const response = await createUser(newRegisterData);
- 
 
-    if (response?.student && response?.audit) {
+    if (response?.success) {
       alert("Account added!");
         setRegisterData({
           fname: "",
@@ -85,13 +89,25 @@ export default function RegisterPage() {
           updatedAt: "",
           uid: "",
         });
-        navigate("/")
-
+       navigate("/");
+    } else {
+      setErrors(prev => ({ ...prev, general: response.message || "Registration failed" }));
+    }
+  } catch (err) {
+    if (err.response?.status === 400) {
+      const msg = err.response.data.message || "";
+      if (msg.includes("email")) {
+        setErrors(prev => ({ ...prev, email: msg }));
+      } else if (msg.includes("student ID")) {
+        setErrors(prev => ({ ...prev, studentId: msg }));
       } else {
-        alert("Registration unsuccessful!");
+        setErrors(prev => ({ ...prev, general: msg }));
       }
+    } else {
+      setErrors(prev => ({ ...prev, general: "Something went wrong, try again." }));
+    }
   }
-
+}
   return (
     <form onSubmit={handleSubmit}>
       <h1>Register</h1>
@@ -141,15 +157,17 @@ export default function RegisterPage() {
       </p>
 
       <p>
-        Student ID:
-        <input
-          type="text"
-          name="studentId"
-          placeholder="Student ID"
-          value={registerData.studentId}
-          onChange={handleChange}
-        />
-      </p>
+      Email:
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        value={registerData.email}
+        onChange={handleChange}
+      />
+      {errors.email && <span style={{ color: "red" }}>{errors.email}</span>}
+    </p>
+
 
       <p>
         Phone:
@@ -163,15 +181,18 @@ export default function RegisterPage() {
       </p>
 
       <p>
-        Email:
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={registerData.email}
-          onChange={handleChange}
-        />
-      </p>
+      Student ID:
+      <input
+        type="text"
+        name="studentId"
+        placeholder="Student ID"
+        value={registerData.studentId}
+        onChange={handleChange}
+      />
+      {errors.studentId && <span style={{ color: "red" }}>{errors.studentId}</span>}
+    </p>
+
+    
 
       <p>
         Birthday:
@@ -214,7 +235,7 @@ export default function RegisterPage() {
           onChange={handleChange}
         />
       </p>
-
+      {errors.general && <p style={{ color: "red" }}>{errors.general}</p>}
       <button type="submit">REGISTER</button>
     </form>
   );

@@ -1,9 +1,10 @@
 import LoginPage from './Pages/LoginPage'; 
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios'
 import RegisterPage from './Pages/RegisterPage';
 import ReportItem from './Pages/ReportItem';
 import ClaimForm from './Pages/ClaimForm';
+import Home from './Pages/Home';
 import { NavBar } from './components/NavBar';
 import { Layout } from './components/Layout';
 import { AdminDisplayData } from "./Pages/AdminDisplayData";
@@ -22,6 +23,17 @@ function App() {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
     }
   }, []) //Kahit nag r-refresh nag s-store parin ung token
+
+  function ProtectedRoute({ children }) {
+  const user = sessionStorage.getItem("User"); 
+
+    if (!user) {
+      return <Navigate to="/" replace />;
+    }
+
+  return children;
+  }
+
   
 
   return (
@@ -31,8 +43,9 @@ function App() {
           <Route path="/" element={<LoginPage/>}/>
           <Route path="/register" element={<RegisterPage/>}/>
           <Route element={<Layout/>}>
-            <Route path="/cli/report" element={<ReportItem/>}/>
-            <Route path="/cli/claim" element={<ClaimForm/>}/>
+            <Route path="/cli/home" element = {<ProtectedRoute><Home/></ProtectedRoute>}/>
+            <Route path="/cli/report" element={<ProtectedRoute><ReportItem/></ProtectedRoute>}/>
+            <Route path="/cli/claim" element={<ProtectedRoute><ClaimForm/></ProtectedRoute>}/>
           </Route>
 
           <Route element={<AdminLayout/>}>

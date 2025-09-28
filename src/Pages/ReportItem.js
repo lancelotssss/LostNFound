@@ -32,8 +32,8 @@ export default function ReportItem() {
     photoUrl: "",
   });
 
-  /*
-  useEffect(() => {
+  
+  /*useEffect(() => {
     axios
       .post("http://localhost:3110/cli/report", {
         test: true, // dummy payload just to trigger verifyToken
@@ -48,6 +48,7 @@ export default function ReportItem() {
       });
   }, []);
   */
+  
 
   function handleChange(e) {
     const { name, value } = e.target;

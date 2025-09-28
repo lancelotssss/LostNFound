@@ -1,6 +1,10 @@
 
 export const pageDataClient = [
     {
+        name: "Profile",
+        path: "/cli/home"
+    },
+    {
         name: "Report Item",
         path: "/cli/report"
     },
