@@ -276,6 +276,29 @@ let postRoutes = express.Router()
         }
     })
 
+    postRoutes.route("/cli/home").get(verifyToken, async (request, response) => {
+    try {
+        // Example: get current logged-in user from token
+        const user = request.user; // decoded from JWT
+
+        // Optionally fetch user details from DB
+        let db = database.getDb();
+        const student = await db.collection("student_db").findOne({ uid: user.uid });
+
+        response.json({
+            message: "Welcome to the Home page!",
+            user: student ? {
+                uid: student.uid,
+                name: student.name,
+                email: student.email,
+                role: student.role,
+            } : user // fallback if student not found
+        });
+    } catch (err) {
+        response.status(500).json({ error: err.message });
+    }
+});
+
     /*
     postRoutes.route("/main/lost-items").get(async (request, response) => {
     try {
@@ -435,13 +458,6 @@ function authorizeRoles(...allowedRoles) {
     };
 }
 
-postRoutes.get("/admin-stats",
-        verifyToken,
-        authorizeRoles("admin"),
-        async (req, res) => {
-            res.json({ message: "Only admins can see this" });
-        }
-        );
 
 
-module.exports = postRoutes;
+module.exports = postRoutes

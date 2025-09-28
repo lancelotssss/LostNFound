@@ -10,9 +10,8 @@ const PORT = 3110;
 app.use(cors());
 app.use(express.json());
 
-// Mount routes with base paths
-//app.use("/posts", posts);
-app.use("/users", userRoutes);
+app.use("/users", users);  // -> /users/register, /users/login, etc.
+app.use("/cli", posts);   
 
 // Role-protected routes
 app.use("/cli", verifyToken, authorizeRoles("student"), userRoutes);

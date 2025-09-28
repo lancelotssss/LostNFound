@@ -27,6 +27,24 @@ export default function ReportItem() {
     details: "",
   });
 
+  
+  /*useEffect(() => {
+    axios
+      .post("http://localhost:3110/cli/report", {
+        test: true, // dummy payload just to trigger verifyToken
+      })
+      .then((res) => {
+
+      })
+      .catch((err) => {
+        if (err.response) {
+        } else {
+        }
+      });
+  }, []);
+  */
+  
+
   function handleChange(e) {
     const { name, value } = e.target;
     setRegisterData({ ...registerData, [name]: value });

@@ -342,6 +342,7 @@ userRoutes.route("/users/:id").delete(async (request, response) => {
 
 
 
+
 /*
 function verifyToken(request, response, next){
      console.log("verifyToken middleware triggered");
