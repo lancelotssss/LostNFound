@@ -147,9 +147,6 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
 });
 
 
-
-
-
 //REPORT
 
 userRoutes.route("/report").post(verifyToken, async (req, res) => {
@@ -198,6 +195,25 @@ userRoutes.route("/report").post(verifyToken, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
     }
     })
+    
+
+    //SETTINGS
+    userRoutes.route("/settings").get(verifyToken, async (req, res) => {
+        const db = database.getDb();
+        const studentId = req.user?.studentId;
+        
+    })
+
+
+
+
+
+
+
+
+
+
+
 
 //Found
     userRoutes.route("/user-items").get(verifyToken, async (req, res) => {
@@ -220,6 +236,16 @@ userRoutes.route("/report").post(verifyToken, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+
+
+
+
+
+
+
+
 
 
 
