@@ -9,7 +9,7 @@ export const pageDataClient = [
         path: "/cli/report"
     },
     {
-        name: "Claim Form",
+        name: "Search Item",
         path: "/cli/claim"
     },
     {
