@@ -2,12 +2,6 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppstoreOutlined, MailOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
-<<<<<<< HEAD
-import { logOutUser } from "../api";
-import axios from "axios";
-=======
-import { getAuditLogs } from "../api";
->>>>>>> 5975782edf760129c50247fd213a0c4c093ea6b3
 
 export const pageDataClient = [
    {
