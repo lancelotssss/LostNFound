@@ -59,6 +59,47 @@ export async function getAllReport(token) {
   }
 }
 
+export async function editClient( token) {
+  try {
+    const response = await axios.put(`${URL}/cli/settings/edit`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+    });
+    console.log("Axios response: ", response)
+    return response.data;
+  } catch (err){
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
+}
+
+export async function editPasswordClient(report, token) {
+  try {
+    const response = await axios.put(`${URL}/cli/settings/pass`, report, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+    });
+    console.log("Axios response: ", response)
+    return response.data;
+  } catch (err){
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
+}
+
+export async function logOutUser(token){
+  const response = await axios.post(`${URL}/users/logout`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+    });
+    return response.data;
+  
+}
+
+
 
 export async function getFoundReport() {
   const response = await axios.get(`${URL}/cli/found-items`);

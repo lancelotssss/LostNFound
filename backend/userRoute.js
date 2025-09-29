@@ -69,6 +69,30 @@ userRoutes.route("/register").post(async (req, res) => {
   }
 });
 
+userRoutes.route("/users/logout").post(verifyToken, async (req, res) => {
+  let db = database.getDb();
+  const studentId = req.user?.studentId;
+  const user = await db.collection("student_db").findOne({ studentId });
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const mongoAuditObject = {
+    aid: `A-${Date.now()}`,
+    action: "LOG_OUT",
+    targetUser: user.studentId,
+    performedBy: "system",
+    timestamp: new Date(),
+    ticketId: null,
+    details: `User ${user.studentId} logged out successfully.`,
+  };
+
+  await db.collection("audit_db").insertOne(mongoAuditObject);
+
+  return res.json({ success: true, role: user.role });
+});
+
 //#6 Login
 userRoutes.route("/users/login").post(async (request, response) => {
     console.log("Login route triggered for:", request.body.email);
@@ -89,7 +113,11 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 password: user.password,
                 studentId: user.studentId,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                status: user.status,
+                createdAt: user.createdAt,
+                phone: user.phone,
+                password: user.password
             }
             const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
 
@@ -136,7 +164,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       .find({ reportedBy: studentId })
       .toArray();
     const countFounds = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Lost" }).toArray();
-    const countLosts = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "F ound" }).toArray();
+    const countLosts = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Found" }).toArray();
     console.log("Found reports:", studentReports); 
 
     res.json({ count: studentReports.length, results: studentReports, countFound: countFounds, countLost: countLosts});
@@ -198,10 +226,10 @@ userRoutes.route("/report").post(verifyToken, async (req, res) => {
     
 
     //SETTINGS
-    userRoutes.route("/settings").get(verifyToken, async (req, res) => {
+    userRoutes.route("/settings").put(verifyToken, async (req, res) => {
         const db = database.getDb();
         const studentId = req.user?.studentId;
-        
+
     })
 
 

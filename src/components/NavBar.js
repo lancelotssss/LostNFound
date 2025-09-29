@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppstoreOutlined, MailOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
+import { logOutUser } from "../api";
+import axios from "axios";
 
 export const pageDataClient = [
    {
@@ -27,10 +29,19 @@ export function NavBar() {
   const navigate = useNavigate();
   const [stateOpenKeys, setStateOpenKeys] = useState([]);
 
-  const handleLogout = () => {
+  async function handleLogout() {
+  const token = sessionStorage.getItem("User");
+  if (!token) return;
+
+  let response = await logOutUser(token);
+
+  if (response.success) {
     sessionStorage.removeItem("User");
     navigate("/");
-  };
+  } else {
+    alert("Logout failed");
+  }
+}
 
   const onOpenChange = (openKeys) => {
     setStateOpenKeys(openKeys);
