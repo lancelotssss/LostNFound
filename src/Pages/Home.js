@@ -7,6 +7,8 @@ import axios from "axios";
 export function Profile() {
   const [found, setFound] = useState([]);
   const [user, setUser] = useState({});
+  const [foundCounts, setFoundCounts] = useState(0);
+  const [lostCounts, setLostCounts] = useState(0);
 
   useEffect(() => {
     async function loadUserData() {
@@ -31,7 +33,9 @@ export function Profile() {
         reportType: item.reportType || "N/A",
         status: item.status || "N/A",
       }));
-
+      console.log("Found Count: ", allReports.countFound)
+      setFoundCounts(allReports.countFound.length || 0);
+      setLostCounts(allReports.countLost.length || 0);
       setFound(formatted);
     }
 
@@ -48,6 +52,7 @@ export function Profile() {
     { title: "Date Reported", dataIndex: "dateReported", key: "dateReported" },
     { title: "Type", dataIndex: "reportType", key: "reportType" },
     { title: "Status", dataIndex: "status", key: "status" },
+    { title: "Actions"}
   ];
 
   const claimColumns = [
@@ -57,6 +62,7 @@ export function Profile() {
     { title: "Location", dataIndex: "location", key: "location" },
     { title: "Date Reported", dataIndex: "dateReported", key: "dateReported" },
     { title: "Status", dataIndex: "status", key: "status" },
+    { title: "Actions"}
   ];
 
   return (
@@ -66,6 +72,12 @@ export function Profile() {
       <p>Email: {user.email || "Unknown"}</p>
       <p>
          
+      </p>
+    <p>
+         Found = {foundCounts}
+      </p>
+        <p>
+         Lost = {lostCounts}
       </p>
 
       <h2>My Reports</h2>

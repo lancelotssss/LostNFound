@@ -134,10 +134,11 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       .collection("lost_found_db")
       .find({ reportedBy: studentId })
       .toArray();
+    const countFounds = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Lost" }).toArray();
+    const countLosts = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "F ound" }).toArray();
+    console.log("Found reports:", studentReports); 
 
-    console.log("Found reports:", studentReports); // <-- check what's returned
-
-    res.json({ count: studentReports.length, results: studentReports });
+    res.json({ count: studentReports.length, results: studentReports, countFound: countFounds, countLost: countLosts});
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

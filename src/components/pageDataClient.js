@@ -9,19 +9,15 @@ export const pageDataClient = [
         path: "/cli/report"
     },
     {
-        name: "Claim Form",
-        path: "/cli/claim"
+        name: "Search Item",
+        path: "/cli/search"
     },
     {
-        name: "Profile"
-    },
-    {
-        name: "Settings"
+        name: "User Profile",
+        path: "/cli/settings"
     },
     {
         name: "Logout"
     }
     
-    
-
 ]
