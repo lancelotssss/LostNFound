@@ -59,9 +59,9 @@ export async function getAllReport(token) {
   }
 }
 
-export async function editClient( token) {
+export async function editClient(data, token) {
   try {
-    const response = await axios.put(`${URL}/cli/settings/edit`, {
+    const response = await axios.put(`${URL}/cli/settings/edit`, data, {
       headers: {
         Authorization: `Bearer ${token}`
       },
@@ -74,9 +74,9 @@ export async function editClient( token) {
   }
 }
 
-export async function editPasswordClient(report, token) {
+export async function editPasswordClient(data, token) {
   try {
-    const response = await axios.put(`${URL}/cli/settings/pass`, report, {
+    const response = await axios.put(`${URL}/cli/settings/pass`, data, {
       headers: {
         Authorization: `Bearer ${token}`
       },
