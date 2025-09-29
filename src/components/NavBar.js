@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppstoreOutlined, MailOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
+import { logOutUser } from "../api";
 
 export const pageDataClient = [
    {
