@@ -1,7 +1,7 @@
 
 export const pageDataClient = [
     {
-        name: "Profile",
+        name: "Home",
         path: "/cli/home"
     },
     {
@@ -10,15 +10,14 @@ export const pageDataClient = [
     },
     {
         name: "Search Item",
-        path: "/cli/claim"
+        path: "/cli/search"
     },
     {
-        name: "Register",
-        path: "/register"
+        name: "User Profile",
+        path: "/cli/settings"
     },
     {
-        name: "Admin Display Data",
-        path: "/main/lost-items"
+        name: "Logout"
     }
-
+    
 ]

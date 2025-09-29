@@ -12,6 +12,8 @@ import { useEffect } from 'react';
 import { AdminLost } from './Pages/AdminLost';
 import { AdminClaims } from './Pages/AdminClaims';
 import { AdminFound } from './Pages/AdminFound';
+import { UserSearch } from './Pages/UserSearch';
+import { UserSettings } from './Pages/UserSettings';
 import {AdminLayout} from './components/AdminLayout';
 import { NavBarAdmin } from './components/NavBarAdmin';
 
@@ -47,7 +49,8 @@ function App() {
           <Route element={<Layout/>}>
             <Route path="/cli/home" element = {<ProtectedRoute><Home/></ProtectedRoute>}/>
             <Route path="/cli/report" element={<ProtectedRoute><ReportItem/></ProtectedRoute>}/>
-            <Route path="/cli/claim" element={<ProtectedRoute><ClaimForm/></ProtectedRoute>}/>
+            <Route path="/cli/search" element={<ProtectedRoute><UserSearch/></ProtectedRoute>}/>
+            <Route path="/cli/settings" element={<ProtectedRoute><UserSettings/></ProtectedRoute>}/>
           </Route>
 
           <Route element={<AdminLayout/>}>

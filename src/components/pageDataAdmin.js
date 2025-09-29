@@ -12,8 +12,8 @@ export const pageDataAdmin = [
         path: "/main/claim-items"
     },
     {
-        name: "Admin Display Data",
-        path: "/main/lost-items"
+        name: "Activity Logs",
+        path: "/main/logs"
     }
 
 ]

@@ -13,7 +13,7 @@ app.use(posts);
 app.use(users);
 
 app.use("/users", users);  // -> /users/register, /users/login, etc.
-app.use("/cli", posts);   
+app.use("/cli", users);   
 
 
 app.listen(PORT, () => {

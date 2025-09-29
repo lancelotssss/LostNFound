@@ -30,7 +30,7 @@ const LoginPage = () => {
 
         sessionStorage.setItem("User", response.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${response.token}`;
-        navigate("/cli/report");
+        navigate("/cli/home");
     } else {
         alert("Login failed");
     }
