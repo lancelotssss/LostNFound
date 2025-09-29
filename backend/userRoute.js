@@ -123,7 +123,7 @@ userRoutes.route("/users/login").post(async (request, response) => {
 
             const mongoAuditObject = {
                 aid: `A-${Date.now()}`,
-                action: "Login",
+                action: "LOGIN",
                 targetUser: user.studentId,
                 performedBy: "system",
                 timestamp: new Date(),
@@ -208,10 +208,14 @@ userRoutes.route("/report").post(verifyToken, async (req, res) => {
             ? "SUBMIT_FOUND"
             : "UNKNOWN",
         targetUser: "",
-        performedBy: "system",
+        performedBy: `${studentId}`,
         timestamp: new Date,
         ticketId: mongoReport.tid,
-        details: `${studentId} filed a missing item ${mongoReport.tid}`
+        details: reportType === "lost"
+        ? `${studentId} filed a missing item ${mongoReport.tid}.`
+        : reportType === "found"
+        ? `${studentId} filed a found item ${mongoReport.tid}.` 
+        : `${studentId} filed a report ${mongoReport.tid}.`
     }
     await db.collection("audit_db").insertOne(reportAuditMongo);
     res.json({ success: true, report: mongoReport, audit: reportAuditMongo });
@@ -225,11 +229,99 @@ userRoutes.route("/report").post(verifyToken, async (req, res) => {
     
 
     //SETTINGS
-    userRoutes.route("/settings").put(verifyToken, async (req, res) => {
-        const db = database.getDb();
-        const studentId = req.user?.studentId;
+    userRoutes.route("/settings/edit").put(verifyToken, async (req, res) => {
+        try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+    const { phone } = req.body;
+
+    if (!studentId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!phone) {
+      return res.status(400).json({ success: false, message: "Phone number is required" });
+    }
+
+    const result = await db.collection("student_db").updateOne(
+      { studentId },
+      { $set: { phone } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(400).json({ success: false, message: "No changes were made" });
+    }
+     const reportAuditMongo = {
+        aid: `A-${Date.now()}`,
+        action: "UPDATE_USER",
+        targetUser: "",
+        performedBy: `${studentId}`,
+        timestamp: new Date,
+        ticketId: "",
+        details: `${studentId} changed a profile settings.`
+    }
+    await db.collection("audit_db").insertOne(reportAuditMongo);
+    res.json({ success: true, message: "Phone updated successfully" });
+  } catch (err) {
+    console.error("Error updating phone:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 
     })
+
+    userRoutes.route("/settings/pass").put(verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!studentId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Missing fields" });
+    }
+
+    // Find user
+    const user = await db.collection("student_db").findOne({ studentId });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Check old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Old password is incorrect" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const result = await db.collection("student_db").updateOne(
+      { studentId },
+      { $set: { password: hashedPassword } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(400).json({ success: false, message: "Password update failed" });
+    }
+    const reportAuditMongo = {
+        aid: `A-${Date.now()}`,
+        action: "UPDATE_USER",
+        targetUser: `${studentId}`,
+        performedBy: "system",
+        timestamp: new Date,
+        ticketId: "",
+        details: `${studentId} changed a profile settings.`
+    }
+    await db.collection("audit_db").insertOne(reportAuditMongo);
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Error updating password:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 
 
