@@ -74,9 +74,9 @@ userRoutes.route("/users/login").post(async (request, response) => {
     console.log("Login route triggered for:", request.body.email);
 
     let db = database.getDb()
-    const user = await db.collection("student_db").findOne({email: request.body.email})
+    const user = await db.collection("student_db").findOne({email: request.body.email, role: request.body.role})
 
-    if (user){
+    if (user.role === student){
         console.log("User found:", user.studentId);
 
         let confirmation = await bcrypt.compare(request.body.password, user.password)
@@ -110,6 +110,9 @@ userRoutes.route("/users/login").post(async (request, response) => {
         else {
             return response.json({success:false, message: "Incorrect Password"})
         }
+    }
+    else if {
+        
     }
     else {
         return response.json({success: false, message: "User not found"})
