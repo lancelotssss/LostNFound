@@ -32,3 +32,6 @@ function verifyToken(request, response, next){
 
 
 adminRoute.route("/dashboard").get(verifyToken, async (request, response) => {})
+
+
+module.exports = adminRoute
