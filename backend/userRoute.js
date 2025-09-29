@@ -146,7 +146,6 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
   }
 });
 
-
 //REPORT
 
 userRoutes.route("/report").post(verifyToken, async (req, res) => {

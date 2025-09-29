@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppstoreOutlined, MailOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
+import { getAuditLogs } from "../api";
 
 export const pageDataClient = [
    {
@@ -26,6 +27,18 @@ export const pageDataClient = [
 export function NavBar() {
   const navigate = useNavigate();
   const [stateOpenKeys, setStateOpenKeys] = useState([]);
+
+  const token = sessionStorage.getItem("User");
+        if (!token) return;
+
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+        const decodedUser = jwtDecode(token);
+        setLogoutUser(decodedUser);
+
+        const allAudit =  getAuditLogs(token);
+        console.log("Raw reports from MongoDB:", allAudit);
+
 
   const handleLogout = () => {
     sessionStorage.removeItem("User");

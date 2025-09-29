@@ -5,8 +5,41 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 require("dotenv").config({path: "./config.env"})
 
-let adminRoute = express.Router()
+let adminRoutes = express.Router()
 const SALT_ROUNDS = 6
+
+adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
+});
+
+adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
+});
+
+adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
+});
+
+adminRoutes.route("/claim-items").get(verifyToken, async (req, res) => {
+});
+
+adminRoutes.route("/logs").get(verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const audit = await db.collection("audit_db").find({}).toArray();
+
+    console.log("Audit logs found:", audit.length, audit); // 👈 log results
+
+    res.json({ success: true, results: audit });
+  } catch (err) {
+    console.error("Error fetching logs:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+adminRoutes.route("/manage-users").get(verifyToken, async (req, res) => {
+});
+
+adminRoutes.route("/profile").get(verifyToken, async (req, res) => {
+});
+
 
 function verifyToken(request, response, next){
          console.log("verifyToken middleware triggered");
@@ -31,7 +64,4 @@ function verifyToken(request, response, next){
     }
 
 
-adminRoute.route("/dashboard").get(verifyToken, async (request, response) => {})
-
-
-module.exports = adminRoute
+module.exports = adminRoutes
