@@ -55,9 +55,9 @@ userRoutes.route("/register").post(async (req, res) => {
       aid: `A-${Date.now()}`,
       action: "REGISTER",
       targetUser: mongoObject.email,
-      performedBy: "system",
+      performedBy: "System",
       timestamp: new Date(),
-      ticketId: null,
+      ticketId: "",
       details: `User ${mongoObject.email} registered successfully.`,
     };
 
@@ -82,9 +82,9 @@ userRoutes.route("/users/logout").post(verifyToken, async (req, res) => {
     aid: `A-${Date.now()}`,
     action: "LOG_OUT",
     targetUser: user.studentId,
-    performedBy: "system",
+    performedBy: "System",
     timestamp: new Date(),
-    ticketId: null,
+    ticketId: "",
     details: `User ${user.studentId} logged out successfully.`,
   };
 
@@ -125,7 +125,7 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 aid: `A-${Date.now()}`,
                 action: "LOGIN",
                 targetUser: user.studentId,
-                performedBy: "system",
+                performedBy: "System",
                 timestamp: new Date(),
                 ticketId: null,
                 details: `User ${user.studentId} logged in successfully.`,
