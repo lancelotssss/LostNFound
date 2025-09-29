@@ -428,7 +428,7 @@ postRoutes.route("/register/:id").put(async (request, response) => {
     */
 
 function verifyToken(request, response, next){
-     console.log("verifyToken middleware triggered");
+    console.log("verifyToken middleware triggered");
     const authHeaders = request.headers["authorization"]
     const token = authHeaders && authHeaders.split(' ')[1]
     if (!token) {

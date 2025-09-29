@@ -30,8 +30,23 @@ const LoginPage = () => {
 
         sessionStorage.setItem("User", response.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${response.token}`;
-        navigate("/cli/home");
-    } else {
+        
+        if (response.role === "student")
+        {
+            navigate("/cli/home");
+        }
+        else if (response.role === "admin")
+        {
+            navigate ("/main/found-items")
+        }
+        else 
+        {
+            alert("Unknown user")
+        }
+
+
+    } 
+    else {
         alert("Login failed");
     }
     

@@ -74,9 +74,9 @@ userRoutes.route("/users/login").post(async (request, response) => {
     console.log("Login route triggered for:", request.body.email);
 
     let db = database.getDb()
-    const user = await db.collection("student_db").findOne({email: request.body.email, role: request.body.role})
+    const user = await db.collection("student_db").findOne({email: request.body.email})
 
-    if (user.role === student){
+    if (user){
         console.log("User found:", user.studentId);
 
         let confirmation = await bcrypt.compare(request.body.password, user.password)
@@ -88,7 +88,8 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 name: user.name,
                 password: user.password,
                 studentId: user.studentId,
-                email: user.email
+                email: user.email,
+                role: user.role
             }
             const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
 
@@ -105,14 +106,11 @@ userRoutes.route("/users/login").post(async (request, response) => {
             console.log("Inserting audit record:", mongoAuditObject);
 
             await db.collection("audit_db").insertOne(mongoAuditObject);
-            return response.json({success:true, token})
+            return response.json({ success: true, token, role: user.role });
         }
         else {
             return response.json({success:false, message: "Incorrect Password"})
         }
-    }
-    else if {
-        
     }
     else {
         return response.json({success: false, message: "User not found"})

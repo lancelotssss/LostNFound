@@ -6,7 +6,7 @@ import { Menu } from "antd";
 export const pageDataClient = [
   { name: "Home", path: "/cli/home" },
   { name: "Report Item", path: "/cli/report" },
-  { name: "Claim Form", path: "/cli/claim" },
+  { name: "Search Item", path: "/cli/claim" },
   { name: "Profile", path: "/cli/profile" },
   { name: "Settings", path: "/cli/settings" },
   { name: "Logout" }, // No path, triggers logout

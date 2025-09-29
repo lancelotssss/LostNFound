@@ -26,15 +26,38 @@ function App() {
     }
   }, []) //Kahit nag r-refresh nag s-store parin ung token
 
-  function ProtectedRoute({ children }) {
-  const user = sessionStorage.getItem("User");
-  const admin = sessionStorage.getItem("Admin");  
+  function ProtectedRoute({ children, allowedRoles }) {
+  const token = sessionStorage.getItem("User");
+  
+  if (!token){
+    return <Navigate to="/" replace />
+  }
+  
+  
+  let userRole;
+  try {
+    const decoded = JSON.parse(atob(token.split('.')[1])); // simple decode
+    userRole = decoded.role;
+  } catch (err) {
+    console.error("Invalid token", err);
+    return <Navigate to="/" replace />;
+  }
 
-    if (!user) {
-      return <Navigate to="/" replace />;
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
+    
+    if (userRole === 'student'){
+       return <Navigate to="/cli/home" replace />;
+    }
+    else if (userRole === 'admin'){
+       return <Navigate to="/main/lost-items" replace />;
+    }
+    else {
+        alert({message: "Unknown User"})
     }
    
+  }
 
+  
   return children;
   }
 
@@ -47,14 +70,14 @@ function App() {
           <Route path="/" element={<LoginPage/>}/>
           <Route path="/register" element={<RegisterPage/>}/>
           <Route element={<Layout/>}>
-            <Route path="/cli/home" element = {<ProtectedRoute><Home/></ProtectedRoute>}/>
+            <Route path="/cli/home" element = {<ProtectedRoute allowedRoles={['student']}><Home/></ProtectedRoute>}/>
             <Route path="/cli/report" element={<ProtectedRoute><ReportItem/></ProtectedRoute>}/>
             <Route path="/cli/search" element={<ProtectedRoute><UserSearch/></ProtectedRoute>}/>
             <Route path="/cli/settings" element={<ProtectedRoute><UserSettings/></ProtectedRoute>}/>
           </Route>
 
           <Route element={<AdminLayout/>}>
-              <Route path="/main/lost-items" element={<AdminLost/>}/>
+              <Route path="/main/lost-items" element={<ProtectedRoute allowedRoles={['admin']}><AdminLost/></ProtectedRoute>}/>
               <Route path="/main/found-items" element={<AdminFound/>}/>
               <Route path="/main/claim-items" element={<AdminClaims/>}/>
           </Route>
