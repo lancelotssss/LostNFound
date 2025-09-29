@@ -4,11 +4,22 @@ import { AppstoreOutlined, MailOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
 
 export const pageDataClient = [
-  { name: "Home", path: "/cli/home" },
-  { name: "Report Item", path: "/cli/report" },
-  { name: "Claim Form", path: "/cli/claim" },
-  { name: "Profile", path: "/cli/profile" },
-  { name: "Settings", path: "/cli/settings" },
+   {
+        name: "Home",
+        path: "/cli/home"
+    },
+    {
+        name: "Report Item",
+        path: "/cli/report"
+    },
+    {
+        name: "Search Item",
+        path: "/cli/search"
+    },
+    {
+        name: "User Profile",
+        path: "/cli/settings"
+    },
   { name: "Logout" }, // No path, triggers logout
 ];
 

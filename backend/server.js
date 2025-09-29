@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const posts = require("./postRoutes");
 const users = require("./userRoute"); 
+const admin = require("./adminRoutes")
 
 const app = express();
 const PORT = 3110;
@@ -11,9 +12,11 @@ app.use(cors());
 app.use(express.json());
 app.use(posts);
 app.use(users);
+app.use(admin);
 
 app.use("/users", users);  // -> /users/register, /users/login, etc.
 app.use("/cli", users);   
+app.use("/main", admin)
 
 
 app.listen(PORT, () => {

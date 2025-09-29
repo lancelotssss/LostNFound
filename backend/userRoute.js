@@ -88,7 +88,8 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 name: user.name,
                 password: user.password,
                 studentId: user.studentId,
-                email: user.email
+                email: user.email,
+                role: user.role
             }
             const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
 
