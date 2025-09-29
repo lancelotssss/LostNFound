@@ -117,6 +117,15 @@ export async function getLostReport() {
   return response.data;
 }
 
+export async function getAuditLogs() {
+   try {
+    const response = await axios.get(`${URL}/main/logs`);
+    return response.data; // expects { success: true, results: [...] }
+  } catch (error) {
+    console.error("Error fetching audit logs:", error);
+    return { success: false, results: [] }; // safe fallback
+  }
+}
 
 
 

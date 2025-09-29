@@ -16,6 +16,7 @@ import { UserSearch } from './Pages/UserSearch';
 import { UserSettings } from './Pages/UserSettings';
 import {AdminLayout} from './components/AdminLayout';
 import { NavBarAdmin } from './components/NavBarAdmin';
+import { ActivityLog } from './Pages/ActivityLog';
 
 function App() {
 
@@ -80,6 +81,8 @@ function App() {
               <Route path="/main/lost-items" element={<ProtectedRoute allowedRoles={['admin']}><AdminLost/></ProtectedRoute>}/>
               <Route path="/main/found-items" element={<AdminFound/>}/>
               <Route path="/main/claim-items" element={<AdminClaims/>}/>
+              <Route path="/main/claim-items" element={<AdminClaims/>}/>
+              <Route path="/main/logs" element={<ActivityLog/>}/>
           </Route>
 
           
