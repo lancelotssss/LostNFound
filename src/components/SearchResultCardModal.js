@@ -7,7 +7,7 @@ export function SearchResultCardModal({ item }) {
   const [open, setOpen] = useState(false);
 
   const showModal = () => setOpen(true);
-  const handleOk = () => setOpen(false);
+  
   const handleCancel = () => setOpen(false);
 
   return (
@@ -55,13 +55,12 @@ export function SearchResultCardModal({ item }) {
       <Modal
         open={open}
         title={item.keyItem}
-        onOk={handleOk}
         onCancel={handleCancel}
-        footer={(_, { OkBtn, CancelBtn }) => (
+        footer={(_, { CancelBtn }) => (
           <>
-            <Button type="primary">Claim</Button>
+            
             <CancelBtn />
-            <OkBtn />
+            <Button type="primary">Claim</Button>
           </>
         )}
       >
