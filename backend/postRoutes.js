@@ -108,6 +108,7 @@ let postRoutes = express.Router()
     })
 */
     //Claim
+    /*
     postRoutes.route("/claim").post(verifyToken, async (request, response) => {
         let db = database.getDb()
         let mongoObject = {
@@ -140,6 +141,7 @@ let postRoutes = express.Router()
         }
 
     })
+        */
 
     //getting Profile settings
     postRoutes.route("/cli/profile/:id").get(verifyToken, async (request, response) => {
@@ -225,7 +227,7 @@ let postRoutes = express.Router()
 
     //Admin Side
     // Get all Lost reports
-    postRoutes.route("/main/lost-items").get(verifyToken, async (request, response) => {
+    /*postRoutes.route("/main/lost-items").get(verifyToken, async (request, response) => {
         try {
             let db = database.getDb()
 
@@ -275,6 +277,7 @@ let postRoutes = express.Router()
             response.status(500).json({ error: err.message })
         }
     })
+        */
 /*
     postRoutes.route("/cli/home").get(verifyToken, async (request, response) => {
     try {

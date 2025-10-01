@@ -100,21 +100,41 @@ export async function logOutUser(token){
 }
 
 
+/*export async function getClaimReport() {
+  const response = await axios.get(`${URL}/cli/claim-items`);
+  return response.data;
+}*/
+
+//ADMIN
 
 export async function getFoundReport() {
-  const response = await axios.get(`${URL}/cli/found-items`);
-  return response.data;
+  try {
+      const response = await axios.get(`${URL}/main/found-items`);
+      return response.data; // expects { success: true, results: [...] }
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      return { success: false, results: [] }; // safe fallback
+    }
+}
+
+export async function getLostReport() {
+  try {
+      const response = await axios.get(`${URL}/main/lost-items`);
+      return response.data; // expects { success: true, results: [...] }
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      return { success: false, results: [] }; // safe fallback
+    }
 }
 
 export async function getClaimReport() {
-  const response = await axios.get(`${URL}/cli/claim-items`);
-  return response.data;
-}
-
-
-export async function getLostReport() {
-  const response = await axios.get(`${URL}/main/lost-items`);
-  return response.data;
+  try {
+      const response = await axios.get(`${URL}/main/claim-items`);
+      return response.data; // expects { success: true, results: [...] }
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      return { success: false, results: [] }; // safe fallback
+    }
 }
 
 export async function getAuditLogs() {
