@@ -1,71 +1,64 @@
 import React, { useState } from "react";
 import { createReport } from "../api";
 
+
 export default function ReportItem() {
   const [registerData, setRegisterData] = useState({
-    title: "",
+    reportType: "",
     category: "",
     keyItem: "",
     itemBrand: "",
-    description: "",
-    status: "",
-    reportType: "",
-    reportedBy: "",
-    approvedBy: "",
     location: "",
-    dateLostOrFound: "",
     startDate: "",
     endDate: "",
-    updatedAt: "",
+    dateFound: "",
+    description: "",
     photoUrl: "",
-    aid: "",
-    action: "",
-    targetUser: "",
-    performedBy: "",
-    timestamp: "",
-    ticketId: "",
-    details: "",
+    title: ""
   });
-
-  
-  /*useEffect(() => {
-    axios
-      .post("http://localhost:3110/cli/report", {
-        test: true, // dummy payload just to trigger verifyToken
-      })
-      .then((res) => {
-
-      })
-      .catch((err) => {
-        if (err.response) {
-        } else {
-        }
-      });
-  }, []);
-  */
-  
 
   function handleChange(e) {
     const { name, value } = e.target;
-    setRegisterData({ ...registerData, [name]: value });
+
+    if (name === "reportType") {
+      setRegisterData({
+        reportType: value,
+        category: "",
+        keyItem: "",
+        itemBrand: "",
+        location: "",
+        startDate: "",
+        endDate: "",
+        dateFound: "",
+        description: "",
+        photoUrl: "",
+        title: "",
+      });
+    } else {
+      setRegisterData({ ...registerData, [name]: value });
+    }
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
 
     try {
-      // ✅ fetch token from sessionStorage
       const token = sessionStorage.getItem("User");
       if (!token) {
         alert("You must be logged in before submitting a report.");
         return;
       }
 
-      const response = await createReport(registerData, token); // ✅ pass token
-      console.log("response: " , response)
+      const {reportType, category, keyItem, itemBrand} = registerData
+      const brandPart = itemBrand ? `, ${itemBrand}` : ""
+      const generatedTitle = `${reportType} Item: ${category}: ${keyItem}${brandPart}`;
+
+      const finalData = { ...registerData, title: generatedTitle}
+      const response = await createReport(finalData, token);
+
       if (!response.success) {
         alert("Report could not be created.");
-        console.log(response, token, registerData)
+        console.log(response, token, registerData);
       } else {
         alert("Report submitted successfully!");
       }
@@ -79,154 +72,228 @@ export default function ReportItem() {
     <form onSubmit={handleSubmit}>
       <h1>Lost and Found Report</h1>
 
+      {/* Step 1: Report Type */}
       <div>
-        <p>
-          Title{" "}
+        <p>Type of Report</p>
+        <label>
           <input
-            type="text"
-            name="title"
-            placeholder="Title"
-            value={registerData.title}
-            onChange={handleChange}
-          />
-        </p>
-      </div>
-
-      <div>
-        <p>
-          Category{" "}
-          <select
-            name="category"
-            value={registerData.category}
-            onChange={handleChange}
-          >
-            <option value="">Select Category</option>
-            <option>Gadgets</option>
-            <option>Personal Belongings</option>
-            <option>School Supplies</option>
-            <option>Wearables</option>
-            <option>Student ID</option>
-            <option>Others</option>
-          </select>
-        </p>
-      </div>
-
-      <div>
-        <p>
-          Item{" "}
-          <input
-            type="text"
-            name="keyItem"
-            placeholder="Item"
-            value={registerData.keyItem}
-            onChange={handleChange}
-          />
-        </p>
-      </div>
-
-      <div>
-        <p>
-          Item Brand{" "}
-          <input
-            type="text"
-            name="itemBrand"
-            placeholder="Brand (optional)"
-            value={registerData.itemBrand}
-            onChange={handleChange}
-          />
-        </p>
-      </div>
-
-      <div>
-        <p>
-          Description{" "}
-          <textarea
-            name="description"
-            placeholder="Description"
-            value={registerData.description}
-            onChange={handleChange}
-          />
-        </p>
-      </div>
-
-      <div>
-        <p>
-          Type of Report{" "}
-          <select
+            type="radio"
             name="reportType"
-            value={registerData.reportType}
+            value="Lost"
+            checked={registerData.reportType === "Lost"}
             onChange={handleChange}
-          >
-            <option value="">Select Type</option>
-            <option>Lost</option>
-            <option>Found</option>
-          </select>
-        </p>
+          />{" "}
+          Lost
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="reportType"
+            value="Found"
+            checked={registerData.reportType === "Found"}
+            onChange={handleChange}
+          />{" "}
+          Found
+        </label>
       </div>
 
-      <div>
-        <p>
-          Location{" "}
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={registerData.location}
-            onChange={handleChange}
-          />
-        </p>
-      </div>
+      {/* Step 2: Category */}
+      {registerData.reportType && (
+        <div>
+          <p>
+            Category{" "}
+            <select
+              name="category"
+              value={registerData.category}
+              onChange={handleChange}
+            >
+              <option value="">Select Category</option>
+              <option>Gadgets</option>
+              <option>Personal Belongings</option>
+              <option>School Supplies</option>
+              <option>Wearables</option>
+              <option>Student ID</option>
+              <option>Others</option>
+            </select>
+          </p>
+        </div>
+      )}
 
-      <div>
-        <p>
-          Date of Lost/Found{" "}
-          <input
-            type="date"
-            name="dateLostOrFound"
-            value={registerData.dateLostOrFound}
-            onChange={handleChange}
-          />
-        </p>
-      </div>
+      {/* Step 3: KeyItem & Brand */}
+      {registerData.category && (
+        <>
+          <div>
+            <p>
+              Item{" "}
+              <input
+                type="text"
+                name="keyItem"
+                placeholder="Item"
+                value={registerData.keyItem}
+                onChange={handleChange}
+              />
+            </p>
+          </div>
 
-      <div>
-        <p>
-          Start Date{" "}
-          <input
-            type="date"
-            name="startDate"
-            value={registerData.startDate}
-            onChange={handleChange}
-          />
-        </p>
-      </div>
-      <div>
-        <p>
-          End Date{" "}
-          <input
-            type="date"
-            name="endDate"
-            value={registerData.endDate}
-            onChange={handleChange}
-          />
-        </p>
-      </div>
-      <div>
-        <p>
-          Photo URL{" "}
-          <input
-            type="text"
-            name="photoUrl"
-            placeholder="Photo URL"
-            value={registerData.photoUrl}
-            onChange={handleChange}
-          />
-        </p>
-      </div>
+          <div>
+            <p>
+              Item Brand{" "}
+              <input
+                type="text"
+                name="itemBrand"
+                placeholder="Brand (optional)"
+                value={registerData.itemBrand}
+                onChange={handleChange}
+              />
+            </p>
+          </div>
+        </>
+      )}
 
-      <div>
-        <button type="submit">SUBMIT REPORT</button>
-      </div>
+      {/* Step 4: Lost vs Found */}
+      {registerData.keyItem && (
+        <>
+          {registerData.reportType === "Lost" ? (
+            <>
+              {/* Location first */}
+              <div>
+                <p>
+                  Location{" "}
+                  <input
+                    type="text"
+                    name="location"
+                    placeholder="Location"
+                    value={registerData.location}
+                    onChange={handleChange}
+                  />
+                </p>
+              </div>
+
+              {/* Show Start + End together */}
+              {registerData.location && (
+                <div>
+                  <p>
+                    Start Date{" "}
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={registerData.startDate}
+                      onChange={handleChange}
+                    />
+                  </p>
+                  <p>
+                    End Date{" "}
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={registerData.endDate}
+                      onChange={handleChange}
+                    />
+                  </p>
+                </div>
+              )}
+
+              {/* Only when both filled → final section */}
+              {registerData.startDate && registerData.endDate && (
+                <>
+                  <div>
+                    <p>
+                      Description{" "}
+                      <textarea
+                        name="description"
+                        placeholder="Description"
+                        value={registerData.description}
+                        onChange={handleChange}
+                      />
+                    </p>
+                  </div>
+
+                  <div>
+                    <p>
+                      Photo URL{" "}
+                      <input
+                        type="text"
+                        name="photoUrl"
+                        placeholder="Photo URL"
+                        value={registerData.photoUrl}
+                        onChange={handleChange}
+                      />
+                    </p>
+                  </div>
+
+                  <div>
+                    <button type="submit">SUBMIT REPORT</button>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Found: Location + Date Found */}
+              <div>
+                <p>
+                  Location{" "}
+                  <input
+                    type="text"
+                    name="location"
+                    placeholder="Location"
+                    value={registerData.location}
+                    onChange={handleChange}
+                  />
+                </p>
+              </div>
+
+              {registerData.location && (
+                <div>
+                  <p>
+                    Date Found{" "}
+                    <input
+                      type="date"
+                      name="dateFound"
+                      value={registerData.dateFound}
+                      onChange={handleChange}
+                    />
+                  </p>
+                </div>
+              )}
+
+              {/* Show final section only when dateFound filled */}
+              {registerData.location && registerData.dateFound && (
+                <>
+                  <div>
+                    <p>
+                      Description{" "}
+                      <textarea
+                        name="description"
+                        placeholder="Description"
+                        value={registerData.description}
+                        onChange={handleChange}
+                      />
+                    </p>
+                  </div>
+
+                  <div>
+                    <p>
+                      Photo URL{" "}
+                      <input
+                        type="text"
+                        name="photoUrl"
+                        placeholder="Photo URL"
+                        value={registerData.photoUrl}
+                        onChange={handleChange}
+                      />
+                    </p>
+                  </div>
+
+                  <div>
+                    <button type="submit">SUBMIT REPORT</button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </>
+      )}
     </form>
   );
 }

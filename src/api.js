@@ -99,6 +99,20 @@ export async function logOutUser(token){
   
 }
 
+export async function getSearchReport(report, token) {
+  try {
+    const response = await axios.get(`${URL}/cli/search/item`, report, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error fetching search: ", err);
+    return { success: false, results: [] };
+  }
+}
+  
 
 
 export async function getFoundReport() {
