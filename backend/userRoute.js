@@ -14,7 +14,30 @@ let userRoutes = express.Router()
 const SALT_ROUNDS = 6
 
 
+function verifyToken(request, response, next){
+         console.log("verifyToken middleware triggered");
+        const authHeaders = request.headers["authorization"]
+        const token = authHeaders && authHeaders.split(' ')[1]
+        if (!token) {
+            return response.status(401).json({message: "Authentication token is missing"}) //401 means you're not authenticated
+        }
+    
+        jwt.verify(token, process.env.SECRETKEY, (error,user) => {
+            if (error) {
+            return response.status(403).json({message: "Invalid token"}) //403 may token pero hindi valid
+            }
+    
+            request.user = user;
+            next()
+    
+            /*mag vvalidate muna ung verify token bago magawa ung functions, 
+            pag hindi nag run hindi mag rrun ung buong code, pero pag successful
+            mapupunta siya sa next() which is itutuloy niya ung function  */
+        })
+    }
 
+
+//------------------------------------------------------------------------REGISTER------------------------------------------------------------------------
 userRoutes.route("/register").post(async (req, res) => {
   const db = database.getDb();
   try {
@@ -75,6 +98,8 @@ userRoutes.route("/register").post(async (req, res) => {
   }
 });
 
+
+//------------------------------------------------------------------------LOGOUT------------------------------------------------------------------------
 userRoutes.route("/users/logout").post(verifyToken, async (req, res) => {
   let db = database.getDb();
   const studentId = req.user?.studentId;
@@ -99,7 +124,8 @@ userRoutes.route("/users/logout").post(verifyToken, async (req, res) => {
   return res.json({ success: true, role: user.role });
 });
 
-//#6 Login
+
+//------------------------------------------------------------------------LOGIN------------------------------------------------------------------------
 userRoutes.route("/users/login").post(async (request, response) => {
     console.log("Login route triggered for:", request.body.email);
 
@@ -152,9 +178,8 @@ userRoutes.route("/users/login").post(async (request, response) => {
 })
 
 
-
-//Users
-//HOME
+//------------------------------------------------------------------------USERS------------------------------------------------------------------------
+//------------------------------------------------------------------------HOME------------------------------------------------------------------------
 userRoutes.get("/home", verifyToken, async (req, res) => {
   try {
     console.log("Backend /cli/home hit!", req.user); // <-- check if this logs
@@ -218,9 +243,10 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
       reportedBy: studentId,
       approvedBy: "",
       location: req.body.location || "No location provided",
-      dateReported: new Date(),
-      startDate: req.body.startDate,
-      endDate: req.body.endDate,
+      dateReported: new Date,
+      dateFound: req.body.dateFound ? new Date(req.body.dateFound) : null,
+      startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+      endDate: req.body.endDate ? new Date(req.body.endDate) : null,
       photoUrl,
       updatedAt: new Date(),
     };
@@ -259,7 +285,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 
     
 
-    //SETTINGS
+    //------------------------------------------------------------------------SETTINGS-CONTACT------------------------------------------------------------------------
     userRoutes.route("/settings/edit").put(verifyToken, async (req, res) => {
         try {
     const db = database.getDb();
@@ -300,6 +326,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 
     })
 
+    //------------------------------------------------------------------------SETTINGS-PASSWORD------------------------------------------------------------------------
     userRoutes.route("/settings/pass").put(verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
@@ -340,8 +367,8 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
     const reportAuditMongo = {
         aid: `A-${Date.now()}`,
         action: "UPDATE_USER",
-        targetUser: `${studentId}`,
-        performedBy: "system",
+        targetUser: "",
+        performedBy: `${studentId}`,
         timestamp: new Date,
         ticketId: "",
         details: `${studentId} changed a profile settings.`
@@ -355,6 +382,68 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 });
 
 
+//------------------------------------------------------------------------SEARCH------------------------------------------------------------------------
+userRoutes.get("/search/item", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { keyItem, category, location, itemBrand, startDate, endDate } = req.query; 
+   
+
+    let query = {};
+
+    // 🔹 Highest priority: keyItem (case-insensitive partial match)
+    if (keyItem) {
+      query.keyItem = { $regex: keyItem, $options: "i" };
+    }
+
+    // 🔹 Category filter
+    if (category) {
+      query.category = category;
+    }
+
+    // 🔹 Location filter (partial match)
+    if (location) {
+      query.location = { $regex: location, $options: "i" };
+    }
+
+    // 🔹 Item Brand filter
+    if (itemBrand) {
+      query.itemBrand = { $regex: itemBrand, $options: "i" };
+    }
+
+    // 🔹 Date Range filter (using dateFound field in DB)
+    if (startDate && endDate) {
+      let start = new Date(startDate);
+      let end = new Date(endDate);
+
+      if (!isNaN(start) && !isNaN(end)) {
+        // Normalize times (start = 00:00:00, end = 23:59:59)
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+
+        query.dateFound = { $gte: start, $lte: end };
+      }
+    }
+
+    console.log("Final search query:", query);
+
+    // Fetch matching reports
+    const results = await db
+      .collection("lost_found_db")
+      .find(query)
+      .toArray();
+
+    if (!results || results.length === 0) {
+      return res.status(404).json({ success: true, results: [] });
+    }
+
+    res.json({ success: true, results });
+
+  } catch (err) {
+    console.error("❌ Error in search:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 
 
@@ -363,7 +452,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 
 
 
-
+/*
 
 //Found
     userRoutes.route("/user-items").get(verifyToken, async (req, res) => {
@@ -389,6 +478,15 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 
 
 
+
+
+
+
+
+
+
+
+
     //Found
     userRoutes.route("/claim-items").get(verifyToken, async (request, response) => {
        try {
@@ -404,34 +502,13 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
       }
     });
 
-
-  
-    function verifyToken(request, response, next){
-         console.log("verifyToken middleware triggered");
-        const authHeaders = request.headers["authorization"]
-        const token = authHeaders && authHeaders.split(' ')[1]
-        if (!token) {
-            return response.status(401).json({message: "Authentication token is missing"}) //401 means you're not authenticated
-        }
     
-        jwt.verify(token, process.env.SECRETKEY, (error,user) => {
-            if (error) {
-            return response.status(403).json({message: "Invalid token"}) //403 may token pero hindi valid
-            }
     
-            request.user = user;
-            next()
-    
-            /*mag vvalidate muna ung verify token bago magawa ung functions, 
-            pag hindi nag run hindi mag rrun ung buong code, pero pag successful
-            mapupunta siya sa next() which is itutuloy niya ung function  */
-        })
-    }
 
 
 
 
-
+*/
 
 module.exports = userRoutes
 

@@ -17,6 +17,7 @@ import { UserSettings } from './Pages/UserSettings';
 import {AdminLayout} from './components/AdminLayout';
 import { NavBarAdmin } from './components/NavBarAdmin';
 import { ActivityLog } from './Pages/ActivityLog';
+import { UserSearchResults } from './Pages/UserSearchResults';
 
 function App() {
 
@@ -74,7 +75,9 @@ function App() {
             <Route path="/cli/home" element = {<ProtectedRoute allowedRoles={['student']}><Home/></ProtectedRoute>}/>
             <Route path="/cli/report" element={<ProtectedRoute><ReportItem/></ProtectedRoute>}/>
             <Route path="/cli/search" element={<ProtectedRoute><UserSearch/></ProtectedRoute>}/>
+            <Route path="/cli/search/result" element = {<ProtectedRoute><UserSearchResults/></ProtectedRoute>}/>
             <Route path="/cli/settings" element={<ProtectedRoute><UserSettings/></ProtectedRoute>}/>
+            
           </Route>
 
           <Route element={<AdminLayout/>}>
