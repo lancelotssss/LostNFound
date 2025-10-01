@@ -194,8 +194,8 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       .collection("lost_found_db")
       .find({ reportedBy: studentId })
       .toArray();
-    const countFounds = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Lost" }).toArray();
-    const countLosts = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Found" }).toArray();
+    const countFounds = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Found" }).toArray();
+    const countLosts = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Lost" }).toArray();
     console.log("Found reports:", studentReports); 
 
     res.json({ count: studentReports.length, results: studentReports, countFound: countFounds, countLost: countLosts});
@@ -205,7 +205,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
   }
 });
 
-//REPORT
+//------------------------------------------------------------------------REPORT------------------------------------------------------------------------
 userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req, res) => {
   try {
     const db = database.getDb();
@@ -231,11 +231,11 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
       photoUrl = publicUrlData.publicUrl;
     }
 
-    // The rest of your report creation remains unchanged
     const mongoReport = {
       tid: `T-${Date.now()}`,
       title: req.body.title || "No title",
       keyItem: req.body.keyItem || "No item",
+      category: req.body.category || "No category",
       itemBrand: req.body.itemBrand || "No brand provided",
       description: req.body.description || "No description provided",
       status: "pending",
@@ -383,67 +383,87 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 
 
 //------------------------------------------------------------------------SEARCH------------------------------------------------------------------------
-userRoutes.get("/search/item", verifyToken, async (req, res) => {
+// userRoutes.js
+userRoutes.post("/search/item", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
-    const { keyItem, category, location, itemBrand, startDate, endDate } = req.query; 
-   
+    const { keyItem, category, location, itemBrand, startDate, endDate } = req.body;
 
     let query = {};
 
-    // 🔹 Highest priority: keyItem (case-insensitive partial match)
+    // 🔹 Require category
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        message: "Category is required for search",
+      });
+    }
+    query.category = category;
+    // 🔹 Require valid date range
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Start and End dates are required",
+      });
+    }
+
+    let start = new Date(startDate);
+    let end = new Date(endDate);
+
+    if (isNaN(start) || isNaN(end)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format",
+      });
+    }
+
+    // 🔹 Normalize times in UTC to avoid timezone mismatch
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    // 🔹 Filter by dateFound only
+    query.dateFound = { $gte: start, $lte: end };
+
+    // 🔹 Key Item (case-insensitive partial match)
     if (keyItem) {
       query.keyItem = { $regex: keyItem, $options: "i" };
     }
 
-    // 🔹 Category filter
-    if (category) {
-      query.category = category;
-    }
-
-    // 🔹 Location filter (partial match)
+    // 🔹 Location (case-insensitive partial match)
     if (location) {
       query.location = { $regex: location, $options: "i" };
     }
 
-    // 🔹 Item Brand filter
+    // 🔹 Item Brand (case-insensitive partial match)
     if (itemBrand) {
       query.itemBrand = { $regex: itemBrand, $options: "i" };
     }
 
-    // 🔹 Date Range filter (using dateFound field in DB)
-    if (startDate && endDate) {
-      let start = new Date(startDate);
-      let end = new Date(endDate);
+    // Debugging log
+    console.log("🔎 Final strict search query:", JSON.stringify(query, null, 2));
+    console.log("🔎 Searching between:", start.toISOString(), "and", end.toISOString());
 
-      if (!isNaN(start) && !isNaN(end)) {
-        // Normalize times (start = 00:00:00, end = 23:59:59)
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-
-        query.dateFound = { $gte: start, $lte: end };
-      }
-    }
-
-    console.log("Final search query:", query);
-
-    // Fetch matching reports
-    const results = await db
-      .collection("lost_found_db")
-      .find(query)
-      .toArray();
-
+    const results = await db.collection("lost_found_db").find(query).toArray();
+    console.log(results)
     if (!results || results.length === 0) {
-      return res.status(404).json({ success: true, results: [] });
+      return res.status(200).json({
+        success: false,
+        results: [],
+        message: "No items matched the strict filters",
+      });
     }
 
-    res.json({ success: true, results });
+    res.status(200).json({ success: true, results });
 
   } catch (err) {
     console.error("❌ Error in search:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+
+
+
 
 
 

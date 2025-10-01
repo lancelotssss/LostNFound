@@ -101,14 +101,15 @@ export async function logOutUser(token){
 
 export async function getSearchReport(report, token) {
   try {
-    const response = await axios.get(`${URL}/cli/search/item`, report, {
+    const response = await axios.post(`${URL}/cli/search/item`, report, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      
     });
     return response.data;
   } catch (err) {
-    console.error("Error fetching search: ", err);
+    console.error("Error fetching search: ", err.response?.data || err.message);
     return { success: false, results: [] };
   }
 }
