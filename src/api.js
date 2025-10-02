@@ -59,6 +59,20 @@ export async function getAllReport(token) {
   }
 }
 
+export async function getAllClaim(token){
+  try {
+    const response = await axios.get(`${URL}/cli/claims`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("Axios response:", response);
+    return response.data; // { count, results }
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
+}
 
 export async function editClient(data, token) {
   try {
@@ -116,8 +130,6 @@ export async function getSearchReport(report, token) {
 }
   
 
-
-
 /*export async function getClaimReport() {
   const response = await axios.get(`${URL}/cli/claim-items`);
   return response.data;
@@ -125,43 +137,62 @@ export async function getSearchReport(report, token) {
 
 //ADMIN
 
-export async function getFoundReport() {
+export async function getFoundReport(token) {
   try {
-      const response = await axios.get(`${URL}/main/found-items`);
-      return response.data; // expects { success: true, results: [...] }
-    } catch (error) {
-      console.error("Error fetching audit logs:", error);
-      return { success: false, results: [] }; // safe fallback
-    }
+    const response = await axios.get(`${URL}/main/found-items`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("Axios response:", response);
+    return response.data; // { count, results }
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
 }
 
-export async function getLostReport() {
+export async function getLostReport(token) {
   try {
-      const response = await axios.get(`${URL}/main/lost-items`);
-      return response.data; // expects { success: true, results: [...] }
-    } catch (error) {
-      console.error("Error fetching audit logs:", error);
-      return { success: false, results: [] }; // safe fallback
-    }
+    const response = await axios.get(`${URL}/main/lost-items`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("Axios response:", response);
+    return response.data; // { count, results }
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
 }
 
-export async function getClaimReport() {
+export async function getClaimReport(token) {
   try {
-      const response = await axios.get(`${URL}/main/claim-items`);
-      return response.data; // expects { success: true, results: [...] }
-    } catch (error) {
-      console.error("Error fetching audit logs:", error);
-      return { success: false, results: [] }; // safe fallback
-    }
+    const response = await axios.get(`${URL}/main/claim-items`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("Axios response:", response);
+    return response.data; // { count, results }
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
 }
 
-export async function getAuditLogs() {
+export async function getAuditLogs(token) {
    try {
-    const response = await axios.get(`${URL}/main/logs`);
-    return response.data; // expects { success: true, results: [...] }
-  } catch (error) {
-    console.error("Error fetching audit logs:", error);
-    return { success: false, results: [] }; // safe fallback
+    const response = await axios.get(`${URL}/main/logs`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // { count, results }
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+    return { results: [] };
   }
 }
 

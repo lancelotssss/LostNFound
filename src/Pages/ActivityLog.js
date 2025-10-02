@@ -9,7 +9,13 @@ export const ActivityLog = () => {
 
   const fetchData = async () => {
     try {
-      const res = await getAuditLogs();
+          const token = sessionStorage.getItem("User"); 
+          if (!token) {
+            alert("You must be logged in");
+            return;
+          }
+    
+     const res = await getAuditLogs(token); 
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
           key: item._id ? item._id.toString() : `row-${index}`,

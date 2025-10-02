@@ -9,7 +9,13 @@ export const AdminClaims = () => {
 
   const fetchData = async () => {
     try {
-      const res = await getClaimReport();
+          const token = sessionStorage.getItem("User"); 
+          if (!token) {
+            alert("You must be logged in");
+            return;
+          }
+    
+          const res = await getClaimReport(token); 
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
         key: item._id ? item._id.toString() : `row-${index}`,
