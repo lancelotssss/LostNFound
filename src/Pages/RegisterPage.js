@@ -109,6 +109,8 @@ export default function RegisterPage() {
   }
 }
   return (
+    <>
+    <a href="/">Login</a>
     <form onSubmit={handleSubmit}>
       <h1>Register</h1>
 
@@ -238,5 +240,6 @@ export default function RegisterPage() {
       {errors.general && <p style={{ color: "red" }}>{errors.general}</p>}
       <button type="submit">REGISTER</button>
     </form>
+    </>
   );
 }
