@@ -8,24 +8,27 @@ import { verifyUser } from "../api";
 
 const LoginPage = () => {
 
-   const navigate = useNavigate()
-
     const [loginData, setLoginData] = useState({
         email: "",
         password: "",
     })
 
-    function handleChange(e) {
+
+   const navigate = useNavigate()
+
+    function handleChange(e) 
+    {
     const { name, value } = e.target;
     setLoginData({ ...loginData, [name]: value });
     }
 
+
     async function handleSubmit(e){
     e.preventDefault();
-    console.log("Login Form submitted:", loginData);
-
+    
+        //do not touch
     let response = await verifyUser(loginData);
-
+        
     if (response && response.token) {
 
         sessionStorage.setItem("User", response.token);
@@ -49,7 +52,7 @@ const LoginPage = () => {
     else {
         alert("Login failed");
     }
-    
+        //safe
     }
 
     return(

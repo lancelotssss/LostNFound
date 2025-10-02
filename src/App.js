@@ -73,10 +73,10 @@ function App() {
           <Route path="/register" element={<RegisterPage/>}/>
           <Route element={<Layout/>}>
             <Route path="/cli/home" element = {<ProtectedRoute allowedRoles={['student']}><Home/></ProtectedRoute>}/>
-            <Route path="/cli/report" element={<ProtectedRoute><ReportItem/></ProtectedRoute>}/>
-            <Route path="/cli/search" element={<ProtectedRoute><UserSearch/></ProtectedRoute>}/>
-            <Route path="/cli/search/result" element = {<ProtectedRoute><UserSearchResults/></ProtectedRoute>}/>
-            <Route path="/cli/settings" element={<ProtectedRoute><UserSettings/></ProtectedRoute>}/>
+            <Route path="/cli/report" element={<ProtectedRoute allowedRoles={['student']}><ReportItem/></ProtectedRoute>}/>
+            <Route path="/cli/search" element={<ProtectedRoute allowedRoles={['student']}><UserSearch/></ProtectedRoute>}/>
+            <Route path="/cli/search/result" element = {<ProtectedRoute allowedRoles={['student']}><UserSearchResults/></ProtectedRoute>}/>
+            <Route path="/cli/settings" element={<ProtectedRoute allowedRoles={['student']}><UserSettings/></ProtectedRoute>}/>
             
           </Route>
 
