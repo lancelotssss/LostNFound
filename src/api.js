@@ -130,17 +130,8 @@ export async function getSearchReport(report, token) {
 }
   
 
-export async function createClaim(claimData, token){
+export async function createClaim(formData, token) {
   try {
-    const formData = new FormData();
-    for (const key in claimData) {
-      if (key === "photo" && claimData.photo) {
-        formData.append("photo", claimData.photo);
-      } else if (claimData[key] !== "") {
-        formData.append(key, claimData[key]);
-      }
-    }
-
     const response = await axios.post(`${URL}/cli/claim`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
