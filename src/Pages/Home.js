@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
-import { getAllReport, getClaimReport } from "../api";
+import {getAllReport} from "../api";
 import { Table } from "antd";
 import axios from "axios";
 
 export function Profile() {
   const [found, setFound] = useState([]);
+  //const [claim, setClaim] = useState([]);
   const [user, setUser] = useState({});
   const [foundCounts, setFoundCounts] = useState(0);
   const [lostCounts, setLostCounts] = useState(0);
@@ -22,6 +23,7 @@ export function Profile() {
 
       const allReports = await getAllReport(token);
       console.log("Raw reports from MongoDB:", allReports);
+      //console.log("Raw reports from MongoDB:", allClaims)
 
       const formatted = (allReports.results || []).map((item, index) => ({
         key: item._id ? item._id.toString() : `row-${index}`,
@@ -33,10 +35,26 @@ export function Profile() {
         reportType: item.reportType || "N/A",
         status: item.status || "N/A",
       }));
+
+      /*const formattedClaim = (allReports.results || []).map((item, index) => ({
+
+        key: item._id ? item._id.toString() : `row-${index}`,
+        title: item.title || "N/A",
+        keyItem: item.keyItem || "N/A",
+        itemBrand: item.itemBrand || "N/A",
+        location: item.location || "N/A",
+        dateReported: item.dateReported || "N/A",
+        reportType: item.reportType || "N/A",
+        status: item.status || "N/A",
+
+      }));
+      */
+
       console.log("Found Count: ", allReports.countFound)
       setFoundCounts(allReports.countFound.length || 0);
       setLostCounts(allReports.countLost.length || 0);
       setFound(formatted);
+      //setClaim(formattedClaim);
     }
 
     loadUserData();
@@ -55,7 +73,7 @@ export function Profile() {
     { title: "Actions"}
   ];
 
-  const claimColumns = [
+  /*const claimColumns = [
     { title: "Title", dataIndex: "title", key: "title" },
     { title: "Key Item", dataIndex: "keyItem", key: "keyItem" },
     { title: "Brand", dataIndex: "itemBrand", key: "itemBrand" },
@@ -63,7 +81,7 @@ export function Profile() {
     { title: "Date Reported", dataIndex: "dateReported", key: "dateReported" },
     { title: "Status", dataIndex: "status", key: "status" },
     { title: "Actions"}
-  ];
+  ]; */
 
   return (
     <>
@@ -84,7 +102,7 @@ export function Profile() {
       <Table dataSource={found} columns={reportColumns} rowKey="key" />
 
       <h2>My Claim Reports</h2>
-      
+
     </>
   );
 }

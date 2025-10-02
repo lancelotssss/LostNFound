@@ -59,6 +59,7 @@ export async function getAllReport(token) {
   }
 }
 
+
 export async function editClient(data, token) {
   try {
     const response = await axios.put(`${URL}/cli/settings/edit`, data, {

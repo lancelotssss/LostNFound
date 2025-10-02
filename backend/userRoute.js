@@ -198,7 +198,15 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
     const countLosts = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Lost" }).toArray();
     console.log("Found reports:", studentReports); 
 
-    res.json({ count: studentReports.length, results: studentReports, countFound: countFounds, countLost: countLosts});
+   /* const claimReports = await db
+      .collection("claims_db")
+      .find({reportedBy: studentId})
+      .toArray();
+
+    const countClaim = await db.collection("claims_db").find({reportedBy: studentId, reportType:"Claim"}).toArray();
+    */
+
+    res.json({ count: studentReports.length, /* claimReports.length, */ results: studentReports, countFound: countFounds, countLost: countLosts, /*countClaim: countClaim*/});
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
