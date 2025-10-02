@@ -398,11 +398,10 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
     const { keyItem, category, location, itemBrand, startDate, endDate } = req.body;
 
     let query = {
-      reportType: "Found", // ✅ Always only "Found"
-      status: "active",    // ✅ Always only active items
+      reportType: "Found",
+      status: "active",    
     };
 
-    // 🔹 Require category
     if (!category) {
       return res.status(400).json({
         success: false,
@@ -411,7 +410,7 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
     }
     query.category = category;
 
-    // 🔹 Require valid date range
+  
     if (!startDate || !endDate) {
       return res.status(400).json({
         success: false,
@@ -429,31 +428,19 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
       });
     }
 
-    // 🔹 Normalize times in UTC to avoid timezone mismatch
     start.setUTCHours(0, 0, 0, 0);
     end.setUTCHours(23, 59, 59, 999);
 
-    // 🔹 Filter by dateFound only
     query.dateFound = { $gte: start, $lte: end };
-
-    // 🔹 Key Item (case-insensitive partial match)
     if (keyItem) {
       query.keyItem = { $regex: keyItem, $options: "i" };
     }
-
-    // 🔹 Location (case-insensitive partial match)
     if (location) {
       query.location = { $regex: location, $options: "i" };
     }
-
-    // 🔹 Item Brand (case-insensitive partial match)
     if (itemBrand) {
       query.itemBrand = { $regex: itemBrand, $options: "i" };
     }
-
-    // Debugging log
-    console.log("🔎 Final strict search query:", JSON.stringify(query, null, 2));
-    console.log("🔎 Searching between:", start.toISOString(), "and", end.toISOString());
 
     const results = await db.collection("lost_found_db").find(query).toArray();
     console.log(results);
@@ -469,11 +456,80 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
     res.status(200).json({ success: true, results });
 
   } catch (err) {
-    console.error("❌ Error in search:", err);
+    console.error("Error in search:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
+
+//------------------------------------------------------------------------CLAIM------------------------------------------------------------------------
+userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req, res) => {
+    try {
+      const db = database.getDb();
+      const studentId = req.user?.studentId;
+      let photoUrl = req.body.photoUrl || "";
+
+      if (!req.body.itemId || !req.body.reason) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing required fields",
+        });
+      }
+
+      
+      if (req.file) {
+        const { originalname, buffer, mimetype } = req.file;
+
+        const { data, error } = await supabase.storage
+          .from("user_uploads")
+          .upload(`claim-${Date.now()}-${originalname}`, buffer, {
+            contentType: mimetype,
+            upsert: false,
+          });
+
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabase.storage
+          .from("user_uploads")
+          .getPublicUrl(data.path);
+
+        photoUrl = publicUrlData.publicUrl;
+      }
+
+      
+      const mongoClaim = {
+        cid: `C-${Date.now()}`,
+        itemId: req.body.itemId,
+        claimerId: studentId,
+        reason: req.body.reason,
+        adminDecisionBy: "N/A",
+        claimStatus: "PENDING",
+        createdAt: new Date(),
+        photoUrl,
+      };
+
+      
+      await db.collection("claims").insertOne(mongoClaim);
+
+     
+      const auditMongo = {
+        aid: `A-${Date.now()}`,
+        action: "SUBMIT_CLAIM",
+        targetUser: "", 
+        performedBy: `${studentId}`,
+        timestamp: new Date(),
+        ticketId: mongoClaim.cid,
+        details: `${studentId} filed a claim for item ${mongoClaim.itemId}. Claim id: `,
+      };
+
+      await db.collection("audit_db").insertOne(auditMongo);
+
+      res.json({ success: true, claim: mongoClaim, audit: auditMongo });
+    } catch (err) {
+      console.error("❌ Error submitting claim:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
 
 
 module.exports = userRoutes

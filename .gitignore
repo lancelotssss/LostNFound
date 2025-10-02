@@ -24,3 +24,10 @@ yarn-error.log*
 
 # .gitignore
 config.env
+
+
+
+
+.gitignore:
+# .gitignore
+.env

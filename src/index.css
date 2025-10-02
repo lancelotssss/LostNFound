@@ -11,3 +11,30 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+* {
+  font-family: "Poppins", sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* IMPORTANT: don't center here */
+#root {
+    display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  min-height: 100vh;
+  width: 100%;
+  /* remove gap/background centering from here */
+  /* background-color: #F5F5F5;  // optional if you want a global fallback */
+}

@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Card, Modal, Button, Form, Input, Upload, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
+import { useEffect } from "react";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { createClaim } from "../api";
 
 const { Meta } = Card;
 const { TextArea } = Input;
@@ -9,6 +13,19 @@ export function SearchResultCardModal({ item }) {
   const [open, setOpen] = useState(false);
   const [claimMode, setClaimMode] = useState(false); // step 2 mode
   const [form] = Form.useForm();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+  async function loadUserData() {
+    const token = sessionStorage.getItem("User");
+    if (!token) return;
+
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const decodedUser = jwtDecode(token);
+    setUser(decodedUser);
+  }
+  loadUserData();
+}, []);
 
   const showModal = () => setOpen(true);
   const handleCancel = () => {
@@ -20,15 +37,32 @@ export function SearchResultCardModal({ item }) {
   const handleClaim = () => setClaimMode(true);
 
   const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      console.log("Form Submitted:", values);
+  try {
+    const values = await form.validateFields();
+    const token = sessionStorage.getItem("User");
+
+    const claimData = {
+      itemId: item._id,
+      claimerId: user?.studentId,
+      reason: values.reason,
+      photo: values.image?.[0]?.originFileObj || null,
+    };
+
+    console.log("Submitting Claim:", claimData);
+
+    const result = await createClaim(claimData, token);
+
+    if (result.success) {
       message.success("Claim submitted successfully!");
       handleCancel();
-    } catch (error) {
-      console.log("Validation Failed:", error);
+    } else {
+      message.error(result.error || "Failed to submit claim");
     }
-  };
+  } catch (error) {
+    console.error("Validation Failed:", error);
+    message.error("Please complete the form");
+  }
+};
 
   return (
     <>

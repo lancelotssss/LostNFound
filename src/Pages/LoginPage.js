@@ -1,76 +1,60 @@
 import {useState} from "react"
-//import { verifyUser } from "../api";
+import '@ant-design/v5-patch-for-react-19';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { verifyUser } from "../api";
 
 
+// IMPORTS NI JACOB
+import { Spin } from "antd";
+import { LoadingOutlined } from '@ant-design/icons';
+import LoginForm from "./LoginForm";
+import LoginBrand from "./LoginBrand";
+import './styles/LoginPage.css'
+import './styles/LoginForm.css'
+import './styles/LoginBrand.css'
+
 
 const LoginPage = () => {
 
-   const navigate = useNavigate()
 
-    const [loginData, setLoginData] = useState({
-        email: "",
-        password: "",
-    })
 
-    function handleChange(e) {
-    const { name, value } = e.target;
-    setLoginData({ ...loginData, [name]: value });
+    // --- JACOB CODES ---
+
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+        setLoading(false);
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (loading) {
+        return (
+        <div className="loading-container">
+            <Spin indicator={<LoadingOutlined spin />} size="large" tip="Loading..." />
+        </div>
+        );
     }
 
-    async function handleSubmit(e){
-    e.preventDefault();
-    console.log("Login Form submitted:", loginData);
 
-    let response = await verifyUser(loginData);
-
-    if (response && response.token) {
-
-        sessionStorage.setItem("User", response.token);
-        axios.defaults.headers.common["Authorization"] = `Bearer ${response.token}`;
-        
-        if (response.role === "student")
-        {
-            navigate("/cli/home");
-        }
-        else if (response.role === "admin")
-        {
-            navigate ("/main/found-items")
-        }
-        else 
-        {
-            alert("Unknown user")
-        }
-
-
-    } 
-    else {
-        alert("Login failed");
-    }
-    
-    }
 
     return(
         <>
             
-            <form onSubmit={handleSubmit}>
-            <h1>Login</h1>
-            <div>
-                <p>Email:<input type="text" name="email" placeholder="Email" value={loginData.email} onChange={handleChange}/></p>
-            </div>
-            
-            <div>
-                <p>Password:<input type="password" name="password" placeholder="Password" value={loginData.password} onChange={handleChange}/></p>
+            <div className="page">
+                <div className="left">
+                    <LoginBrand />
+                </div>
+                
+                <div className="right">
+                    <LoginForm />
+                </div>
             </div>
 
-            <div>
-                <button type="submit" >LOGIN</button>
-                <a href="/#/register">Register</a>
-            </div>
-            
-            </form>
+
+
     </>
     )
 }

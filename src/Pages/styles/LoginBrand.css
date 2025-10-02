@@ -1,0 +1,33 @@
+/* Container */
+.container-brandpanel {
+  max-width: 520px; /* <-- add px */
+}
+
+/* You used .brand-img in JSX; keep this one and remove the unused .brandpanel-img */
+.brand-img {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Make images responsive */
+#foundhub {
+  width: min(400px, 80vw);
+  max-width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+#kit {
+  width: min(150px, 40vw);
+  max-width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+/* Optional: slightly loosen constraints on narrower laptops */
+@media (max-width: 1286px) {
+  .container-brandpanel { max-width: 100%; }
+}

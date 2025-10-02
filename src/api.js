@@ -36,10 +36,10 @@ export async function createReport(report, token) {
     }
   );
   
-    return response.data; // ✅ return the actual data from backend
+    return response.data;
   } catch (err) {
     console.error("Error in createReport:", err);
-    return { success: false, error: err.message }; // optional error handling
+    return { success: false, error: err.message }; 
   }
 }
 
@@ -129,6 +129,33 @@ export async function getSearchReport(report, token) {
   }
 }
   
+
+export async function createClaim(claimData, token){
+  try {
+    const formData = new FormData();
+    for (const key in claimData) {
+      if (key === "photo" && claimData.photo) {
+        formData.append("photo", claimData.photo);
+      } else if (claimData[key] !== "") {
+        formData.append(key, claimData[key]);
+      }
+    }
+
+    const response = await axios.post(`${URL}/cli/claim`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    console.error("Error in createClaim:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+
 
 /*export async function getClaimReport() {
   const response = await axios.get(`${URL}/cli/claim-items`);
