@@ -11,7 +11,7 @@ import { AdminDisplayData } from "./Pages/AdminDisplayData";
 import { useEffect } from 'react';
 import { AdminLost } from './Pages/AdminLost';
 import { AdminClaims } from './Pages/AdminClaims';
-import { AdminFound } from './Pages/AdminFound';
+import  {AdminFound}  from './Pages/AdminFound';
 import { UserSearch } from './Pages/UserSearch';
 import { UserSettings } from './Pages/UserSettings';
 import {AdminLayout} from './components/AdminLayout';

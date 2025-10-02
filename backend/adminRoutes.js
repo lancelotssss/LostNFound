@@ -73,15 +73,12 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
 
 adminRoutes.route("/logs").get(verifyToken, async (req, res) => {
   try {
-    const db = database.getDb();
+    let db = database.getDb();
     const audit = await db.collection("audit_db").find({}).toArray();
-
-    console.log("Audit logs found:", audit.length, audit); 
-
-    res.json({ success: true, results: audit });
+    res.json({ count: audit.length, results: audit });
   } catch (err) {
-    console.error("Error fetching logs:", err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error("Error in /logs route:", err); // log error for debugging
+    res.status(500).json({ error: err.message });
   }
 });
 

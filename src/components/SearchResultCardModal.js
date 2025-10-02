@@ -4,6 +4,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import { useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { createClaim } from "../api";
 
 const { Meta } = Card;
 const { TextArea } = Input;
@@ -38,32 +39,34 @@ export function SearchResultCardModal({ item }) {
   const handleSubmit = async () => {
   try {
     const values = await form.validateFields();
+    const token = sessionStorage.getItem("User");
 
+    // ✅ build FormData
     const formData = new FormData();
-    formData.append("itemId", item._id);                // from card
-    formData.append("claimerId", user?.studentId);      // from decoded user
+    formData.append("itemId", item._id);
+    formData.append("claimerId", user?.studentId);
     formData.append("reason", values.reason);
 
-    // take first uploaded file
     if (values.image && values.image[0]) {
       formData.append("photo", values.image[0].originFileObj);
     }
 
-    // debug
-    console.log("Submitting Claim:", {
-      itemId: item._id,
-      claimerId: user?.studentId,
-      reason: values.reason,
-      photoFile: values.image?.[0]?.originFileObj
-    });
+    console.log("Submitting Claim FormData:", [...formData.entries()]);
 
-    message.success("Claim submitted successfully!");
-    handleCancel();
+    const result = await createClaim(formData, token);
+
+    if (result.success) {
+      message.success("Claim submitted successfully!");
+      handleCancel();
+    } else {
+      message.error(result.error || "Failed to submit claim");
+    }
   } catch (error) {
     console.error("Validation Failed:", error);
     message.error("Please complete the form");
   }
 };
+
 
   return (
     <>
