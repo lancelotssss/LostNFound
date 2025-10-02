@@ -509,7 +509,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
       };
 
       
-      await db.collection("claims").insertOne(mongoClaim);
+      await db.collection("claims_db").insertOne(mongoClaim);
 
      
       const auditMongo = {
@@ -519,7 +519,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
         performedBy: `${studentId}`,
         timestamp: new Date(),
         ticketId: mongoClaim.cid,
-        details: `${studentId} filed a claim for item ${mongoClaim.itemId}. Claim id: `,
+        details: `${studentId} filed a claim for item ${mongoClaim.itemId}. Claim id: ${mongoClaim.cid}`,
       };
 
       await db.collection("audit_db").insertOne(auditMongo);
