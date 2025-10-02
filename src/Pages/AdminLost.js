@@ -1,43 +1,46 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, Button } from "antd";
+import { Table, Button, Modal, Descriptions, Image } from "antd";
 import { getLostReport } from "../api";
 
 const { Column } = Table;
 
 export const AdminLost = () => {
   const [data, setData] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null); // store row data for modal
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const fetchData = async () => {
     try {
-          const token = sessionStorage.getItem("User"); 
-          if (!token) {
-            alert("You must be logged in");
-            return;
-          }
-    
-          const res = await getLostReport(token); 
+      const token = sessionStorage.getItem("User"); 
+      if (!token) {
+        alert("You must be logged in");
+        return;
+      }
+
+      const res = await getLostReport(token); 
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
-        key: item._id ? item._id.toString() : `row-${index}`,
-        tid: item.tid || "N/A",
-        title: item.title || "N/A",
-        keyItem: item.keyItem || "N/A",
-        itemBrand: item.itemBrand || "N/A",
-        description: item.description || "N/A",
-        status: item.status || "N/A",
-        reportType: item.reportType || "N/A",
-        reportedBy: item.reportedBy || "N/A",
-        approvedBy: item.approvedBy || "N/A",
-        location: item.location || "N/A",
-        dateReported: item.dateReported || "N/A",
-        startDate: item.startDate || "N/A",
-        endDate: item.endDate || "N/A",
-        photoUrl: item.photoUrl || null,
-        updatedAt: item.updatedAt || "N/A",
+          key: item._id ? item._id.toString() : `row-${index}`,
+          tid: item.tid || "N/A",
+          title: item.title || "N/A",
+          category: item.category || "N/A",
+          keyItem: item.keyItem || "N/A",
+          itemBrand: item.itemBrand || "N/A",
+          status: item.status || "N/A",
+          reportType: item.reportType || "N/A",
+          reportedBy: item.reportedBy || "N/A",
+          approvedBy: item.approvedBy || "N/A",
+          location: item.location || "N/A",
+          dateReported: item.dateReported
+            ? new Date(item.dateReported).toLocaleString()
+            : "N/A",
+          startDate: item.startDate ? new Date(item.startDate).toLocaleDateString() : "N/A",
+          endDate: item.endDate ? new Date(item.endDate).toLocaleDateString() : "N/A",
+          photoUrl: item.photoUrl || null,
+          updatedAt: item.updatedAt ? new Date(item.updatedAt).toLocaleString() : "N/A",
         }));
 
         setData(formattedData);
-        console.log("Formatted data:", formattedData);
       }
     } catch (err) {
       console.error("Error fetching lost items:", err);
@@ -48,45 +51,83 @@ export const AdminLost = () => {
     fetchData();
   }, []);
 
+  const handleRowClick = (record) => {
+    setSelectedItem(record);
+    setIsModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+    setSelectedItem(null);
+  };
+
   return (
     <>
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
         Refresh
       </Button>
-      <Table dataSource={data}>
+      <Table
+        dataSource={data}
+        onRow={(record) => ({
+          onClick: () => handleRowClick(record),
+          style: { cursor: "pointer" },
+        })}
+      >
         <Column title="TID" dataIndex="tid" key="tid" />
         <Column title="Title" dataIndex="title" key="title" />
         <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
         <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
-        <Column title="Description" dataIndex="description" key="description" />
         <Column title="Status" dataIndex="status" key="status" />
-        <Column title="Report Type" dataIndex="reportType" key="reportType" />
-        <Column title="Reported By" dataIndex="reportedBy" key="reportedBy" />
-        <Column title="Approved By" dataIndex="approvedBy" key="approvedBy" />
-        <Column title="Location" dataIndex="location" key="location" />
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
         <Column title="Start Date" dataIndex="startDate" key="startDate" />
         <Column title="End Date" dataIndex="endDate" key="endDate" />
-        <Column
-          title="Photo"
-          dataIndex="photoUrl"
-          key="photoUrl"
-          render={(url) =>
-            url ? <img src={url} alt="item" style={{ width: 80 }} /> : "No photo"
-          }
-        />
-        <Column title="Updated At" dataIndex="updatedAt" key="updatedAt" />
-        <Column
-          title="Action"
-          key="action"
-          render={(_, record) => (
-            <Space size="middle">
-              <a>Edit</a>
-              <a>Delete</a>
-            </Space>
-          )}
-        />
       </Table>
-    </>
+
+      {/* Modal for showing detailed info */}
+      <Modal
+            title={selectedItem ? selectedItem.title : "Lost Item Details"}
+            visible={isModalVisible}
+            onCancel={handleModalClose}
+            footer={null} // We'll add custom buttons inside modal
+            width={700}
+            maskClosable={false} // <-- Prevent closing by clicking outside
+          >
+            {selectedItem && (
+              <>
+                {/* Image at the top */}
+                {selectedItem.photoUrl && (
+                  <div style={{ textAlign: "center", marginBottom: 16 }}>
+                    <Image src={selectedItem.photoUrl} width={250} />
+                  </div>
+                )}
+      
+                {/* Details below */}
+                <Descriptions bordered column={1} size="middle">
+                  <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+                  <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
+                  <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
+                  <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
+                  <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
+                  <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
+                  <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
+                  <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
+                  <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
+                  <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
+                  <Descriptions.Item label="Start Date">{selectedItem.startDate}</Descriptions.Item>
+                  <Descriptions.Item label="End Date">{selectedItem.endDate}</Descriptions.Item>
+                  <Descriptions.Item label="Report Type">{selectedItem.reportType}</Descriptions.Item>
+                  <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
+                </Descriptions>
+      
+                {/* Approve / Deny Buttons */}
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
+                  <Button type="primary" >Approve</Button>
+                  <Button type="primary" >Deny</Button>
+                  <Button type="primary" >Cancel</Button>
+                </div>
+              </>
+            )}
+            </Modal>
+          </>
   );
 };
