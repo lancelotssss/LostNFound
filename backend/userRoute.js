@@ -389,7 +389,10 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
     const db = database.getDb();
     const { keyItem, category, location, itemBrand, startDate, endDate } = req.body;
 
-    let query = {};
+    let query = {
+      reportType: "Found", // ✅ Always only "Found"
+      status: "active",    // ✅ Always only active items
+    };
 
     // 🔹 Require category
     if (!category) {
@@ -399,6 +402,7 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
       });
     }
     query.category = category;
+
     // 🔹 Require valid date range
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -444,7 +448,8 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
     console.log("🔎 Searching between:", start.toISOString(), "and", end.toISOString());
 
     const results = await db.collection("lost_found_db").find(query).toArray();
-    console.log(results)
+    console.log(results);
+
     if (!results || results.length === 0) {
       return res.status(200).json({
         success: false,
@@ -462,73 +467,6 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-/*
-
-//Found
-    userRoutes.route("/user-items").get(verifyToken, async (req, res) => {
-    try {
-        let db = database.getDb();
-        const studentId = req.user?.studentId; // use req, not request
-
-        if (!studentId) {
-            return res.status(401).json({ error: "Unauthorized: No student ID" });
-        }
-
-        // Fetch reports for this student
-        let foundReports = await db
-            .collection("lost_found_db")
-            .find({ studentId })
-            .toArray();
-
-        res.json({ count: foundReports.length, results: foundReports });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-    //Found
-    userRoutes.route("/claim-items").get(verifyToken, async (request, response) => {
-       try {
-        let db = database.getDb();
-
-        const lostReports = await db.collection("lost_found_db")
-          .find({ claimStatus: "Pending" }) // <-- only "Pending Claims"
-          .toArray();
-
-        res.json({ count: lostReports.length, results: lostReports });
-      } catch (err) {
-        res.status(500).json({ error: err.message });
-      }
-    });
-
-    
-    
-
-
-
-
-*/
 
 module.exports = userRoutes
 
