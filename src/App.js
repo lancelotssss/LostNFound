@@ -1,7 +1,7 @@
 import LoginPage from './Pages/LoginPage'; 
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios'
-import RegisterPage from './Pages/RegisterPage';
+import RegisterPage2 from './Pages/RegisterPage2';
 import ReportItem from './Pages/ReportItem';
 import ClaimForm from './Pages/ClaimForm';
 import Home from './Pages/Home';
@@ -70,7 +70,7 @@ function App() {
      <Router>
         <Routes>
           <Route path="/" element={<LoginPage/>}/>
-          <Route path="/register" element={<RegisterPage/>}/>
+          <Route path="/register" element={<RegisterPage2/>}/>
           <Route element={<Layout/>}>
             <Route path="/cli/home" element = {<ProtectedRoute allowedRoles={['student']}><Home/></ProtectedRoute>}/>
             <Route path="/cli/report" element={<ProtectedRoute allowedRoles={['student']}><ReportItem/></ProtectedRoute>}/>
