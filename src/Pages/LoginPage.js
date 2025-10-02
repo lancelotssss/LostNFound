@@ -1,5 +1,5 @@
 import {useState} from "react"
-//import { verifyUser } from "../api";
+import '@ant-design/v5-patch-for-react-19';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { verifyUser } from "../api";
