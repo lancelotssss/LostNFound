@@ -1,4 +1,5 @@
 import LoginPage from "./Pages/LoginPage";
+
 import {
   HashRouter as Router,
   Routes,
@@ -19,6 +20,7 @@ import { UserSettings } from "./Pages/UserSettings";
 import { AdminLayout } from "./components/AdminLayout";
 import { ActivityLog } from "./Pages/ActivityLog";
 import { UserSearchResults } from "./Pages/UserSearchResults";
+
 
 function App() {
   useEffect(() => {
@@ -112,6 +114,10 @@ function App() {
             <Route path="/main/claim-items" element={<AdminClaims />} />
             <Route path="/main/logs" element={<ActivityLog />} />
           </Route>
+
+
+
+
         </Routes>
       </Router>
     </>

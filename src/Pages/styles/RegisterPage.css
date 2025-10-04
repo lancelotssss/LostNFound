@@ -160,7 +160,7 @@ body { margin: 0; }
 
 
 
-@media (max-height: 880px){
+@media (max-height: 600px){
   .register-container{
     height: auto;
     min-height: 100dvh;
