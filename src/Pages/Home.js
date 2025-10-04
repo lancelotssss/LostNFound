@@ -86,22 +86,35 @@ export const Home = () => {
   };
 
 
-  const handleDelete = async (id) => {
-  
-    const confirm = window.confirm("Are you sure you want to delete this report?");
-    if (!confirm) return;
-  
-    try {
-    const response = await deleteReport(id, token);
-    if (response.success) {
-      message.success("Report deleted successfully");
-      await fetchData(token); 
+  const handleDispose = async (id, type) => {
+  const confirm = window.confirm("Are you sure you want to dispose this report?");
+  if (!confirm) return;
+
+  try {
+    const response = await axios.put(`http://localhost:3110/home/${id}/dispose`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (response.data.success) {
+      message.success(response.data.message);
+
+      // Remove disposed report from table
+      if (type === "Lost") {
+        setLost(prev => prev.filter(report => report._id !== id));
+      } else if (type === "Found") {
+        setFound(prev => prev.filter(report => report._id !== id));
+      }
+
+      // Close modal if the disposed report was selected
+      if (selectedItem?._id === id) {
+        handleModalClose();
+      }
     } else {
-      message.error("Failed to delete report");
+      message.error("Failed to dispose report");
     }
-  } catch (error) {
-    console.error("Delete error:", error);
-    message.error("An error occurred while deleting the report.");
+  } catch (err) {
+    console.error("Dispose error:", err);
+    message.error("An error occurred while disposing the report.");
   }
 };
 
@@ -162,7 +175,7 @@ export const Home = () => {
           </Button>,
           selectedItem?.reportType?.toLowerCase() === "lost" && (
           <Button key ="find" onClick = {handleRowLost} disabled={selectedItem?.status?.toLowerCase() !== "active"}>See similar items</Button>),
-          <Button key="delete" danger onClick={async () => {await handleDelete(selectedItem._id);handleModalClose();}}>Delete </Button>,
+          <Button key="dispose" danger onClick={() => handleDispose(selectedItem._id, selectedItem.reportType)}>Dispose</Button>,
         ]}
         width={700}
         maskClosable={false}
