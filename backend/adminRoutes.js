@@ -25,7 +25,7 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
                 branches: [
                   { case: { $eq: ["$status", "Pending"] }, then: 1 },
                   { case: { $eq: ["$status", "Active"] }, then: 2 },
-                  { case: { $eq: ["$status", "Pending Claimed"], then: 3}}
+                  { case: { $eq: ["$status", "Pending Claimed"], then: 3}},
                   { case: { $eq: ["$status", "Claimed"] }, then: 4 },
                   { case: { $eq: ["$status", "Disposed"] }, then: 5 },
                   { case: { $eq: ["$status", "Denied"] }, then: 6 }
