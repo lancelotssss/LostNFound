@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { editClient, editPasswordClient } from "../api";
+import { editAdmin, editPasswordAdmin } from "../api";
 
-export function UserSettings() {
+export function AdminSettings() {
   const [user, setUser] = useState({});
   const [formData, setFormData] = useState({
     studentId: "",
@@ -41,7 +41,7 @@ export function UserSettings() {
       const decodedUser = jwtDecode(token);
       setUser(decodedUser);
 
-      // initialize formData
+      
       setFormData({
         ...formData,
         studentId: decodedUser.studentId || "",
@@ -67,7 +67,7 @@ export function UserSettings() {
       const token = sessionStorage.getItem("User");
       if (!token) return;
 
-      const response = await editClient({ phone: formData.phone }, token);
+      const response = await editAdmin({ phone: formData.phone }, token);
 
       if (!response.success) {
         alert("Phone number could not be updated.");
@@ -100,7 +100,7 @@ export function UserSettings() {
       const token = sessionStorage.getItem("User");
       if (!token) return;
 
-      const response = await editPasswordClient(passwordForm, token);
+      const response = await editPasswordAdmin(passwordForm, token);
 
       if (!response.success) {
         alert("Password could not be updated.");

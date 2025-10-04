@@ -14,11 +14,13 @@ import { useEffect } from "react";
 import { AdminLost } from "./Pages/AdminLost";
 import { AdminClaims } from "./Pages/AdminClaims";
 import { AdminFound } from "./Pages/AdminFound";
-import { UserSearch } from "./Pages/UserSearch";
 import { UserSettings } from "./Pages/UserSettings";
 import { AdminLayout } from "./components/AdminLayout";
 import { ActivityLog } from "./Pages/ActivityLog";
 import { UserSearchResults } from "./Pages/UserSearchResults";
+import {AdminStorage} from "./Pages/AdminStorage";
+import { AdminHistory } from "./Pages/AdminHistory";
+import { AdminSettings } from "./Pages/AdminSettings";
 
 function App() {
   useEffect(() => {
@@ -107,10 +109,29 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/main/found-items" element={<AdminFound />} />
-            <Route path="/main/claim-items" element={<AdminClaims />} />
-            <Route path="/main/claim-items" element={<AdminClaims />} />
-            <Route path="/main/logs" element={<ActivityLog />} />
+            <Route path="/main/found-items" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminFound />
+              </ProtectedRoute>} />
+            <Route path="/main/claim-items" element={<ProtectedRoute allowedRoles={["admin"]}>
+                <AdminClaims />
+              </ProtectedRoute>} />
+            <Route path="/main/claim-items" element={<ProtectedRoute allowedRoles={["admin"]}>
+              <AdminClaims /> 
+              </ProtectedRoute> } />
+            <Route path="/main/logs" element={<ProtectedRoute allowedRoles={["admin"]}>
+              <ActivityLog />
+              </ProtectedRoute>} />
+            <Route path="/main/storage" element={<ProtectedRoute allowedRoles={["admin"]}>
+              <AdminStorage />
+            </ProtectedRoute>} />
+              <Route path="/main/history" element = {<ProtectedRoute allowedRoles={["admin"]}>
+              <AdminHistory />
+              </ProtectedRoute>}/>
+              <Route path="/main/settings" element = {<ProtectedRoute allowedRoles={["admin"]}>
+                <AdminSettings/>
+              </ProtectedRoute>} />
+
           </Route>
         </Routes>
       </Router>

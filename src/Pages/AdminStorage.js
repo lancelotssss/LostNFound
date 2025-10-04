@@ -1,12 +1,11 @@
-// AdminDisplayData.js
 import React, { useEffect, useState } from "react";
 import { Table, Button, Modal, Descriptions, Image, message } from "antd";
-import { getFoundReport, approveFound } from "../api";
+import { getStorage, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
 
 const { Column } = Table;
 
-export const AdminFound = () => {
+export const AdminStorage = () => {
   const [data, setData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -15,7 +14,7 @@ export const AdminFound = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
 
-  // 🔹 Fetch user info from token
+  
   useEffect(() => {
     const token = sessionStorage.getItem("User");
     if (token) {
@@ -24,7 +23,7 @@ export const AdminFound = () => {
     }
   }, []);
 
-  // 🔹 Fetch all found reports
+
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem("User"); 
@@ -32,11 +31,11 @@ export const AdminFound = () => {
             alert("You must be logged in");
             return;
           }
-      const res = await getFoundReport(token);
+      const res = await getStorage(token);
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
         key: item._id ? item._id.toString() : `row-${index}`,
-        _id: item._id ? item._id.toString() : null, // keep actual Mongo ID
+        _id: item._id ? item._id.toString() : null, 
         ...item,
         dateReported: item.dateReported
           ? new Date(item.dateReported).toLocaleString()
@@ -75,8 +74,8 @@ export const AdminFound = () => {
   setConfirmLoading(true);
   const token = sessionStorage.getItem("User");
   try {
-    await approveFound(selectedItem._id, "Active", user.studentId, token);
-    message.success("Item approved successfully!");
+    await approveFound(selectedItem._id, "Claimed", user.studentId, token);
+    message.success("Item claimed successfully!");
     setApproveModal(false);
     setIsModalVisible(false);
     fetchData();
@@ -92,14 +91,14 @@ const confirmDeny = async () => {
   setConfirmLoading(true);
   const token = sessionStorage.getItem("User");
   try {
-    await approveFound(selectedItem._id, "Denied", user.studentId, token); // ✅ use _id here
-    message.success("Item denied successfully!");
+    await approveFound(selectedItem._id, "Disposed", user.studentId, token); 
+    message.success("Item disposed successfully!");
     setDenyModal(false);
     setIsModalVisible(false);
     fetchData();
   } catch (err) {
     console.error(err);
-    message.error("Failed to deny item.");
+    message.error("Failed to dispose item.");
   } finally {
     setConfirmLoading(false);
   }
@@ -159,11 +158,11 @@ const confirmDeny = async () => {
             </Descriptions>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button type="primary" onClick={handleApprove}  disabled={selectedItem.status === "Active"}>
-                Approve
+              <Button type="primary" onClick={handleApprove}  disabled={selectedItem.status === "Claimed"}>
+                Claim
               </Button>
-              <Button danger onClick={handleDeny} disabled={selectedItem.status === "Denied"}>
-                Deny
+              <Button danger onClick={handleDeny} disabled={selectedItem.status === "Dispose"}>
+                Dispose
               </Button>
               <Button onClick={handleModalClose}>Cancel</Button>
             </div>
@@ -179,7 +178,7 @@ const confirmDeny = async () => {
         confirmLoading={confirmLoading}
         onCancel={() => setApproveModal(false)}
       >
-        <p>Are you sure you want to approve this report?</p>
+        <p>Are you sure you want to authorize claim this item?</p>
       </Modal>
 
       {/* Deny Confirmation */}
@@ -190,7 +189,7 @@ const confirmDeny = async () => {
         confirmLoading={confirmLoading}
         onCancel={() => setDenyModal(false)}
       >
-        <p>Are you sure you want to deny this report?</p>
+        <p>Are you sure you want to authorize dispose this item?</p>
       </Modal>
     </>
   );

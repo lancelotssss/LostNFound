@@ -47,6 +47,7 @@ export const AdminLost = () => {
           endDate: item.endDate
             ? new Date(item.endDate).toLocaleDateString()
             : "N/A",
+            approvedBy: item.approvedBy ? item.approvedBy : "No actions yet"
         }));
         setData(formattedData);
       }
@@ -59,7 +60,7 @@ export const AdminLost = () => {
     fetchData();
   }, []);
 
-  // 🔹 Modal logic
+
   const handleRowClick = (record) => {
     setSelectedItem(record);
     setIsModalVisible(true);
@@ -73,7 +74,6 @@ export const AdminLost = () => {
   const handleApprove = () => setApproveModal(true);
   const handleDeny = () => setDenyModal(true);
 
-  // 🔹 Confirm Approve
   const confirmApprove = async () => {
     setConfirmLoading(true);
     const token = sessionStorage.getItem("User");
@@ -121,7 +121,6 @@ export const AdminLost = () => {
           style: { cursor: "pointer" },
         })}
       >
-        <Column title="TID" dataIndex="tid" key="tid" />
         <Column title="Title" dataIndex="title" key="title" />
         <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
         <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
@@ -149,6 +148,7 @@ export const AdminLost = () => {
             )}
             <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+              <Descriptions.Item label="Report Type">{selectedItem.reportType}</Descriptions.Item>
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
@@ -158,15 +158,14 @@ export const AdminLost = () => {
               <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
               <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
               <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
-              <Descriptions.Item label="Report Type">{selectedItem.reportType}</Descriptions.Item>
               <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
             </Descriptions>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button type="primary" onClick={handleApprove}>
+              <Button type="primary" onClick={handleApprove}  disabled={selectedItem.status === "Active"}>
                 Approve
               </Button>
-              <Button danger onClick={handleDeny}>
+              <Button danger onClick={handleDeny}  disabled={selectedItem.status === "Denied"}>
                 Deny
               </Button>
               <Button onClick={handleModalClose}>Cancel</Button>

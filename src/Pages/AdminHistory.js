@@ -1,12 +1,11 @@
-// AdminDisplayData.js
 import React, { useEffect, useState } from "react";
 import { Table, Button, Modal, Descriptions, Image, message } from "antd";
-import { getFoundReport, approveFound } from "../api";
+import { getHistory, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
 
 const { Column } = Table;
 
-export const AdminFound = () => {
+export const AdminHistory = () => {
   const [data, setData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -15,7 +14,7 @@ export const AdminFound = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
 
-  // 🔹 Fetch user info from token
+  
   useEffect(() => {
     const token = sessionStorage.getItem("User");
     if (token) {
@@ -24,7 +23,7 @@ export const AdminFound = () => {
     }
   }, []);
 
-  // 🔹 Fetch all found reports
+
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem("User"); 
@@ -32,11 +31,11 @@ export const AdminFound = () => {
             alert("You must be logged in");
             return;
           }
-      const res = await getFoundReport(token);
+      const res = await getHistory(token);
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
         key: item._id ? item._id.toString() : `row-${index}`,
-        _id: item._id ? item._id.toString() : null, // keep actual Mongo ID
+        _id: item._id ? item._id.toString() : null, 
         ...item,
         dateReported: item.dateReported
           ? new Date(item.dateReported).toLocaleString()
@@ -155,43 +154,19 @@ const confirmDeny = async () => {
               <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
               <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
               <Descriptions.Item label="Date Found">{selectedItem.dateFound}</Descriptions.Item>
+              <Descriptions.Item label="Start Date">{selectedItem.startDate}</Descriptions.Item>
+              <Descriptions.Item label="End Date">{selectedItem.endDate}</Descriptions.Item>
               <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
             </Descriptions>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button type="primary" onClick={handleApprove}  disabled={selectedItem.status === "Active"}>
-                Approve
-              </Button>
-              <Button danger onClick={handleDeny} disabled={selectedItem.status === "Denied"}>
-                Deny
-              </Button>
               <Button onClick={handleModalClose}>Cancel</Button>
             </div>
           </>
         )}
       </Modal>
 
-      {/* Approve Confirmation */}
-      <Modal
-        title="Confirm Approval"
-        open={approveModal}
-        onOk={confirmApprove}
-        confirmLoading={confirmLoading}
-        onCancel={() => setApproveModal(false)}
-      >
-        <p>Are you sure you want to approve this report?</p>
-      </Modal>
-
-      {/* Deny Confirmation */}
-      <Modal
-        title="Confirm Denial"
-        open={denyModal}
-        onOk={confirmDeny}
-        confirmLoading={confirmLoading}
-        onCancel={() => setDenyModal(false)}
-      >
-        <p>Are you sure you want to deny this report?</p>
-      </Modal>
+      
     </>
   );
 };

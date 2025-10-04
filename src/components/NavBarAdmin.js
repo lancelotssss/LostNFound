@@ -19,11 +19,24 @@ const pageDataAdmin = [
         path: "/main/claim-items"
     },
     {
+      name: "Storage",
+      path: "/main/storage"
+    },
+    {
+      name: "History",
+      path: "/main/history"
+    },
+    {
         name: "Activity Logs",
         path: "/main/logs"
     },
+    {
+      name: "User Settings",
+      path: "/main/settings"
+    },
 
-    { name: "Logout" }, // No path, triggers logout
+
+    { name: "Logout" }, 
 ];
 
 

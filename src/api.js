@@ -185,7 +185,7 @@ export async function approveFound(itemObjectId, status, approvedBy, token) {
 
 export async function approveLost(itemObjectId, status, approvedBy, token) {
   try {
-    const response = await axios.put(`${URL}/lost/approve`,
+    const response = await axios.put(`${URL}/main/lost/approve`,
       { itemObjectId, status, approvedBy },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -212,6 +212,78 @@ export async function getLostReport(token) {
   }
 }
 
+export async function getStorage(token) {
+  try {
+    const response = await axios.get(`${URL}/main/storage`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("Axios response:", response);
+    return response.data; // { count, results }
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
+}
+
+export async function approveStorage(itemObjectId, status, approvedBy, token) {
+  try {
+    const response = await axios.put(`${URL}/main/storage/approve`,
+      { itemObjectId, status, approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error updating found item:", err);
+    throw err;
+  }
+}
+
+export async function getHistory(token) {
+  try {
+    const response = await axios.get(`${URL}/main/history`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("Axios response:", response);
+    return response.data; // { count, results }
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
+}
+
+export async function editAdmin(data, token) {
+  try {
+    const response = await axios.put(`${URL}/main/settings/edit`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+    });
+    console.log("Axios response: ", response)
+    return response.data;
+  } catch (err){
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
+}
+
+export async function editPasswordAdmin(data, token) {
+  try {
+    const response = await axios.put(`${URL}/main/settings/pass`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+    });
+    console.log("Axios response: ", response)
+    return response.data;
+  } catch (err){
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
+}
 
 
 export async function getClaimReport(token) {
