@@ -1,13 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createUser } from "../api";
 import { useNavigate } from "react-router-dom";
-import { Card, Input, Select, Button, Image, Typography, message} from "antd";
+import { Card, Input, Select, Button, Image, Typography, message } from "antd";
 import { Link } from "react-router-dom";
+import { Spin } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
 
 import "./styles/RegisterPage.css";
 const { Title } = Typography;
-
 export default function RegisterPage2() {
+  // --------------------------------------------------------------------------------
+  // --- JACOB CODES --- loading notification after mag register
+  // setSubmitting pang set after pindutin yung register
+  const [loading, setLoading] = useState(true); // page loader
+  const [submitting, setSubmitting] = useState(false); // submit loader
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 1000); // same as LoginPage
+    return () => clearTimeout(t);
+  }, []);
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <Spin
+          indicator={<LoadingOutlined spin />}
+          size="large"
+          tip="Loading..."
+        />
+      </div>
+    );
+  }
+  // --- END JACOB CODES ---
+  // --------------------------------------------------------------------------------
+
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [registerData, setRegisterData] = useState({
@@ -117,8 +141,10 @@ export default function RegisterPage2() {
           uid: "",
         });
 
-        // ----------------------------------- ANT design pang loading message 
-        showCenteredSuccess("Account created! You can sign in now.");
+        // ----------------------------------- ANT design pang loading message
+        setSubmitting(true); // <---------- start ng loading
+
+        showCenteredSuccess("Account created! You can sign in now."); // <--- success message galing sa ant d
         setTimeout(() => navigate("/"), 1800);
 
         // ----------------------------------- end ng message
@@ -150,22 +176,20 @@ export default function RegisterPage2() {
   }
 
   /* ------------------------------------------------- TOAST NOTIFICATION -------------------------------------------------  */
-const showCenteredSuccess = (text) => {
-  const h = window.innerHeight || document.documentElement.clientHeight || 800;
-  const msgTop = Math.max(0, Math.round(h / 2 - 24)); // ~vertical center
+  const showCenteredSuccess = (text) => {
+    const h =
+      window.innerHeight || document.documentElement.clientHeight || 800;
+    const msgTop = Math.max(0, Math.round(h / 2 - 24)); // ~vertical center
 
-  // Temporarily move container to top so marginTop pushes it down to center
-  message.config({ top: 0 });
-  messageApi.open({
-    type: "success",
-    content: text,
-    duration: 2.2,
-    style: { marginTop: msgTop, textAlign: "center" },
-  });
-  // Reset default top for future messages
-  setTimeout(() => message.config({ top: 8 }), 0);
-};
-
+    message.config({ top: 0 });
+    messageApi.open({
+      type: "success",
+      content: text,
+      duration: 2.2,
+      style: { marginTop: msgTop, textAlign: "center" },
+    });
+    setTimeout(() => message.config({ top: 8 }), 0);
+  };
 
   return (
     <div className="register-container">
@@ -190,7 +214,6 @@ const showCenteredSuccess = (text) => {
             CREATE YOUR ACCOUNT
           </Title>
 
-          {/* NEW */}
           <p className="register-header__desc">
             Create your FoundHub account to report lost items, post found items,
             and claim matches.
@@ -202,10 +225,6 @@ const showCenteredSuccess = (text) => {
             PERSONAL INFORMATION
           </h2>
 
-
-
-
-          
           {/* -------------------------------------------------------------------------------------------------------------------- */}
           {/* Name block */}
           <div
@@ -356,6 +375,7 @@ const showCenteredSuccess = (text) => {
           <h2 id="thirdHeader" className="reg-form-headers">
             PERSONAL INFORMATION
           </h2>
+
           <div
             style={{
               display: "grid",
@@ -373,6 +393,7 @@ const showCenteredSuccess = (text) => {
                 size="large"
               />
             </div>
+
             <div>
               <label>Confirm Password</label>
               <Input.Password
@@ -385,12 +406,10 @@ const showCenteredSuccess = (text) => {
             </div>
           </div>
 
-          {/* General error */}
           {errors.general && (
             <div style={{ color: "red", marginTop: 12 }}>{errors.general}</div>
           )}
 
-          {/* Submit */}
           <Button
             id="registerBtn"
             type="primary"
@@ -401,12 +420,13 @@ const showCenteredSuccess = (text) => {
             REGISTER
           </Button>
 
-          {/* Footer under the button */}
           <div className="register-footer">
             <p className="register-legal">
-              By registering, you confirm that the information provided is accurate and complete.
-              You agree to comply with FoundHub’s <Link to="/terms">Terms &amp; Conditions</Link> and
-              acknowledge our <Link to="/privacy">Privacy Policy</Link>, including how we handle your personal data.
+              By registering, you confirm that the information provided is
+              accurate and complete. You agree to comply with FoundHub’s{" "}
+              <Link to="/terms">Terms &amp; Conditions</Link> and acknowledge
+              our <Link to="/privacy">Privacy Policy</Link>, including how we
+              handle your personal data.
             </p>
 
             <p className="register-auth">
@@ -416,7 +436,5 @@ const showCenteredSuccess = (text) => {
         </form>
       </Card>
     </div>
-
-    
   );
 }
