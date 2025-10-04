@@ -23,6 +23,11 @@ function LoginForm() {
   async function handleSubmit(e) {
     e.preventDefault();
 
+    if (!loginData.email.trim() || !loginData.password.trim()) {
+    alert("Email and password fields cannot be empty.");
+    return; 
+    }
+
     //do not touch
     let response = await verifyUser(loginData);
 
