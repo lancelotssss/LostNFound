@@ -531,7 +531,7 @@ userRoutes.post("/similar-items", verifyToken, async (req, res) => {
       status: "Active",
       _id: { $ne: new ObjectId(selectedItemId) },   // convert string to ObjectId
       reportedBy: { $ne: studentId },
-      $or: [
+      $and: [
         { category: category },
         { keyItem: keyItem },
         { location: location },

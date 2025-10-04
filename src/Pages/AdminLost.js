@@ -15,7 +15,7 @@ export const AdminLost = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
 
-  // 🔹 Load admin user
+  
   useEffect(() => {
     const token = sessionStorage.getItem("User");
     if (token) {
@@ -24,7 +24,7 @@ export const AdminLost = () => {
     }
   }, []);
 
-  // 🔹 Fetch Lost reports
+
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem("User");
@@ -91,7 +91,7 @@ export const AdminLost = () => {
     }
   };
 
-  // 🔹 Confirm Deny
+ 
   const confirmDeny = async () => {
     setConfirmLoading(true);
     const token = sessionStorage.getItem("User");
@@ -130,7 +130,7 @@ export const AdminLost = () => {
         <Column title="End Date" dataIndex="endDate" key="endDate" />
       </Table>
 
-      {/* Main Modal */}
+      
       <Modal
         title={selectedItem ? selectedItem.title : "Lost Item Details"}
         open={isModalVisible}
@@ -174,7 +174,7 @@ export const AdminLost = () => {
         )}
       </Modal>
 
-      {/* Approve Confirmation */}
+      
       <Modal
         title="Confirm Approval"
         open={approveModal}
@@ -185,7 +185,7 @@ export const AdminLost = () => {
         <p>Are you sure you want to approve this lost report?</p>
       </Modal>
 
-      {/* Deny Confirmation */}
+      
       <Modal
         title="Confirm Denial"
         open={denyModal}
