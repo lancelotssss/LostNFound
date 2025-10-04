@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { createUser } from "../api";
 import { useNavigate } from "react-router-dom";
-import { Card, Input, Select, Button, Image, Typography } from "antd";
+import { Card, Input, Select, Button, Image, Typography, message} from "antd";
+import { Link } from "react-router-dom";
+
 import "./styles/RegisterPage.css";
 const { Title } = Typography;
 
 export default function RegisterPage2() {
   const navigate = useNavigate();
-
+  const [messageApi, contextHolder] = message.useMessage();
   const [registerData, setRegisterData] = useState({
     fname: "",
     mname: "",
@@ -53,25 +55,37 @@ export default function RegisterPage2() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-  const { fname, lname, email, studentId, password, confirmPassword } = registerData;
-  if (!fname.trim() || !lname.trim() || !email.trim() || !studentId.trim() || !password.trim() || !confirmPassword.trim()) {
-    alert("Email and password fields cannot be empty.");
-    return; // 
-  }
+    const { fname, lname, email, studentId, password, confirmPassword } =
+      registerData;
+    if (
+      !fname.trim() ||
+      !lname.trim() ||
+      !email.trim() ||
+      !studentId.trim() ||
+      !password.trim() ||
+      !confirmPassword.trim()
+    ) {
+      alert("Email and password fields cannot be empty.");
+      return; //
+    }
 
-  // Password match check
-  if (password !== confirmPassword) {
-    setErrors({ general: "Passwords do not match." });
-    return;
-  }
+    // Password match check
+    if (password !== confirmPassword) {
+      setErrors({ general: "Passwords do not match." });
+      return;
+    }
 
-
-  const newRegisterData = {
-    ...registerData,
-    name: [registerData.fname, registerData.mname, registerData.lname, registerData.suffix]
-      .filter(Boolean)
-      .join(" ")
-  };
+    const newRegisterData = {
+      ...registerData,
+      name: [
+        registerData.fname,
+        registerData.mname,
+        registerData.lname,
+        registerData.suffix,
+      ]
+        .filter(Boolean)
+        .join(" "),
+    };
 
     setErrors({ email: "", studentId: "", general: "" }); // reset errors
 
@@ -79,7 +93,6 @@ export default function RegisterPage2() {
       const response = await createUser(newRegisterData);
 
       if (response?.success) {
-        alert("Account added!");
         setRegisterData({
           fname: "",
           mname: "",
@@ -103,7 +116,14 @@ export default function RegisterPage2() {
           updatedAt: "",
           uid: "",
         });
-        navigate("/");
+
+        // ----------------------------------- ANT design pang loading message 
+        showCenteredSuccess("Account created! You can sign in now.");
+        setTimeout(() => navigate("/"), 1800);
+
+        // ----------------------------------- end ng message
+
+        return;
       } else {
         setErrors((prev) => ({
           ...prev,
@@ -129,8 +149,27 @@ export default function RegisterPage2() {
     }
   }
 
+  /* ------------------------------------------------- TOAST NOTIFICATION -------------------------------------------------  */
+const showCenteredSuccess = (text) => {
+  const h = window.innerHeight || document.documentElement.clientHeight || 800;
+  const msgTop = Math.max(0, Math.round(h / 2 - 24)); // ~vertical center
+
+  // Temporarily move container to top so marginTop pushes it down to center
+  message.config({ top: 0 });
+  messageApi.open({
+    type: "success",
+    content: text,
+    duration: 2.2,
+    style: { marginTop: msgTop, textAlign: "center" },
+  });
+  // Reset default top for future messages
+  setTimeout(() => message.config({ top: 8 }), 0);
+};
+
+
   return (
     <div className="register-container">
+      {contextHolder}
       <Card className="register-card">
         {/* --- HEADER --- */}
 
@@ -138,24 +177,43 @@ export default function RegisterPage2() {
           <Image
             src="/assets/kit.png"
             alt="Toolbox"
-            width={88}
+            width={55}
             preview={false}
             className="register-header__icon"
           />
 
           <Title
-            id="register-header"
-            level={3}
+            level={5}
             className="register-header__title"
+            style={{ margin: 0 }}
           >
             CREATE YOUR ACCOUNT
           </Title>
+
+          {/* NEW */}
+          <p className="register-header__desc">
+            Create your FoundHub account to report lost items, post found items,
+            and claim matches.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="reg-form" onSubmit={handleSubmit}>
+          <h2 id="firstHeader" className="reg-form-headers">
+            PERSONAL INFORMATION
+          </h2>
+
+
+
+
+          
+          {/* -------------------------------------------------------------------------------------------------------------------- */}
           {/* Name block */}
           <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 25,
+            }}
           >
             <div>
               <label>First Name</label>
@@ -167,6 +225,7 @@ export default function RegisterPage2() {
                 size="large"
               />
             </div>
+
             <div>
               <label>Middle Name</label>
               <Input
@@ -177,6 +236,7 @@ export default function RegisterPage2() {
                 size="large"
               />
             </div>
+
             <div>
               <label>Last Name</label>
               <Input
@@ -187,6 +247,7 @@ export default function RegisterPage2() {
                 size="large"
               />
             </div>
+
             <div>
               <label>Suffix</label>
               <Input
@@ -199,13 +260,16 @@ export default function RegisterPage2() {
             </div>
           </div>
 
+          {/* -------------------------------------------------------------------------------------------------------------------- */}
           {/* Contacts / IDs */}
+          <h2 id="secondHeader" className="reg-form-headers">
+            ACCOUNT INFORMATION
+          </h2>
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
-              gap: 12,
-              marginTop: 16,
+              gap: 25,
             }}
           >
             <div>
@@ -264,7 +328,11 @@ export default function RegisterPage2() {
           </div>
 
           {/* Gender */}
-          <div style={{ marginTop: 16 }}>
+          <div
+            style={{
+              marginTop: 25,
+            }}
+          >
             <label>Gender</label>
             <Select
               size="large"
@@ -283,13 +351,16 @@ export default function RegisterPage2() {
             />
           </div>
 
+          {/* -------------------------------------------------------------------------------------------------------------------- */}
           {/* Passwords */}
+          <h2 id="thirdHeader" className="reg-form-headers">
+            PERSONAL INFORMATION
+          </h2>
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
-              gap: 12,
-              marginTop: 16,
+              gap: 25,
             }}
           >
             <div>
@@ -321,15 +392,31 @@ export default function RegisterPage2() {
 
           {/* Submit */}
           <Button
+            id="registerBtn"
             type="primary"
             size="large"
             htmlType="submit"
-            style={{ width: "100%", marginTop: 20 }}
+            style={{ width: "100%", marginTop: 40 }}
           >
             REGISTER
           </Button>
+
+          {/* Footer under the button */}
+          <div className="register-footer">
+            <p className="register-legal">
+              By registering, you confirm that the information provided is accurate and complete.
+              You agree to comply with FoundHub’s <Link to="/terms">Terms &amp; Conditions</Link> and
+              acknowledge our <Link to="/privacy">Privacy Policy</Link>, including how we handle your personal data.
+            </p>
+
+            <p className="register-auth">
+              Already have an account? <Link to="/">SIGN IN</Link>
+            </p>
+          </div>
         </form>
       </Card>
     </div>
+
+    
   );
 }
