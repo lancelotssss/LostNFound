@@ -1,19 +1,69 @@
 import { useLocation } from "react-router-dom";
-import { Row, Col, Empty } from "antd";
-import { SearchResultCardModal } from "../components/SearchResultCardModal";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { Row, Col, Empty, Spin, message } from "antd";
+import {SearchResultCardModal} from '../components/SearchResultCardModal';
+import { jwtDecode } from "jwt-decode";
 
 export function UserSearchResults() {
   const location = useLocation();
-  const results = location.state?.results || [];
+  const selectedItem = location.state?.selectedItem;
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+  if (!selectedItem) return;
+
+  const fetchRecommendations = async () => {
+    setLoading(true);
+    try {
+      const token = sessionStorage.getItem("User");
+      if (!token) {
+        message.error("You must be logged in to view recommendations.");
+        return;
+      }
+
+      // Call backend for similar items
+      const response = await axios.post(
+        "http://localhost:3110/cli/similar-items",
+        {
+          selectedItemId: selectedItem._id,
+          category: selectedItem.category,
+          keyItem: selectedItem.keyItem,
+          location: selectedItem.location,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setRecommendations(response.data.similarFound);
+    } catch (error) {
+      console.error("Error fetching recommended items:", error);
+      message.error("Failed to load similar items.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchRecommendations();
+}, [selectedItem]);
+
+  if (!selectedItem) {
+    return <Empty description="No selected item" style={{ marginTop: 100 }} />;
+  }
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Search Results</h1>
-      {results.length === 0 ? (
-        <Empty description="No items found" />
+      <h1>Recommended Items</h1>
+
+      {loading ? (
+        <Spin size="large" />
+      ) : recommendations.length === 0 ? (
+        <Empty description="No similar items found" />
       ) : (
         <Row gutter={[16, 16]}>
-          {results.map((item) => (
+          {recommendations.map((item) => (
             <Col key={item._id} xs={24} sm={12} md={8} lg={6}>
               <SearchResultCardModal item={item} />
             </Col>

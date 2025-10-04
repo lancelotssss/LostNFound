@@ -25,9 +25,10 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
                 branches: [
                   { case: { $eq: ["$status", "Pending"] }, then: 1 },
                   { case: { $eq: ["$status", "Active"] }, then: 2 },
-                  { case: { $eq: ["$status", "Claimed"] }, then: 3 },
-                  { case: { $eq: ["$status", "Disposed"] }, then: 4 },
-                  { case: { $eq: ["$status", "Denied"] }, then: 5 }
+                  { case: { $eq: ["$status", "Pending Claimed"], then: 3}}
+                  { case: { $eq: ["$status", "Claimed"] }, then: 4 },
+                  { case: { $eq: ["$status", "Disposed"] }, then: 5 },
+                  { case: { $eq: ["$status", "Denied"] }, then: 6 }
                 ],
                 default: 99
               }
@@ -93,6 +94,28 @@ adminRoutes.put("/found/approve", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Error approving/denying item:", err);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+adminRoutes.delete("/delete/:id", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { id } = req.params;
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Access denied. Admin only." });
+    }
+
+    const result = await db.collection("reports").deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: "Report not found" });
+    }
+
+    res.json({ success: true, message: "Report deleted successfully" });
+  } catch (error) {
+    console.error("Admin delete error:", error);
+    res.status(500).json({ success: false, message: "Server error during deletion" });
   }
 });
 
