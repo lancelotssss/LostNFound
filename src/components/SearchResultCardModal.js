@@ -41,9 +41,9 @@ export function SearchResultCardModal({ item }) {
     const values = await form.validateFields();
     const token = sessionStorage.getItem("User");
 
-    // ✅ build FormData
+    
     const formData = new FormData();
-    formData.append("itemId", item._id);
+    formData.append("itemId", item.tid);
     formData.append("claimerId", user?.studentId);
     formData.append("reason", values.reason);
 

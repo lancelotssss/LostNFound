@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppstoreOutlined, MailOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
 import { logOutUser } from "../api";
-import axios from "axios";
+
 
 export const pageDataClient = [
    {
@@ -13,10 +13,6 @@ export const pageDataClient = [
     {
         name: "Report Item",
         path: "/cli/report"
-    },
-    {
-        name: "Search Item",
-        path: "/cli/search"
     },
     {
         name: "User Profile",

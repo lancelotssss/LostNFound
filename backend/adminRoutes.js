@@ -25,6 +25,99 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
         }
     });
   
+adminRoutes.put("/found/approve", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { itemObjectId, status, approvedBy } = req.body;
+
+    console.log("Incoming Approve Payload:", req.body);
+
+    if (!itemObjectId || !status || !approvedBy) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    if (!ObjectId.isValid(itemObjectId)) {
+      return res.status(400).json({ success: false, message: "Invalid itemId" });
+    }
+
+    const objectId = new ObjectId(itemObjectId);
+
+    const updateResult = await db.collection("lost_found_db").updateOne(
+      { _id: objectId },
+      { $set: { status, approvedBy } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      return res.status(404).json({ success: false, message: "Item not found" });
+    }
+
+    const auditMongo = {
+      aid: `A-${Date.now()}`,
+      action: status === "Active" ? "APPROVE_FOUND" : "DENY_FOUND",
+      targetUser: "",
+      performedBy: approvedBy,
+      timestamp: new Date(),
+      ticketId: updateResult.tid,
+      details: `${approvedBy} set item ${updateResult.tid} status to ${status}.`,
+    };
+
+    await db.collection("audit_db").insertOne(auditMongo);
+
+    res.json({ success: true, message: `Item ${status}`, audit: auditMongo });
+  } catch (err) {
+    console.error("Error approving/denying item:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+adminRoutes.put("/lost/approve", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { itemObjectId, status, approvedBy } = req.body;
+
+    console.log("Incoming Lost Approve Payload:", req.body);
+
+    if (!itemObjectId || !status || !approvedBy) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    if (!ObjectId.isValid(itemObjectId)) {
+      return res.status(400).json({ success: false, message: "Invalid itemId" });
+    }
+
+    const objectId = new ObjectId(itemObjectId);
+
+    // ✅ update status + approvedBy
+    const updateResult = await db.collection("lost_found_db").updateOne(
+      { _id: objectId, reportType: "Lost" },
+      { $set: { status, approvedBy } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      return res.status(404).json({ success: false, message: "Lost item not found" });
+    }
+
+    // 🔹 Audit log
+    const auditMongo = {
+      aid: `A-${Date.now()}`,
+      action: status === "Active" ? "APPROVE_LOST" : "DENY_LOST",
+      targetUser: "",
+      performedBy: approvedBy,
+      timestamp: new Date(),
+      ticketId: itemObjectId,
+      details: `${approvedBy} set lost item ${itemObjectId} status to ${status}.`,
+    };
+
+    await db.collection("audit_db").insertOne(auditMongo);
+
+    res.json({ success: true, message: `Lost Item ${status}`, audit: auditMongo });
+  } catch (err) {
+    console.error("❌ Error approving/denying lost item:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
 
     adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
       try {

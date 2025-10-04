@@ -53,17 +53,25 @@ export default function RegisterPage2() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const newRegisterData = {
-      ...registerData,
-      name: [
-        registerData.fname,
-        registerData.mname,
-        registerData.lname,
-        registerData.suffix,
-      ]
-        .filter(Boolean)
-        .join(" "),
-    };
+  const { fname, lname, email, studentId, password, confirmPassword } = registerData;
+  if (!fname.trim() || !lname.trim() || !email.trim() || !studentId.trim() || !password.trim() || !confirmPassword.trim()) {
+    alert("Email and password fields cannot be empty.");
+    return; // 
+  }
+
+  // Password match check
+  if (password !== confirmPassword) {
+    setErrors({ general: "Passwords do not match." });
+    return;
+  }
+
+
+  const newRegisterData = {
+    ...registerData,
+    name: [registerData.fname, registerData.mname, registerData.lname, registerData.suffix]
+      .filter(Boolean)
+      .join(" ")
+  };
 
     setErrors({ email: "", studentId: "", general: "" }); // reset errors
 

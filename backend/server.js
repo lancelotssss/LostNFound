@@ -14,7 +14,7 @@ app.use(posts);
 app.use(users);
 app.use(admin);
 
-app.use("/users", users);  // -> /users/register, /users/login, etc.
+app.use("/users", users);  
 app.use("/cli", users);   
 app.use("/main", admin)
 
