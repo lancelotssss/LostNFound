@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { createUser } from "../api";
 import { useNavigate } from "react-router-dom";
+import { Card, Input, Select, Button, Image, Typography } from "antd";
+import "./styles/RegisterPage.css";
+const { Title } = Typography;
 
-
-export default function RegisterPage() {
-  
-  const navigate = useNavigate()
+export default function RegisterPage2() {
+  const navigate = useNavigate();
 
   const [registerData, setRegisterData] = useState({
     fname: "",
@@ -35,14 +36,14 @@ export default function RegisterPage() {
     performedBy: "System",
     timestamp: new Date(),
     ticketId: "",
-    details: `User registered successfully.`
+    details: `User registered successfully.`,
   });
 
   const [errors, setErrors] = useState({
-  email: "",
-  studentId: "",
-  general: ""
-});
+    email: "",
+    studentId: "",
+    general: "",
+  });
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -50,22 +51,27 @@ export default function RegisterPage() {
   }
 
   async function handleSubmit(e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  const newRegisterData = {
-    ...registerData,
-    name: [registerData.fname, registerData.mname, registerData.lname, registerData.suffix]
-      .filter(Boolean)
-      .join(" ")
-  };
+    const newRegisterData = {
+      ...registerData,
+      name: [
+        registerData.fname,
+        registerData.mname,
+        registerData.lname,
+        registerData.suffix,
+      ]
+        .filter(Boolean)
+        .join(" "),
+    };
 
-  setErrors({ email: "", studentId: "", general: "" }); // reset errors
+    setErrors({ email: "", studentId: "", general: "" }); // reset errors
 
-  try {
-    const response = await createUser(newRegisterData);
+    try {
+      const response = await createUser(newRegisterData);
 
-    if (response?.success) {
-      alert("Account added!");
+      if (response?.success) {
+        alert("Account added!");
         setRegisterData({
           fname: "",
           mname: "",
@@ -89,157 +95,233 @@ export default function RegisterPage() {
           updatedAt: "",
           uid: "",
         });
-       navigate("/");
-    } else {
-      setErrors(prev => ({ ...prev, general: response.message || "Registration failed" }));
-    }
-  } catch (err) {
-    if (err.response?.status === 400) {
-      const msg = err.response.data.message || "";
-      if (msg.includes("email")) {
-        setErrors(prev => ({ ...prev, email: msg }));
-      } else if (msg.includes("student ID")) {
-        setErrors(prev => ({ ...prev, studentId: msg }));
+        navigate("/");
       } else {
-        setErrors(prev => ({ ...prev, general: msg }));
+        setErrors((prev) => ({
+          ...prev,
+          general: response.message || "Registration failed",
+        }));
       }
-    } else {
-      setErrors(prev => ({ ...prev, general: "Something went wrong, try again." }));
+    } catch (err) {
+      if (err.response?.status === 400) {
+        const msg = err.response.data.message || "";
+        if (msg.includes("email")) {
+          setErrors((prev) => ({ ...prev, email: msg }));
+        } else if (msg.includes("student ID")) {
+          setErrors((prev) => ({ ...prev, studentId: msg }));
+        } else {
+          setErrors((prev) => ({ ...prev, general: msg }));
+        }
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          general: "Something went wrong, try again.",
+        }));
+      }
     }
   }
-}
+
   return (
-    <>
-    <a href="/">Login</a>
-    <form onSubmit={handleSubmit}>
-      <h1>Register</h1>
+    <div className="register-container">
+      <Card className="register-card">
+        {/* --- HEADER --- */}
 
-      <p>
-        First Name:
-        <input
-          type="text"
-          name="fname"
-          placeholder="First Name"
-          value={registerData.fname}
-          onChange={handleChange}
-        />
-      </p>
+        <div className="register-header">
+          <Image
+            src="/assets/kit.png"
+            alt="Toolbox"
+            width={88}
+            preview={false}
+            className="register-header__icon"
+          />
 
-      <p>
-        Middle Name:
-        <input
-          type="text"
-          name="mname"
-          placeholder="Middle Name"
-          value={registerData.mname}
-          onChange={handleChange}
-        />
-      </p>
+          <Title
+            id="register-header"
+            level={3}
+            className="register-header__title"
+          >
+            CREATE YOUR ACCOUNT
+          </Title>
+        </div>
 
-      <p>
-        Last Name:
-        <input
-          type="text"
-          name="lname"
-          placeholder="Last Name"
-          value={registerData.lname}
-          onChange={handleChange}
-        />
-      </p>
+        <form onSubmit={handleSubmit}>
+          {/* Name block */}
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+          >
+            <div>
+              <label>First Name</label>
+              <Input
+                name="fname"
+                placeholder="First Name"
+                value={registerData.fname}
+                onChange={handleChange}
+                size="large"
+              />
+            </div>
+            <div>
+              <label>Middle Name</label>
+              <Input
+                name="mname"
+                placeholder="Middle Name"
+                value={registerData.mname}
+                onChange={handleChange}
+                size="large"
+              />
+            </div>
+            <div>
+              <label>Last Name</label>
+              <Input
+                name="lname"
+                placeholder="Last Name"
+                value={registerData.lname}
+                onChange={handleChange}
+                size="large"
+              />
+            </div>
+            <div>
+              <label>Suffix</label>
+              <Input
+                name="suffix"
+                placeholder="Jr., Sr., III"
+                value={registerData.suffix}
+                onChange={handleChange}
+                size="large"
+              />
+            </div>
+          </div>
 
-      <p>
-        Suffix:
-        <input
-          type="text"
-          name="suffix"
-          placeholder="Name Suffix"
-          value={registerData.suffix}
-          onChange={handleChange}
-        />
-      </p>
+          {/* Contacts / IDs */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 12,
+              marginTop: 16,
+            }}
+          >
+            <div>
+              <label>Email</label>
+              <Input
+                name="email"
+                type="email"
+                placeholder="email@example.com"
+                value={registerData.email}
+                onChange={handleChange}
+                size="large"
+              />
+              {errors.email && (
+                <div style={{ color: "red", marginTop: 4 }}>{errors.email}</div>
+              )}
+            </div>
 
-      <p>
-      Email:
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        value={registerData.email}
-        onChange={handleChange}
-      />
-      {errors.email && <span style={{ color: "red" }}>{errors.email}</span>}
-    </p>
+            <div>
+              <label>Phone</label>
+              <Input
+                name="phone"
+                placeholder="Mobile Number"
+                value={registerData.phone}
+                onChange={handleChange}
+                size="large"
+              />
+            </div>
 
+            <div>
+              <label>Student ID</label>
+              <Input
+                name="studentId"
+                placeholder="Student ID"
+                value={registerData.studentId}
+                onChange={handleChange}
+                size="large"
+              />
+              {errors.studentId && (
+                <div style={{ color: "red", marginTop: 4 }}>
+                  {errors.studentId}
+                </div>
+              )}
+            </div>
 
-      <p>
-        Phone:
-        <input
-          type="text"
-          name="phone"
-          placeholder="Mobile Number"
-          value={registerData.phone}
-          onChange={handleChange}
-        />
-      </p>
+            <div>
+              <label>Birthday</label>
+              {/* Keep native date via AntD Input to avoid handler changes */}
+              <Input
+                name="birthday"
+                type="date"
+                value={registerData.birthday}
+                onChange={handleChange}
+                size="large"
+              />
+            </div>
+          </div>
 
-      <p>
-      Student ID:
-      <input
-        type="text"
-        name="studentId"
-        placeholder="Student ID"
-        value={registerData.studentId}
-        onChange={handleChange}
-      />
-      {errors.studentId && <span style={{ color: "red" }}>{errors.studentId}</span>}
-    </p>
+          {/* Gender */}
+          <div style={{ marginTop: 16 }}>
+            <label>Gender</label>
+            <Select
+              size="large"
+              placeholder="Select Gender"
+              value={registerData.gender || undefined}
+              onChange={(value) =>
+                setRegisterData({ ...registerData, gender: value })
+              }
+              style={{ width: "100%" }}
+              options={[
+                { value: "", label: "Select Gender" },
+                { value: "Male", label: "Male" },
+                { value: "Female", label: "Female" },
+                { value: "Rather not say", label: "Rather not say" },
+              ]}
+            />
+          </div>
 
-    
+          {/* Passwords */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 12,
+              marginTop: 16,
+            }}
+          >
+            <div>
+              <label>Password</label>
+              <Input.Password
+                name="password"
+                placeholder="Password"
+                value={registerData.password}
+                onChange={handleChange}
+                size="large"
+              />
+            </div>
+            <div>
+              <label>Confirm Password</label>
+              <Input.Password
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={registerData.confirmPassword}
+                onChange={handleChange}
+                size="large"
+              />
+            </div>
+          </div>
 
-      <p>
-        Birthday:
-        <input
-          type="date"
-          name="birthday"
-          value={registerData.birthday}
-          onChange={handleChange}
-        />
-      </p>
+          {/* General error */}
+          {errors.general && (
+            <div style={{ color: "red", marginTop: 12 }}>{errors.general}</div>
+          )}
 
-      <p>
-        Gender:
-        <select name="gender" value={registerData.gender} onChange={handleChange}>
-          <option value="">Select Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Rather not say">Rather not say</option>
-        </select>
-      </p>
-
-      <p>
-        Password:
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={registerData.password}
-          onChange={handleChange}
-        />
-      </p>
-
-      <p>
-        Confirm Password:
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          value={registerData.confirmPassword}
-          onChange={handleChange}
-        />
-      </p>
-      {errors.general && <p style={{ color: "red" }}>{errors.general}</p>}
-      <button type="submit">REGISTER</button>
-    </form>
-    </>
+          {/* Submit */}
+          <Button
+            type="primary"
+            size="large"
+            htmlType="submit"
+            style={{ width: "100%", marginTop: 20 }}
+          >
+            REGISTER
+          </Button>
+        </form>
+      </Card>
+    </div>
   );
 }

@@ -1,7 +1,27 @@
 
+*{
+    font-family: "Poppins", sans-serif;
+
+}
 
 
+.register-container{
+    
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    min-height: 100vh;
+    width: 100%;
+    padding: 24px; 
 
+
+    background: url("../../../public/assets/background-register.png") center / cover no-repeat;
+    background-color: #f3f4f6;
+
+  
+}
 
 
 
@@ -11,6 +31,15 @@
     width: 100%;
     margin-top: 16px;
     padding: 0;
-    height: 80%;
-    background-color: red;
+    
+    
+}
+
+
+.register-header{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 50px;
 }
