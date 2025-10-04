@@ -3,11 +3,8 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import axios from 'axios'
 import RegisterPage2 from './Pages/RegisterPage2';
 import ReportItem from './Pages/ReportItem';
-import ClaimForm from './Pages/ClaimForm';
 import Home from './Pages/Home';
-import { NavBar } from './components/NavBar';
 import { Layout } from './components/Layout';
-import { AdminDisplayData } from "./Pages/AdminDisplayData";
 import { useEffect } from 'react';
 import { AdminLost } from './Pages/AdminLost';
 import { AdminClaims } from './Pages/AdminClaims';
@@ -15,7 +12,6 @@ import  {AdminFound}  from './Pages/AdminFound';
 import { UserSearch } from './Pages/UserSearch';
 import { UserSettings } from './Pages/UserSettings';
 import {AdminLayout} from './components/AdminLayout';
-import { NavBarAdmin } from './components/NavBarAdmin';
 import { ActivityLog } from './Pages/ActivityLog';
 import { UserSearchResults } from './Pages/UserSearchResults';
 
@@ -74,7 +70,6 @@ function App() {
           <Route element={<Layout/>}>
             <Route path="/cli/home" element = {<ProtectedRoute allowedRoles={['student']}><Home/></ProtectedRoute>}/>
             <Route path="/cli/report" element={<ProtectedRoute allowedRoles={['student']}><ReportItem/></ProtectedRoute>}/>
-            <Route path="/cli/search" element={<ProtectedRoute allowedRoles={['student']}><UserSearch/></ProtectedRoute>}/>
             <Route path="/cli/search/result" element = {<ProtectedRoute allowedRoles={['student']}><UserSearchResults/></ProtectedRoute>}/>
             <Route path="/cli/settings" element={<ProtectedRoute allowedRoles={['student']}><UserSettings/></ProtectedRoute>}/>
             

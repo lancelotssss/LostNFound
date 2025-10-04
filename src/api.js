@@ -170,6 +170,33 @@ export async function getFoundReport(token) {
   }
 }
 
+export async function approveFound(itemObjectId, status, approvedBy, token) {
+  try {
+    const response = await axios.put(`${URL}/main/found/approve`,
+      { itemObjectId, status, approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error updating found item:", err);
+    throw err;
+  }
+}
+
+export async function approveLost(itemObjectId, status, approvedBy, token) {
+  try {
+    const response = await axios.put(`${URL}/lost/approve`,
+      { itemObjectId, status, approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error updating lost item:", err);
+    throw err;
+  }
+}
+
+
 export async function getLostReport(token) {
   try {
     const response = await axios.get(`${URL}/main/lost-items`, {
@@ -184,6 +211,8 @@ export async function getLostReport(token) {
     return { results: [] };
   }
 }
+
+
 
 export async function getClaimReport(token) {
   try {
