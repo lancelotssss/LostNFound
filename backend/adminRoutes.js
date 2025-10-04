@@ -70,6 +70,28 @@ adminRoutes.put("/found/approve", verifyToken, async (req, res) => {
   }
 });
 
+adminRoutes.delete("/delete/:id", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { id } = req.params;
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Access denied. Admin only." });
+    }
+
+    const result = await db.collection("reports").deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: "Report not found" });
+    }
+
+    res.json({ success: true, message: "Report deleted successfully" });
+  } catch (error) {
+    console.error("Admin delete error:", error);
+    res.status(500).json({ success: false, message: "Server error during deletion" });
+  }
+});
+
 adminRoutes.put("/lost/approve", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
@@ -87,7 +109,6 @@ adminRoutes.put("/lost/approve", verifyToken, async (req, res) => {
 
     const objectId = new ObjectId(itemObjectId);
 
-    // ✅ update status + approvedBy
     const updateResult = await db.collection("lost_found_db").updateOne(
       { _id: objectId, reportType: "Lost" },
       { $set: { status, approvedBy } }
@@ -97,7 +118,6 @@ adminRoutes.put("/lost/approve", verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: "Lost item not found" });
     }
 
-    // 🔹 Audit log
     const auditMongo = {
       aid: `A-${Date.now()}`,
       action: status === "Active" ? "APPROVE_LOST" : "DENY_LOST",

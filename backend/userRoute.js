@@ -187,36 +187,80 @@ userRoutes.route("/users/login").post(async (request, response) => {
 //------------------------------------------------------------------------HOME------------------------------------------------------------------------
 userRoutes.get("/home", verifyToken, async (req, res) => {
   try {
-    console.log("Backend /cli/home hit!", req.user); // <-- check if this logs
     const db = database.getDb();
     const studentId = req.user?.studentId;
 
     if (!studentId) {
-      return res.status(401).json({ error: "Unauthorized: No student ID" });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: No student ID",
+      });
     }
 
-    const studentReports = await db
+    const lostReports = await db
       .collection("lost_found_db")
-      .find({ reportedBy: studentId })
-      .toArray();
-    const countFounds = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Found" }).toArray();
-    const countLosts = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Lost" }).toArray();
-    console.log("Found reports:", studentReports); 
-
-   /* const claimReports = await db
-      .collection("claims_db")
-      .find({reportedBy: studentId})
+      .find({ reportedBy: studentId, reportType: "Lost" })
       .toArray();
 
-    const countClaim = await db.collection("claims_db").find({reportedBy: studentId, reportType:"Claim"}).toArray();
-    */
+    const foundReports = await db
+      .collection("lost_found_db")
+      .find({ reportedBy: studentId, reportType: "Found" })
+      .toArray();
 
-    res.json({ count: studentReports.length, /* claimReports.length, */ results: studentReports, countFound: countFounds, countLost: countLosts, /*countClaim: countClaim*/});
+    res.json({
+      success: true,    
+      lostReports,              
+      foundReports,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    console.error("Error fetching reports:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
+
+userRoutes.delete("/home/:id", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+    const reportId = req.params.id;
+
+    if (!studentId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Find the report in your actual collection
+    const report = await db
+      .collection("lost_found_db")
+      .findOne({ _id: new ObjectId(reportId), reportedBy: studentId });
+
+    if (!report) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Report not found or not owned by you" });
+    }
+
+    // Delete the report
+    await db.collection("lost_found_db").deleteOne({ _id: new ObjectId(reportId) });
+
+    // Optional: Audit log
+    const mongoAuditObject = {
+      aid: `A-${Date.now()}`,
+      action: "DELETE_REPORT",
+      targetUser: "",
+      performedBy: `${studentId}`,
+      timestamp: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
+      ticketId: report.tid || "",
+      details: `${studentId} deleted a report (${report.reportType}) titled '${report.title}'.`,
+    };
+    await db.collection("audit_db").insertOne(mongoAuditObject);
+
+    res.json({ success: true, message: "Report deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting report:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 //------------------------------------------------------------------------REPORT------------------------------------------------------------------------
 userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req, res) => {
@@ -401,7 +445,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 
 //------------------------------------------------------------------------SEARCH------------------------------------------------------------------------
 // userRoutes.js
-userRoutes.post("/search/item", verifyToken, async (req, res) => {
+/*userRoutes.post("/search/item", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
     const { keyItem, category, location, itemBrand, startDate, endDate } = req.body;
@@ -469,76 +513,109 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+*/
+
+userRoutes.post("/similar-items", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+
+    const { selectedItemId, category, keyItem, location } = req.body;
+
+    if (!selectedItemId || !category) {
+      return res.status(400).json({ success: false, message: "Missing item info" });
+    }
+
+    const similarFound = await db.collection("lost_found_db").find({
+      reportType: "Found",
+      status: "Active",
+      _id: { $ne: new ObjectId(selectedItemId) },   // convert string to ObjectId
+      reportedBy: { $ne: studentId },
+      $or: [
+        { category: category },
+        { keyItem: keyItem },
+        { location: location },
+      ],
+    }).toArray();
+    
+    res.json({ success: true, similarFound });
+  } catch (err) {
+    console.error("Error fetching similar items:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 
 //------------------------------------------------------------------------CLAIM------------------------------------------------------------------------
 userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req, res) => {
-    try {
-      const db = database.getDb();
-      const studentId = req.user?.studentId;
-      let photoUrl = req.body.photoUrl || "";
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+    let photoUrl = req.body.photoUrl || "";
+    const { itemId, reason } = req.body;
 
-      if (!req.body.itemId || !req.body.reason) {
-        return res.status(400).json({
-          success: false,
-          message: "Missing required fields",
-        });
-      }
-
-      
-      if (req.file) {
-        const { originalname, buffer, mimetype } = req.file;
-
-        const { data, error } = await supabase.storage
-          .from("user_uploads")
-          .upload(`claim-${Date.now()}-${originalname}`, buffer, {
-            contentType: mimetype,
-            upsert: false,
-          });
-
-        if (error) throw error;
-
-        const { data: publicUrlData } = supabase.storage
-          .from("user_uploads")
-          .getPublicUrl(data.path);
-
-        photoUrl = publicUrlData.publicUrl;
-      }
-
-      
-      const mongoClaim = {
-        cid: `C-${Date.now()}`,
-        itemId: req.body.itemId,
-        claimerId: studentId,
-        reason: req.body.reason,
-        adminDecisionBy: "N/A",
-        claimStatus: "Pending",
-        createdAt: new Date(),
-        photoUrl,
-      };
-
-      
-      await db.collection("claims_db").insertOne(mongoClaim);
-
-     
-      const auditMongo = {
-        aid: `A-${Date.now()}`,
-        action: "SUBMIT_CLAIM",
-        targetUser: "", 
-        performedBy: `${studentId}`,
-        timestamp: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
-        ticketId: mongoClaim.cid,
-        details: `${studentId} filed a claim for item ${mongoClaim.itemId}. Claim id: ${mongoClaim.cid}`,
-      };
-
-      await db.collection("audit_db").insertOne(auditMongo);
-
-      res.json({ success: true, claim: mongoClaim, audit: auditMongo });
-    } catch (err) {
-      console.error("❌ Error submitting claim:", err);
-      res.status(500).json({ success: false, error: err.message });
+    if (!itemId || !reason) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
     }
-  });
+
+    // Upload claim photo to Supabase
+    if (req.file) {
+      const { originalname, buffer, mimetype } = req.file;
+      const { data, error } = await supabase.storage
+        .from("user_uploads")
+        .upload(`claim-${Date.now()}-${originalname}`, buffer, { contentType: mimetype, upsert: false });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("user_uploads")
+        .getPublicUrl(data.path);
+
+      photoUrl = publicUrlData.publicUrl;
+    }
+
+    // Create claim record
+    const mongoClaim = {
+      cid: `C-${Date.now()}`,
+      itemId: itemId,
+      claimerId: studentId,
+      reason,
+      adminDecisionBy: "N/A",
+      claimStatus: "Pending",
+      createdAt: new Date(),
+      photoUrl,
+    };
+
+    await db.collection("claims_db").insertOne(mongoClaim);
+
+    // ✅ Correctly update the claimed item in lost_found_db
+    await db.collection("lost_found_db").updateOne(
+    { _id: new ObjectId(itemId) }, // match the document by MongoDB _id
+    { $set: { claimedBy: studentId, status: "Pending Claimed" } } // update fields
+  );
+
+    // Log audit
+    const auditMongo = {
+      aid: `A-${Date.now()}`,
+      action: "SUBMIT_CLAIM",
+      performedBy: `${studentId}`,
+      timestamp: new Date().toLocaleString("en-US", {
+        year: "numeric", month: "short", day: "numeric", hour: "numeric",
+        minute: "2-digit", hour12: true, timeZone: "Asia/Manila"
+      }).replace(",", ""),
+      ticketId: mongoClaim.cid,
+      details: `${studentId} filed a claim for item ${mongoClaim.itemId}. Claim ID: ${mongoClaim.cid}`,
+    };
+
+    await db.collection("audit_db").insertOne(auditMongo);
+
+    res.json({ success: true, claim: mongoClaim, audit: auditMongo });
+
+  } catch (err) {
+    console.error("❌ Error submitting claim:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 
 module.exports = userRoutes

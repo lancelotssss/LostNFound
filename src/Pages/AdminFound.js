@@ -15,7 +15,7 @@ export const AdminFound = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
 
-  // 🔹 Fetch user info from token
+ 
   useEffect(() => {
     const token = sessionStorage.getItem("User");
     if (token) {
@@ -24,7 +24,7 @@ export const AdminFound = () => {
     }
   }, []);
 
-  // 🔹 Fetch all found reports
+
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem("User"); 

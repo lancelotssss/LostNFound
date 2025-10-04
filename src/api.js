@@ -59,6 +59,19 @@ export async function getAllReport(token) {
   }
 }
 
+
+export async function deleteReport(id, token) {
+  try {
+    const response = await axios.delete(`${URL}/cli/home/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting report:", error);
+    return { success: false };
+  }
+}
+
 export async function getAllClaim(token){
   try {
     const response = await axios.get(`${URL}/cli/claims`, {
@@ -138,13 +151,13 @@ export async function createClaim(formData, token) {
         "Content-Type": "multipart/form-data",
       },
     });
-
     return response.data;
   } catch (err) {
     console.error("Error in createClaim:", err);
     return { success: false, error: err.message };
   }
 }
+
 
 
 
