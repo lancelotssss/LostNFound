@@ -13,23 +13,8 @@ export default function RegisterPage2() {
   // --- JACOB CODES --- loading notification after mag register
   // setSubmitting pang set after pindutin yung register
   const [loading, setLoading] = useState(true); // page loader
-  const [submitting, setSubmitting] = useState(false); // submit loader
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 1000); // same as LoginPage
-    return () => clearTimeout(t);
-  }, []);
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <Spin
-          indicator={<LoadingOutlined spin />}
-          size="large"
-          tip="Loading..."
-        />
-      </div>
-    );
-  }
-  // --- END JACOB CODES ---
+  const [submitting, setSubmitting] = useState(false); 
+
   // --------------------------------------------------------------------------------
 
   const navigate = useNavigate();
@@ -174,7 +159,22 @@ export default function RegisterPage2() {
       }
     }
   }
-
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 1000); 
+    return () => clearTimeout(t);
+  }, []);
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <Spin
+          indicator={<LoadingOutlined spin />}
+          size="large"
+          tip="Loading..."
+        />
+      </div>
+    );
+  }
+  // --- END JACOB CODES ---
   /* ------------------------------------------------- TOAST NOTIFICATION -------------------------------------------------  */
   const showCenteredSuccess = (text) => {
     const h =
