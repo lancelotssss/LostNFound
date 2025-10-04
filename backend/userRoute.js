@@ -218,49 +218,46 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
   }
 });
 
-userRoutes.delete("/home/:id", verifyToken, async (req, res) => {
+userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
     const studentId = req.user?.studentId;
     const reportId = req.params.id;
 
-    if (!studentId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
-
-    // Find the report in your actual collection
-    const report = await db
-      .collection("lost_found_db")
-      .findOne({ _id: new ObjectId(reportId), reportedBy: studentId });
+    // Validate ownership
+    const report = await db.collection("lost_found_db").findOne({
+      _id: new ObjectId(reportId),
+      reportedBy: studentId,
+    });
 
     if (!report) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Report not found or not owned by you" });
+      return res.status(404).json({ success: false, message: "Report not found or not owned by you" });
     }
 
-    // Delete the report
-    await db.collection("lost_found_db").deleteOne({ _id: new ObjectId(reportId) });
+    // Update status to "Disposed"
+    await db.collection("lost_found_db").updateOne(
+      { _id: new ObjectId(reportId) },
+      { $set: { status: "Deleted", updatedAt: new Date() } }
+    );
 
-    // Optional: Audit log
-    const mongoAuditObject = {
+    // Audit log
+    const audit = {
       aid: `A-${Date.now()}`,
       action: "DELETE_REPORT",
       targetUser: "",
-      performedBy: `${studentId}`,
+      performedBy: studentId,
       timestamp: new Date(),
       ticketId: report.tid || "",
-      details: `${studentId} deleted a report (${report.reportType}) titled '${report.title}'.`,
+      details: `${studentId} marked report '${report.title}' as Deleted.`,
     };
-    await db.collection("audit_db").insertOne(mongoAuditObject);
+    await db.collection("audit_db").insertOne(audit);
 
-    res.json({ success: true, message: "Report deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting report:", error);
+    res.json({ success: true, message: "Report Deleted successfully" });
+  } catch (err) {
+    console.error("Error deleted report:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
 
 //------------------------------------------------------------------------REPORT------------------------------------------------------------------------
 userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req, res) => {
@@ -269,6 +266,8 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
     const studentId = req.user?.studentId;
     let photoUrl = req.body.photoUrl || "";
 
+    
+    //Preparing the file
     if (req.file) {
       const { originalname, buffer, mimetype } = req.file;
 
@@ -520,30 +519,47 @@ userRoutes.post("/similar-items", verifyToken, async (req, res) => {
     const db = database.getDb();
     const studentId = req.user?.studentId;
 
-    const { selectedItemId, category, keyItem, location } = req.body;
+    const { selectedItemId, category, keyItem, location, startDate, endDate } = req.body;
 
     if (!selectedItemId || !category) {
       return res.status(400).json({ success: false, message: "Missing item info" });
     }
 
-    const similarFound = await db.collection("lost_found_db").find({
+    let start, end;
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      end = new Date(endDate);
+
+      if (isNaN(start) || isNaN(end)) {
+        return res.status(400).json({ success: false, message: "Invalid date format" });
+      }
+
+      start.setUTCHours(0, 0, 0, 0);
+      end.setUTCHours(23, 59, 59, 999);
+    }
+
+    // Build query
+    const query = {
       reportType: "Found",
       status: "Active",
-      _id: { $ne: new ObjectId(selectedItemId) },   // convert string to ObjectId
+      _id: { $ne: new ObjectId(selectedItemId) },
       reportedBy: { $ne: studentId },
-      $and: [
-        { category: category },
-        { keyItem: keyItem },
-        { location: location },
-      ],
-    }).toArray();
-    
+      category,
+    };
+
+    if (keyItem) query.keyItem = { $regex: keyItem, $options: "i" };
+    if (location) query.location = { $regex: location, $options: "i" };
+    if (start && end) query.dateFound = { $gte: start, $lte: end };
+
+    const similarFound = await db.collection("lost_found_db").find(query).toArray();
+
     res.json({ success: true, similarFound });
   } catch (err) {
     console.error("Error fetching similar items:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
 
 
 //------------------------------------------------------------------------CLAIM------------------------------------------------------------------------
