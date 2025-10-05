@@ -9,7 +9,7 @@ import { createClaim } from "../api";
 const { Meta } = Card;
 const { TextArea } = Input;
 
-export function SearchResultCardModal({ item }) {
+export function SearchResultCardModal({ item, onClaimSuccess }) {
   const [open, setOpen] = useState(false);
   const [claimMode, setClaimMode] = useState(false); // step 2 mode
   const [form] = Form.useForm();

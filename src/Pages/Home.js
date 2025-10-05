@@ -1,35 +1,30 @@
 import React, { useEffect, useState } from "react";
-<<<<<<< HEAD
-import { Table, Button, Modal, Descriptions, Image, message } from "antd";
-import { getAllReport } from "../api"; 
-=======
 import { Table, Button, Modal, Descriptions, Image, message, Popconfirm } from "antd";
-import { getAllReport, deleteReport, getClaimDetailsClient } from "../api"; 
->>>>>>> 81b19e4bb87c2061ebfcfd6d4fdec8d55831dd53
+import { getAllReport, deleteReport, getClaimDetailsClient } from "../api";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+ 
 const { Column } = Table;
-
-export const Home = () => {
+ 
+export const Home  = () => {
   const [lost, setLost] = useState([]);
   const [found, setFound] = useState([]);
-  const [claim, setClaim] = useState([]); 
-
+  const [claim, setClaim] = useState([]);
+ 
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
-
+ 
   // Claim modal states
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [claimDetails, setClaimDetails] = useState(null);
   const [isClaimModalVisible, setIsClaimModalVisible] = useState(false);
-
+ 
   const navigate = useNavigate();
   const token = sessionStorage.getItem("User");
-
+ 
   useEffect(() => {
     if (token) {
       const decodedUser = jwtDecode(token);
@@ -38,35 +33,35 @@ export const Home = () => {
       fetchData(token);
     }
   }, []);
-
+ 
   const fetchData = async (token) => {
     try {
       setLoading(true);
       const res = await getAllReport(token);
       if (res && res.success) {
         const formatDate = (d) => (d ? new Date(d).toLocaleString() : "N/A");
-
+ 
         const lostFormatted = (res.lostReports || []).map((item, index) => ({
           key: item._id || `lost-${index}`,
           ...item,
           dateReported: formatDate(item.dateReported),
           dateFound: formatDate(item.dateFound),
         }));
-
+ 
         const foundFormatted = (res.foundReports || []).map((item, index) => ({
           key: item._id || `found-${index}`,
           ...item,
           dateReported: formatDate(item.dateReported),
           dateFound: formatDate(item.dateFound),
         }));
-
+ 
         const claimFormatted = (res.claimReports || []).map((item, index) => ({
           key: item._id || `claim-${index}`,
           ...item,
           dateReported: formatDate(item.dateReported),
           dateFound: formatDate(item.dateFound),
         }));
-
+ 
         setLost(lostFormatted);
         setFound(foundFormatted);
         setClaim(claimFormatted);
@@ -80,20 +75,18 @@ export const Home = () => {
       setLoading(false);
     }
   };
-
-  // When user clicks a row to view details
+ 
   const handleRowClick = (record) => {
     setSelectedItem(record);
     setIsModalVisible(true);
-
-    
+ 
+   
   };
-
-  // Navigate to similar items page for lost items
-  const handleRowLost = () => {
+ 
+  const handleRowLost = (record) => {
     if (selectedItem) {
       //dito istore yung global variables
-      
+     
       localStorage.setItem("selectedLostId", record._id);
      
       navigate("/cli/search/result", {
@@ -102,41 +95,41 @@ export const Home = () => {
       setIsModalVisible(false);
     }
   };
-
+ 
   const handleClaimSuccess = (claimedId) => {
     setFound((prev) => prev.filter((item) => item._id !== claimedId));
     setLost((prev) => prev.filter((item) => item._id !== claimedId));
-
+ 
     if (selectedItem?._id === claimedId) {
       handleModalClose();
     }
-
+ 
     message.success("Item claimed successfully!");
   };
-
+ 
   const handleModalClose = () => {
     setIsModalVisible(false);
     setSelectedItem(null);
   };
-
+ 
   const handleDispose = async (id, type) => {
     const confirm = window.confirm("Are you sure you want to dispose this report?");
     if (!confirm) return;
-
+ 
     try {
       const response = await axios.put(`http://localhost:3110/home/${id}/dispose`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+ 
       if (response.data.success) {
         message.success(response.data.message);
-
+ 
         if (type === "Lost") {
           setLost((prev) => prev.filter((report) => report._id !== id));
         } else if (type === "Found") {
           setFound((prev) => prev.filter((report) => report._id !== id));
         }
-
+ 
         if (selectedItem?._id === id) {
           handleModalClose();
         }
@@ -148,16 +141,16 @@ export const Home = () => {
       message.error("An error occurred while disposing the report.");
     }
   };
-
+ 
 const handleClaimRowClick = async (record) => {
   try {
     setSelectedClaim(record);
     setIsClaimModalVisible(true);
-
+ 
     localStorage.setItem("selectedClaimId", record._id);
-
+ 
     const claimData = await getClaimDetailsClient(token, record._id);
-
+ 
     if (claimData && claimData.success) {
       setClaimDetails({
         claim: claimData.claim || null,
@@ -174,22 +167,22 @@ const handleClaimRowClick = async (record) => {
     message.error("Failed to load claim details.");
   }
 };
-
+ 
   const handleClaimModalClose = () => {
     setIsClaimModalVisible(false);
     setSelectedClaim(null);
     setClaimDetails(null);
   };
-
+ 
   return (
     <>
-      {/* Header */}
       <div style={{ marginBottom: 16 }}>
         <p>Welcome, {user ? user.name : "Guest"} </p>
-        <Button onClick={() => fetchData(token)}>Refresh</Button>
+        <Button onClick={() => fetchData(sessionStorage.getItem("User"))}>
+          Refresh
+        </Button>
       </div>
-
-      {/* Lost Table */}
+ 
       <h1>MY LOST TABLE</h1>
       <Table
         loading={loading}
@@ -206,8 +199,7 @@ const handleClaimRowClick = async (record) => {
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
         <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
       </Table>
-
-      {/* Found Table */}
+ 
       <h1>MY FOUND TABLE</h1>
       <Table
         loading={loading}
@@ -224,14 +216,16 @@ const handleClaimRowClick = async (record) => {
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
         <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
       </Table>
-
+ 
       {/* Modal for Lost/Found */}
       <Modal
-        title={selectedItem?.title || "Item Details"}
+        title={selectedItem ? selectedItem.title : "Item Details"}
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={[
-          <Button key="close" onClick={handleModalClose}>Close</Button>,
+          <Button key="close" onClick={handleModalClose}>
+            Close
+          </Button>,
           selectedItem?.reportType?.toLowerCase() === "lost" && (
             <Button
               key="find"
@@ -277,7 +271,7 @@ const handleClaimRowClick = async (record) => {
           </>
         )}
       </Modal>
-
+ 
       {/* 🔹 CLAIM TABLE */}
       <h1>MY CLAIM TABLE</h1>
       <Table
@@ -293,7 +287,7 @@ const handleClaimRowClick = async (record) => {
         <Column title="Claim Status" dataIndex="claimStatus" key="claimStatus" />
         <Column title="Created At" dataIndex="createdAt" key="createdAt" />
       </Table>
-
+ 
       {/* 🔹 CLAIM MODAL (Triple layout like AdminClaims) */}
 <Modal
   title={selectedClaim ? "Claim Details" : "Item Details"}
@@ -335,7 +329,7 @@ const handleClaimRowClick = async (record) => {
           <p style={{ color: "gray" }}>No found item data.</p>
         )}
       </div>
-
+ 
       {/* 🔹 Lost Item Reference */}
       <div style={{ flex: 1 }}>
         <h3>Lost Item Reference</h3>
@@ -361,7 +355,7 @@ const handleClaimRowClick = async (record) => {
           <p style={{ color: "gray" }}>No linked lost item found.</p>
         )}
       </div>
-
+ 
       {/* 🔹 Claim Information */}
       <div style={{ flex: 1 }}>
         <h3>Claim Information</h3>
@@ -397,5 +391,5 @@ const handleClaimRowClick = async (record) => {
     </>
   );
 };
-
+ 
 export default Home;
