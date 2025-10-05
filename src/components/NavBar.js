@@ -32,6 +32,8 @@ export function NavBar() {
   let response = await logOutUser(token);
 
   if (response.success) {
+    localStorage.removeItem("selectedLostId");
+    localStorage.removeItem("lostReferenceFound");
     sessionStorage.removeItem("User");
     navigate("/");
   } else {

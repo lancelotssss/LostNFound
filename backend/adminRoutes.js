@@ -232,155 +232,119 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
 
 //---------------------------------------------------------------------------REVIEW CLAIM ITEMS---------------------------------------------------------------------------
 
-    adminRoutes.route("/claim-items").get(async (req, res) => {
-      try {
-        let db = database.getDb()
-         const claims = await db.collection("lost_found_db")
+adminRoutes.get("/claim-items", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const claims = await db
+      .collection("claims_db")
       .aggregate([
         {
           $match: {
-            status: { $in: ["Pending Claim", "Claimed", "Claim Denied"] }
-          }
+            claimStatus: {
+              $in: ["Pending Approval", "Claim Approved", "Claim Rejected"],
+            },
+          },
         },
         {
-          $addFields: {
-            statusOrder: {
-              $switch: {
-                branches: [
-                  { case: { $eq: ["$status", "Pending Claim"] }, then: 1 },
-                  { case: { $eq: ["$status", "Claimed"] }, then: 2 },
-                  { case: { $eq: ["$status", "Claim Denied"] }, then: 3 }
-                ],
-                default: 4
-              }
-            }
-          }
+          $sort: { createdAt: -1 },
         },
-        {
-          $sort: {
-            statusOrder: 1,     
-            dateReported: 1     
-          }
-        }
       ])
       .toArray();
 
     res.json({ success: true, results: claims });
-      } catch (err) {
-        console.error("Error fetching claim items: ", err)
-        res.status(500), json ({success: false, error: err.message, results: []})
-      }
-    });
-
-adminRoutes.get("/claim-items/:itemId", verifyToken, async (req, res) => {
-  try {
-    const db = database.getDb();
-    const { itemId } = req.params;
-
-    if (!ObjectId.isValid(itemId)) {
-      return res.status(400).json({ success: false, message: "Invalid itemId", claim: null });
-    }
-
-    // Look up claim record by itemId
-    const claim = await db.collection("claims_db").findOne({ itemId });
-
-    if (!claim) {
-      return res.json({ success: true, claim: null });
-    }
-
-    res.json({ success: true, claim });
   } catch (err) {
-    console.error("Error fetching claim details:", err);
-    res.status(500).json({ success: false, error: err.message, claim: null });
+    console.error("Error fetching claims:", err);
+    res.status(500).json({ success: false, error: err.message, results: [] });
   }
 });
 
-
-      adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
+// 🔹 GET CLAIM DETAILS
+adminRoutes.get("/claim-items/:claimId", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
-    const { itemObjectId, status, approvedBy } = req.body;
+    const { claimId } = req.params;
 
-    console.log("Incoming Claim Approve Payload:", req.body);
-
-    // 🔸 Validation
-    if (!itemObjectId || !status || !approvedBy) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
+    if (!ObjectId.isValid(claimId)) {
+      return res.status(400).json({ success: false, message: "Invalid claimId" });
     }
 
-    if (!ObjectId.isValid(itemObjectId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid itemObjectId",
-      });
-    }
+    const claim = await db.collection("claims_db").findOne({
+      _id: new ObjectId(claimId),
+    });
 
-    const objectId = new ObjectId(itemObjectId);
+    if (!claim) return res.json({ success: true, claim: null });
 
-    // 🔸 Check claim record
-    const claim = await db.collection("claims_db").findOne({ itemId: itemObjectId });
-    if (!claim) {
-      return res.status(404).json({
-        success: false,
-        message: "Claim record not found",
-      });
-    }
+    // linked items from lost_found_db
+    const lostItem = claim.selectedLostId
+      ? await db
+          .collection("lost_found_db")
+          .findOne({ _id: new ObjectId(claim.selectedLostId) })
+      : null;
 
-    // 🔸 Update lost_found_db item
-    const item = await db.collection("lost_found_db").findOne({ _id: objectId });
-    if (!item) {
-      return res.status(404).json({
-        success: false,
-        message: "Item not found in lost_found_db",
-      });
-    }
+    const foundItem = claim.lostReferenceFound
+      ? await db
+          .collection("lost_found_db")
+          .findOne({ _id: new ObjectId(claim.lostReferenceFound) })
+      : null;
 
-    await db.collection("lost_found_db").updateOne(
-      { _id: objectId },
-      { $set: { status, approvedBy, updatedAt: new Date() } }
+    res.json({ success: true, claim, foundItem, lostItem });
+  } catch (err) {
+    console.error("Error fetching claim details:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 🔹 APPROVE / DENY CLAIM
+adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { claimId, status, approvedBy } = req.body;
+
+    if (!ObjectId.isValid(claimId))
+      return res.status(400).json({ success: false, message: "Invalid claimId" });
+
+    const claimObjectId = new ObjectId(claimId);
+
+    const claim = await db.collection("claims_db").findOne({ _id: claimObjectId });
+    if (!claim)
+      return res.status(404).json({ success: false, message: "Claim not found" });
+
+    // update claim
+    await db.collection("claims_db").updateOne(
+      { _id: claimObjectId },
+      {
+        $set: {
+          claimStatus: status,
+          adminDecisionBy: approvedBy,
+          reviewedAt: new Date(),
+        },
+      }
     );
 
-    // 🔸 Update claim status
-    const claimUpdate = await db.collection("claims_db").updateOne(
-      { itemId: itemObjectId },
-      { $set: { status, reviewedBy: approvedBy, reviewedAt: new Date() } }
-    );
-
-    if (claimUpdate.modifiedCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Failed to update claim record",
-      });
+    // update linked lost_found_db items
+    if (claim.lostReferenceFound) {
+      await db
+        .collection("lost_found_db")
+        .updateOne(
+          { _id: new ObjectId(claim.lostReferenceFound) },
+          { $set: { status, approvedBy, updatedAt: new Date() } }
+        );
     }
 
-    // 🔸 Audit trail
-    const auditMongo = {
+    // add audit trail
+    const audit = {
       aid: `A-${Date.now()}`,
-      action: status === "Approved" ? "APPROVE_CLAIM" : "DENY_CLAIM",
-      targetUser: claim.claimant || "",
+      action: status === "Claim Approved" ? "APPROVE_CLAIM" : "DENY_CLAIM",
       performedBy: approvedBy,
       timestamp: new Date(),
-      ticketId: item.tid,
-      details: `${approvedBy} set claim for item ${item.tid} to ${status}.`,
+      details: `${approvedBy} set claim ${claimId} to ${status}.`,
     };
+    await db.collection("audit_db").insertOne(audit);
 
-    await db.collection("audit_db").insertOne(auditMongo);
-
-    // 🔸 Response
-    res.json({
-      success: true,
-      message: `Claim ${status}`,
-      audit: auditMongo,
-    });
+    res.json({ success: true, message: `Claim ${status}`, audit });
   } catch (err) {
-    console.error("Error approving/denying claim:", err);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    console.error("Error updating claim:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
   

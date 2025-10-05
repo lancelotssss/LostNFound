@@ -72,6 +72,13 @@ export async function deleteReport(id, token) {
   }
 }
 
+export async function getClaimDetailsClient(token, itemId) {
+  const response = await axios.get(`${URL}/cli/claim-items/${itemId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+}
+
 export async function getAllClaim(token){
   try {
     const response = await axios.get(`${URL}/cli/claims`, {
@@ -293,44 +300,46 @@ export async function editPasswordAdmin(data, token) {
 }
 
 
+
 export async function getClaimReport(token) {
   try {
     const response = await axios.get(`${URL}/main/claim-items`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
-    console.log("Axios response:", response);
-    return response.data; // { count, results }
+    return response.data;
   } catch (err) {
-    console.error("Error fetching reports:", err);
+    console.error("Error fetching claim report:", err);
     return { results: [] };
   }
 }
 
-export async function getClaimDetails(token, itemId) {
+export async function getClaimDetails(token, claimId) {
   try {
-    const response = await axios.get(`${URL}/main/claim-items/${itemId}`, {
+    const response = await axios.get(`${URL}/main/claim-items/${claimId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return response.data.claim;
+    return {
+      claim: response.data.claim,
+      foundItem: response.data.foundItem,
+      lostItem: response.data.lostItem,
+    };
   } catch (err) {
     console.error("Error fetching claim details:", err);
-    return null;
+    return { claim: null, foundItem: null, lostItem: null };
   }
 }
 
-export async function approveClaim(token, itemObjectId, status, approvedBy) {
+export async function approveClaim(token, claimId, status, approvedBy) {
   try {
     const response = await axios.put(
       `${URL}/main/claim-items/approve`,
-      { itemObjectId, status, approvedBy },
+      { claimId, status, approvedBy },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
   } catch (err) {
     console.error("Error approving claim:", err);
-    throw err;
+    return { success: false };
   }
 }
 

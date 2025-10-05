@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
+<<<<<<< HEAD
 import { Table, Button, Modal, Descriptions, Image, message } from "antd";
 import { getAllReport } from "../api"; 
+=======
+import { Table, Button, Modal, Descriptions, Image, message, Popconfirm } from "antd";
+import { getAllReport, deleteReport, getClaimDetailsClient } from "../api"; 
+>>>>>>> 81b19e4bb87c2061ebfcfd6d4fdec8d55831dd53
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +21,11 @@ export const Home = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Claim modal states
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [claimDetails, setClaimDetails] = useState(null);
+  const [isClaimModalVisible, setIsClaimModalVisible] = useState(false);
 
   const navigate = useNavigate();
   const token = sessionStorage.getItem("User");
@@ -36,7 +46,6 @@ export const Home = () => {
       if (res && res.success) {
         const formatDate = (d) => (d ? new Date(d).toLocaleString() : "N/A");
 
-        // Format lost reports
         const lostFormatted = (res.lostReports || []).map((item, index) => ({
           key: item._id || `lost-${index}`,
           ...item,
@@ -44,7 +53,6 @@ export const Home = () => {
           dateFound: formatDate(item.dateFound),
         }));
 
-        // Format found reports
         const foundFormatted = (res.foundReports || []).map((item, index) => ({
           key: item._id || `found-${index}`,
           ...item,
@@ -53,15 +61,15 @@ export const Home = () => {
         }));
 
         const claimFormatted = (res.claimReports || []).map((item, index) => ({
-          key: item._id || `found-${index}`,
+          key: item._id || `claim-${index}`,
           ...item,
           dateReported: formatDate(item.dateReported),
           dateFound: formatDate(item.dateFound),
         }));
 
-        setLost(lostFormatted)
-        setFound(foundFormatted)
-        setClaim(claimFormatted)
+        setLost(lostFormatted);
+        setFound(foundFormatted);
+        setClaim(claimFormatted);
       } else {
         message.error("Failed to load reports.");
       }
@@ -77,14 +85,33 @@ export const Home = () => {
   const handleRowClick = (record) => {
     setSelectedItem(record);
     setIsModalVisible(true);
+
+    
   };
 
   // Navigate to similar items page for lost items
   const handleRowLost = () => {
     if (selectedItem) {
-      navigate("/cli/search/result", { state: { selectedItem } });
+      //dito istore yung global variables
+      
+      localStorage.setItem("selectedLostId", record._id);
+     
+      navigate("/cli/search/result", {
+        state: { selectedItem },
+      });
       setIsModalVisible(false);
     }
+  };
+
+  const handleClaimSuccess = (claimedId) => {
+    setFound((prev) => prev.filter((item) => item._id !== claimedId));
+    setLost((prev) => prev.filter((item) => item._id !== claimedId));
+
+    if (selectedItem?._id === claimedId) {
+      handleModalClose();
+    }
+
+    message.success("Item claimed successfully!");
   };
 
   const handleModalClose = () => {
@@ -93,38 +120,66 @@ export const Home = () => {
   };
 
   const handleDispose = async (id, type) => {
-  const confirmDispose = window.confirm("Are you sure you want to dispose this report?");
-  if (!confirmDispose) return;
+    const confirm = window.confirm("Are you sure you want to dispose this report?");
+    if (!confirm) return;
 
-  try {
-    const response = await axios.put(
-      `http://localhost:3110/home/${id}/dispose`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    try {
+      const response = await axios.put(`http://localhost:3110/home/${id}/dispose`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (response.data.success) {
-      message.success(response.data.message);
+      if (response.data.success) {
+        message.success(response.data.message);
 
-      // Remove disposed report from the correct table
-      if (type === "Lost") {
-        setLost((prev) => prev.filter((report) => report._id !== id));
-      } else if (type === "Found") {
-        setFound((prev) => prev.filter((report) => report._id !== id));
-      } else if (type === "Claim" || type === "Pending Claim") {
-        setClaim((prev) => prev.filter((report) => report._id !== id));
+        if (type === "Lost") {
+          setLost((prev) => prev.filter((report) => report._id !== id));
+        } else if (type === "Found") {
+          setFound((prev) => prev.filter((report) => report._id !== id));
+        }
+
+        if (selectedItem?._id === id) {
+          handleModalClose();
+        }
+      } else {
+        message.error("Failed to dispose report");
       }
+    } catch (err) {
+      console.error("Dispose error:", err);
+      message.error("An error occurred while disposing the report.");
+    }
+  };
 
-      // Close modal if the disposed report was selected
-      if (selectedItem?._id === id) handleModalClose();
+const handleClaimRowClick = async (record) => {
+  try {
+    setSelectedClaim(record);
+    setIsClaimModalVisible(true);
+
+    localStorage.setItem("selectedClaimId", record._id);
+
+    const claimData = await getClaimDetailsClient(token, record._id);
+
+    if (claimData && claimData.success) {
+      setClaimDetails({
+        claim: claimData.claim || null,
+        lostItem: claimData.lostItem || null,
+        foundItem: claimData.foundItem || null,
+      });
     } else {
-      message.error("Failed to dispose report");
+      setClaimDetails(null);
+      message.warning("No claim details found for this item.");
     }
   } catch (err) {
-    console.error("Dispose error:", err);
-    message.error("An error occurred while disposing the report.");
+    console.error("Error fetching claim details:", err);
+    setClaimDetails(null);
+    message.error("Failed to load claim details.");
   }
 };
+
+  const handleClaimModalClose = () => {
+    setIsClaimModalVisible(false);
+    setSelectedClaim(null);
+    setClaimDetails(null);
+  };
 
   return (
     <>
@@ -170,25 +225,7 @@ export const Home = () => {
         <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
       </Table>
 
-      {/* Found Table */}
-      <h1>MY CLAIM TABLE</h1>
-      <Table
-        loading={loading}
-        dataSource={claim}
-        onRow={(record) => ({
-          onClick: () => handleRowClick(record),
-          style: { cursor: "pointer" },
-        })}
-      >
-        <Column title="Title" dataIndex="title" key="title" />
-        <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
-        <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
-        <Column title="Status" dataIndex="status" key="status" />
-        <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
-        <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
-      </Table>
-
-      {/* Modal for item details */}
+      {/* Modal for Lost/Found */}
       <Modal
         title={selectedItem?.title || "Item Details"}
         open={isModalVisible}
@@ -198,7 +235,7 @@ export const Home = () => {
           selectedItem?.reportType?.toLowerCase() === "lost" && (
             <Button
               key="find"
-              onClick={handleRowLost}
+              onClick={() => handleRowLost(selectedItem)}
               disabled={selectedItem?.status?.toLowerCase() !== "active"}
             >
               See similar items
@@ -222,7 +259,6 @@ export const Home = () => {
                 <Image src={selectedItem.photoUrl} width={250} />
               </div>
             )}
-
             <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
@@ -241,6 +277,123 @@ export const Home = () => {
           </>
         )}
       </Modal>
+
+      {/* 🔹 CLAIM TABLE */}
+      <h1>MY CLAIM TABLE</h1>
+      <Table
+        loading={loading}
+        dataSource={claim}
+        onRow={(record) => ({
+          onClick: () => handleClaimRowClick(record),
+          style: { cursor: "pointer" },
+        })}
+      >
+        <Column title="Claim ID" dataIndex="cid" key="cid" />
+        <Column title="Claimer ID" dataIndex="claimerId" key="claimerId" />
+        <Column title="Claim Status" dataIndex="claimStatus" key="claimStatus" />
+        <Column title="Created At" dataIndex="createdAt" key="createdAt" />
+      </Table>
+
+      {/* 🔹 CLAIM MODAL (Triple layout like AdminClaims) */}
+<Modal
+  title={selectedClaim ? "Claim Details" : "Item Details"}
+  open={isClaimModalVisible}
+  onCancel={handleClaimModalClose}
+  footer={[
+    <Button key="close" onClick={handleClaimModalClose}>
+      Close
+    </Button>,
+  ]}
+  width={1300}
+  maskClosable={false}
+  bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+>
+  {claimDetails ? (
+    <div style={{ display: "flex", gap: 24 }}>
+      {/* 🔹 Found Item */}
+      <div style={{ flex: 1 }}>
+        <h3>Found Item Information</h3>
+        {claimDetails?.foundItem?.photoUrl && (
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <Image src={claimDetails.foundItem.photoUrl} width={220} />
+          </div>
+        )}
+        {claimDetails?.foundItem ? (
+          <Descriptions bordered column={1} size="middle">
+            <Descriptions.Item label="TID">{claimDetails.foundItem.tid}</Descriptions.Item>
+            <Descriptions.Item label="Title">{claimDetails.foundItem.title}</Descriptions.Item>
+            <Descriptions.Item label="Category">{claimDetails.foundItem.category}</Descriptions.Item>
+            <Descriptions.Item label="Location">{claimDetails.foundItem.location}</Descriptions.Item>
+            <Descriptions.Item label="Date Found">
+              {claimDetails.foundItem.dateFound
+                ? new Date(claimDetails.foundItem.dateFound).toLocaleString()
+                : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Status">{claimDetails.foundItem.status}</Descriptions.Item>
+          </Descriptions>
+        ) : (
+          <p style={{ color: "gray" }}>No found item data.</p>
+        )}
+      </div>
+
+      {/* 🔹 Lost Item Reference */}
+      <div style={{ flex: 1 }}>
+        <h3>Lost Item Reference</h3>
+        {claimDetails?.lostItem?.photoUrl && (
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <Image src={claimDetails.lostItem.photoUrl} width={220} />
+          </div>
+        )}
+        {claimDetails?.lostItem ? (
+          <Descriptions bordered column={1} size="middle">
+            <Descriptions.Item label="TID">{claimDetails.lostItem.tid}</Descriptions.Item>
+            <Descriptions.Item label="Title">{claimDetails.lostItem.title}</Descriptions.Item>
+            <Descriptions.Item label="Category">{claimDetails.lostItem.category}</Descriptions.Item>
+            <Descriptions.Item label="Location">{claimDetails.lostItem.location}</Descriptions.Item>
+            <Descriptions.Item label="Date Reported">
+              {claimDetails.lostItem.dateReported
+                ? new Date(claimDetails.lostItem.dateReported).toLocaleString()
+                : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Status">{claimDetails.lostItem.status}</Descriptions.Item>
+          </Descriptions>
+        ) : (
+          <p style={{ color: "gray" }}>No linked lost item found.</p>
+        )}
+      </div>
+
+      {/* 🔹 Claim Information */}
+      <div style={{ flex: 1 }}>
+        <h3>Claim Information</h3>
+        {claimDetails?.claim ? (
+          <>
+            {claimDetails.claim.photoUrl && (
+              <div style={{ textAlign: "center", marginBottom: 16 }}>
+                <Image src={claimDetails.claim.photoUrl} width={200} />
+              </div>
+            )}
+            <Descriptions bordered column={1} size="middle">
+              <Descriptions.Item label="Claim ID">{claimDetails.claim.cid}</Descriptions.Item>
+              <Descriptions.Item label="Claimer ID">{claimDetails.claim.claimerId}</Descriptions.Item>
+              <Descriptions.Item label="Claim Status">{claimDetails.claim.claimStatus}</Descriptions.Item>
+              <Descriptions.Item label="Reason">{claimDetails.claim.reason}</Descriptions.Item>
+              <Descriptions.Item label="Admin Decision By">{claimDetails.claim.reviewedBy}</Descriptions.Item>
+              <Descriptions.Item label="Created At">
+                {claimDetails.claim.createdAt
+                  ? new Date(claimDetails.claim.createdAt).toLocaleString()
+                  : "N/A"}
+              </Descriptions.Item>
+            </Descriptions>
+          </>
+        ) : (
+          <p style={{ color: "gray" }}>No claim record found for this item.</p>
+        )}
+      </div>
+    </div>
+  ) : (
+    <p style={{ color: "gray" }}>No claim details available.</p>
+  )}
+</Modal>
     </>
   );
 };

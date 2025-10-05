@@ -197,6 +197,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       });
     }
 
+    // 🔹 Fetch Lost and Found reports
     const lostReports = await db
       .collection("lost_found_db")
       .find({ reportedBy: studentId, reportType: "Lost" })
@@ -207,23 +208,66 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       .find({ reportedBy: studentId, reportType: "Found" })
       .toArray();
 
-    const claimReports = await db
-      .collection("lost_found_db")
-      .find({status: { $in: ["Claimed", "Pending Claim", "Claim", "Deny"] }})
+    // 🔹 Fetch Claim reports with JOIN from lost_found_db
+    const claimReports = await db.collection("claims_db")
+      .aggregate([
+        {
+          $match: {
+            claimerId: studentId,
+            claimStatus: {
+              $in: ["Pending", "Pending Approval", "Claim Approved", "Claimed", "Claim Rejected"]
+            }
+          }
+        },
+        {
+          // JOIN lost_found_db on selectedLostId
+          $lookup: {
+            from: "lost_found_db",
+            localField: "selectedLostId",
+            foreignField: "_id",
+            as: "lostItemDetails"
+          }
+        },
+        { $unwind: { path: "$lostItemDetails", preserveNullAndEmptyArrays: true } },
+        {
+          $addFields: {
+            title: "$lostItemDetails.title",
+            category: "$lostItemDetails.category",
+            keyItem: "$lostItemDetails.keyItem",
+            itemBrand: "$lostItemDetails.itemBrand",
+            status: "$claimStatus",
+            reportType: "$lostItemDetails.reportType",
+            location: "$lostItemDetails.location",
+            dateReported: "$lostItemDetails.dateReported",
+            dateFound: "$lostItemDetails.dateFound",
+            description: "$lostItemDetails.description",
+            photoUrl: "$lostItemDetails.photoUrl", // ✅ add the lost/found image
+            tid: "$lostItemDetails.tid",
+            reportedBy: "$lostItemDetails.reportedBy",
+            approvedBy: "$lostItemDetails.approvedBy",
+          }
+        },
+        {
+          $sort: {
+            createdAt: -1
+          }
+        }
+      ])
       .toArray();
 
     res.json({
-      success: true,    
-      lostReports,              
+      success: true,
+      lostReports,
       foundReports,
       claimReports,
-
     });
   } catch (err) {
     console.error("Error fetching reports:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+
 
 userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
   try {
@@ -263,6 +307,47 @@ userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Error deleted report:", err);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+userRoutes.get("/claim-items/:id", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const claimId = req.params.id;
+
+    // 1️⃣ Find claim record first
+    const claim = await db.collection("claims_db").findOne({ _id: new ObjectId(claimId) });
+
+    if (!claim) {
+      return res.status(404).json({
+        success: false,
+        message: "Claim not found.",
+      });
+    }
+
+    // 2️⃣ Find related lost and found items using IDs from claim
+    const lostItem = claim.selectedLostId
+      ? await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.selectedLostId) })
+      : null;
+
+    const foundItem = claim.lostReferenceFound
+      ? await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.lostReferenceFound) })
+      : null;
+
+    // 3️⃣ Return combined data
+    res.json({
+      success: true,
+      claim,
+      lostItem,
+      foundItem,
+    });
+
+  } catch (err) {
+    console.error("Error fetching claim item:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching claim details.",
+    });
   }
 });
 
@@ -575,7 +660,8 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
     const db = database.getDb();
     const studentId = req.user?.studentId;
     let photoUrl = req.body.photoUrl || "";
-    const { itemId, reason } = req.body;
+
+    const { itemId, reason, selectedLostId, lostReferenceFound } = req.body;
 
     if (!itemId || !reason) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
@@ -607,6 +693,8 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
       claimStatus: "Pending",
       createdAt: new Date(),
       photoUrl,
+      selectedLostId: selectedLostId || null,
+      lostReferenceFound: lostReferenceFound || null,
     };
 
     await db.collection("claims_db").insertOne(mongoClaim);
