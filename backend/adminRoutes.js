@@ -25,7 +25,7 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
                 branches: [
                   { case: { $eq: ["$status", "Pending"] }, then: 1 },
                   { case: { $eq: ["$status", "Active"] }, then: 2 },
-                  { case: { $eq: ["$status", "Pending Claimed"] }, then: 3 },
+                  { case: { $eq: ["$status", "Pending Claim"] }, then: 3 },
                   { case: { $eq: ["$status", "Claimed"] }, then: 4 },
                   { case: { $eq: ["$status", "Disposed"] }, then: 5 },
                   { case: { $eq: ["$status", "Denied"] }, then: 6 }
@@ -165,7 +165,7 @@ adminRoutes.put("/lost/approve", verifyToken, async (req, res) => {
 
     res.json({ success: true, message: `Lost Item ${status}`, audit: auditMongo });
   } catch (err) {
-    console.error("❌ Error approving/denying lost item:", err);
+    console.error("Error approving/denying lost item:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -220,6 +220,43 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
 });
 
     adminRoutes.route("/claim-items").get(async (req, res) => {
+      try {
+        let db = database.getDb()
+         const claims = await db.collection("lost_found_db")
+      .aggregate([
+        {
+          $match: {
+            status: { $in: ["Pending Claim", "Claimed", "Claim Denied"] }
+          }
+        },
+        {
+          $addFields: {
+            statusOrder: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ["$status", "Pending Claim"] }, then: 1 },
+                  { case: { $eq: ["$status", "Claimed"] }, then: 2 },
+                  { case: { $eq: ["$status", "Claim Denied"] }, then: 3 }
+                ],
+                default: 4
+              }
+            }
+          }
+        },
+        {
+          $sort: {
+            statusOrder: 1,     
+            dateReported: 1     
+          }
+        }
+      ])
+      .toArray();
+
+    res.json({ success: true, results: claims });
+      } catch (err) {
+        console.error("Error fetching claim items: ", err)
+        res.status(500), json ({success: false, error: err.message, results: []})
+      }
     /*try {
       let db = database.getDb();
 
@@ -240,7 +277,7 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
 
       res.json({ success: true, results }); // ✅ match frontend expectation
     } catch (err) {
-      console.error("❌ Error fetching claim items:", err);
+      console.error(" Error fetching claim items:", err);
       res.status(500).json({ success: false, error: err.message, results: [] });
     }
      */

@@ -114,9 +114,6 @@ function App() {
                 <AdminFound />
               </ProtectedRoute>} />
             <Route path="/main/claim-items" element={<ProtectedRoute allowedRoles={["admin"]}>
-                <AdminClaims />
-              </ProtectedRoute>} />
-            <Route path="/main/claim-items" element={<ProtectedRoute allowedRoles={["admin"]}>
               <AdminClaims /> 
               </ProtectedRoute> } />
             <Route path="/main/logs" element={<ProtectedRoute allowedRoles={["admin"]}>

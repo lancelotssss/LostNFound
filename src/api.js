@@ -160,12 +160,6 @@ export async function createClaim(formData, token) {
 
 
 
-
-/*export async function getClaimReport() {
-  const response = await axios.get(`${URL}/cli/claim-items`);
-  return response.data;
-}*/
-
 //ADMIN
 
 export async function getFoundReport(token) {

@@ -122,7 +122,6 @@ const confirmDeny = async () => {
         <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
         <Column title="Status" dataIndex="status" key="status" />
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
-        <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
       </Table>
 
       {/* Main modal */}

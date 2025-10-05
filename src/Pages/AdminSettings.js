@@ -118,7 +118,7 @@ export function AdminSettings() {
   return (
     <>
       <form onSubmit={handleSave}>
-        <p>Student ID: </p>
+        <p>Employee ID: </p>
         <p>{user.studentId}</p>
 
         <p>Email: </p>

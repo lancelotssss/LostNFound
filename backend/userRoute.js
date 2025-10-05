@@ -607,7 +607,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
     
     await db.collection("lost_found_db").updateOne(
     { _id: new ObjectId(itemId) }, 
-    { $set: { claimedBy: studentId, status: "Pending Claimed" } } 
+    { $set: { claimedBy: studentId, status: "Pending Claim" } } 
   );
 
     // Log audit

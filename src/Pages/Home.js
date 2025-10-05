@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const { Column } = Table;
 
-export const Home = () => {
+export const Home  = () => {
   const [lost, setLost] = useState([]);
   const [found, setFound] = useState([]);
   //const [claim, setClaim] = ([]);
