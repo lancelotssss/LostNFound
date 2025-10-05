@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, Modal, Button, Form, Input, Upload, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
+import { useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { createClaim } from "../api";
@@ -8,23 +9,23 @@ import { createClaim } from "../api";
 const { Meta } = Card;
 const { TextArea } = Input;
 
-export function SearchResultCardModal({ item, onClaimSuccess }) {
+export function SearchResultCardModal({ item }) {
   const [open, setOpen] = useState(false);
-  const [claimMode, setClaimMode] = useState(false);
+  const [claimMode, setClaimMode] = useState(false); // step 2 mode
   const [form] = Form.useForm();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    async function loadUserData() {
-      const token = sessionStorage.getItem("User");
-      if (!token) return;
+  async function loadUserData() {
+    const token = sessionStorage.getItem("User");
+    if (!token) return;
 
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      const decodedUser = jwtDecode(token);
-      setUser(decodedUser);
-    }
-    loadUserData();
-  }, []);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const decodedUser = jwtDecode(token);
+    setUser(decodedUser);
+  }
+  loadUserData();
+}, []);
 
   const showModal = () => setOpen(true);
   const handleCancel = () => {
@@ -32,9 +33,10 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
     setClaimMode(false);
     form.resetFields();
   };
+
   const handleClaim = () => setClaimMode(true);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async ({item, onClaimSuccess } ) => {
     try {
       const values = await form.validateFields();
       const token = sessionStorage.getItem("User");
@@ -51,10 +53,13 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
       const result = await createClaim(formData, token);
 
       if (result.success) {
+        message.success("Claim submitted successfully!");
         handleCancel();
 
-        // Notify parent to remove this item
-        if (onClaimSuccess) onClaimSuccess(item._id);
+        // ✅ Notify parent to remove the card
+        if (onClaimSuccess) {
+          onClaimSuccess(item._id);
+        }
       } else {
         message.error(result.error || "Failed to submit claim");
       }
@@ -63,6 +68,8 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
       message.error("Please complete the form");
     }
   };
+
+
 
   return (
     <>
@@ -73,7 +80,10 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
           <img
             draggable={false}
             alt={item.keyItem}
-            src={item.photoUrl || "https://community.softr.io/uploads/db9110/original/2X/7/74e6e7e382d0ff5d7773ca9a87e6f6f8817a68a6.jpeg"}
+            src={
+              item.photoUrl ||
+              "https://community.softr.io/uploads/db9110/original/2X/7/74e6e7e382d0ff5d7773ca9a87e6f6f8817a68a6.jpeg"
+            }
             style={{ height: 180, objectFit: "cover" }}
           />
         }
@@ -83,10 +93,21 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
           title={item.keyItem}
           description={
             <>
-              <p><b>Category:</b> {item.category}</p>
-              <p><b>Brand:</b> {item.itemBrand || "N/A"}</p>
-              <p><b>Location:</b> {item.location}</p>
-              <p><b>Date Found:</b> {item.dateFound ? new Date(item.dateFound).toLocaleDateString() : "N/A"}</p>
+              <p>
+                <b>Category:</b> {item.category}
+              </p>
+              <p>
+                <b>Brand:</b> {item.itemBrand || "N/A"}
+              </p>
+              <p>
+                <b>Location:</b> {item.location}
+              </p>
+              <p>
+                <b>Date Found:</b>{" "}
+                {item.dateFound
+                  ? new Date(item.dateFound).toLocaleDateString()
+                  : "N/A"}
+              </p>
             </>
           }
         />
@@ -97,29 +118,59 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
         title={item.keyItem}
         onCancel={handleCancel}
         maskClosable={false}
-        footer={null}
-        width={800}
+        footer={null} // custom footer
+        width={800} // wider to accommodate right panel
       >
-        <div style={{ display: "flex" }}>
-          {/* Left side: Item details */}
-          <div style={{ flex: 1, paddingRight: 16 }}>
+        <div className="flex transition-all duration-500">
+          {/* Left Side: Item Details */}
+          <div className="w-1/2 pr-6">
             <img
-              src={item.photoUrl || "https://community.softr.io/uploads/db9110/original/2X/7/74e6e7e382d0ff5d7773ca9a87e6f6f8817a68a6.jpeg"}
+              src={
+                item.photoUrl ||
+                "https://community.softr.io/uploads/db9110/original/2X/7/74e6e7e382d0ff5d7773ca9a87e6f6f8817a68a6.jpeg"
+              }
               alt={item.keyItem}
-              style={{ width: "100%", marginBottom: 15, borderRadius: 8, objectFit: "cover" }}
+              style={{
+                width: "100%",
+                marginBottom: "15px",
+                borderRadius: "8px",
+                objectFit: "cover",
+              }}
             />
-            <p><b>Category:</b> {item.category}</p>
-            <p><b>Brand:</b> {item.itemBrand || "N/A"}</p>
-            <p><b>Location:</b> {item.location}</p>
-            <p><b>Date Found:</b> {item.dateFound ? new Date(item.dateFound).toLocaleDateString() : "N/A"}</p>
-            <p><b>Description:</b> {item.description || "No description provided."}</p>
+            <p>
+              <b>Category:</b> {item.category}
+            </p>
+            <p>
+              <b>Brand:</b> {item.itemBrand || "N/A"}
+            </p>
+            <p>
+              <b>Location:</b> {item.location}
+            </p>
+            <p>
+              <b>Date Found:</b>{" "}
+              {item.dateFound
+                ? new Date(item.dateFound).toLocaleDateString()
+                : "N/A"}
+            </p>
+            <p>
+              <b>Description:</b> {item.description || "No description provided."}
+            </p>
 
-            {!claimMode && <Button type="primary" onClick={handleClaim}>Claim</Button>}
+            {/* Step 1 Claim Button */}
+            {!claimMode && (
+              <Button type="primary" onClick={handleClaim}>
+                Claim
+              </Button>
+            )}
           </div>
 
-          {/* Right side: Claim form */}
-          {claimMode && (
-            <div style={{ flex: 1, paddingLeft: 16, borderLeft: "1px solid #f0f0f0" }}>
+          {/* Right Side: Claim Form (Slides In) */}
+          <div
+            className={`w-1/2 pl-6 border-l transition-all duration-500 ${
+              claimMode ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full"
+            }`}
+          >
+            {claimMode && (
               <Form form={form} layout="vertical">
                 <Form.Item
                   label="Reason for Claim"
@@ -141,13 +192,15 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
                   </Upload>
                 </Form.Item>
 
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                <div className="flex justify-end gap-2">
                   <Button onClick={handleCancel}>Cancel</Button>
-                  <Button type="primary" onClick={handleSubmit}>Submit</Button>
+                  <Button type="primary" onClick={handleSubmit}>
+                    Submit
+                  </Button>
                 </div>
               </Form>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </Modal>
     </>

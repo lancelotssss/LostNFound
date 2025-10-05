@@ -209,7 +209,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
 
     const claimReports = await db
       .collection("lost_found_db")
-      .find({reportType: { $in: ["Claimed", "Pending Claim", "Claim"] }})
+      .find({status: { $in: ["Claimed", "Pending Claim", "Claim", "Deny"] }})
       .toArray();
 
     res.json({

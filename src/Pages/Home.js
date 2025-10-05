@@ -36,6 +36,7 @@ export const Home = () => {
       if (res && res.success) {
         const formatDate = (d) => (d ? new Date(d).toLocaleString() : "N/A");
 
+        // Format lost reports
         const lostFormatted = (res.lostReports || []).map((item, index) => ({
           key: item._id || `lost-${index}`,
           ...item,
@@ -43,6 +44,7 @@ export const Home = () => {
           dateFound: formatDate(item.dateFound),
         }));
 
+        // Format found reports
         const foundFormatted = (res.foundReports || []).map((item, index) => ({
           key: item._id || `found-${index}`,
           ...item,
@@ -51,15 +53,15 @@ export const Home = () => {
         }));
 
         const claimFormatted = (res.claimReports || []).map((item, index) => ({
-          key: item._id || `claim-${index}`,
+          key: item._id || `found-${index}`,
           ...item,
           dateReported: formatDate(item.dateReported),
           dateFound: formatDate(item.dateFound),
         }));
 
-        setLost(lostFormatted);
-        setFound(foundFormatted);
-        setClaim(claimFormatted);
+        setLost(lostFormatted)
+        setFound(foundFormatted)
+        setClaim(claimFormatted)
       } else {
         message.error("Failed to load reports.");
       }
@@ -71,11 +73,13 @@ export const Home = () => {
     }
   };
 
+  // When user clicks a row to view details
   const handleRowClick = (record) => {
     setSelectedItem(record);
     setIsModalVisible(true);
   };
 
+  // Navigate to similar items page for lost items
   const handleRowLost = () => {
     if (selectedItem) {
       navigate("/cli/search/result", { state: { selectedItem } });
@@ -89,31 +93,38 @@ export const Home = () => {
   };
 
   const handleDispose = async (id, type) => {
-    const confirm = window.confirm("Are you sure you want to dispose this report?");
-    if (!confirm) return;
+  const confirmDispose = window.confirm("Are you sure you want to dispose this report?");
+  if (!confirmDispose) return;
 
-    try {
-      const response = await axios.put(
-        `http://localhost:3110/home/${id}/dispose`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  try {
+    const response = await axios.put(
+      `http://localhost:3110/home/${id}/dispose`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      if (response.data.success) {
-        message.success(response.data.message);
+    if (response.data.success) {
+      message.success(response.data.message);
 
-        if (type === "Lost") setLost(prev => prev.filter(item => item._id !== id));
-        if (type === "Found") setFound(prev => prev.filter(item => item._id !== id));
-
-        if (selectedItem?._id === id) handleModalClose();
-      } else {
-        message.error("Failed to dispose report");
+      // Remove disposed report from the correct table
+      if (type === "Lost") {
+        setLost((prev) => prev.filter((report) => report._id !== id));
+      } else if (type === "Found") {
+        setFound((prev) => prev.filter((report) => report._id !== id));
+      } else if (type === "Claim" || type === "Pending Claim") {
+        setClaim((prev) => prev.filter((report) => report._id !== id));
       }
-    } catch (err) {
-      console.error("Dispose error:", err);
-      message.error("An error occurred while disposing the report.");
+
+      // Close modal if the disposed report was selected
+      if (selectedItem?._id === id) handleModalClose();
+    } else {
+      message.error("Failed to dispose report");
     }
-  };
+  } catch (err) {
+    console.error("Dispose error:", err);
+    message.error("An error occurred while disposing the report.");
+  }
+};
 
   return (
     <>
@@ -159,7 +170,7 @@ export const Home = () => {
         <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
       </Table>
 
-      {/* Claim Table */}
+      {/* Found Table */}
       <h1>MY CLAIM TABLE</h1>
       <Table
         loading={loading}
@@ -230,8 +241,6 @@ export const Home = () => {
           </>
         )}
       </Modal>
-
-      
     </>
   );
 };
