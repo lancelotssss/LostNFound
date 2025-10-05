@@ -207,10 +207,17 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       .find({ reportedBy: studentId, reportType: "Found" })
       .toArray();
 
+    const claimReports = await db
+      .collection("lost_found_db")
+      .find({reportType: { $in: ["Claimed", "Pending Claim", "Claim"] }})
+      .toArray();
+
     res.json({
       success: true,    
       lostReports,              
       foundReports,
+      claimReports,
+
     });
   } catch (err) {
     console.error("Error fetching reports:", err);
