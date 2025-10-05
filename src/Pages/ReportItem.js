@@ -91,180 +91,251 @@ export default function ReportItem() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Lost and Found Report</h1>
+  <form onSubmit={handleSubmit}>
+    <h1>Lost and Found Report</h1>
 
-      {/* Step 1: Report Type */}
+    {/* Step 1: Report Type */}
+    <div>
+      <p>Type of Report</p>
+      <label>
+        <input
+          type="radio"
+          name="reportType"
+          value="Lost"
+          checked={registerData.reportType === "Lost"}
+          onChange={handleChange}
+        />{" "}
+        Lost
+      </label>
+      <label>
+        <input
+          type="radio"
+          name="reportType"
+          value="Found"
+          checked={registerData.reportType === "Found"}
+          onChange={handleChange}
+        />{" "}
+        Found
+      </label>
+    </div>
+
+    {/* Step 2: Category */}
+    {registerData.reportType && (
       <div>
-        <p>Type of Report</p>
-        <label>
-          <input
-            type="radio"
-            name="reportType"
-            value="Lost"
-            checked={registerData.reportType === "Lost"}
+        <p>
+          Category{" "}
+          <select
+            name="category"
+            value={registerData.category}
             onChange={handleChange}
-          />{" "}
-          Lost
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="reportType"
-            value="Found"
-            checked={registerData.reportType === "Found"}
-            onChange={handleChange}
-          />{" "}
-          Found
-        </label>
+          >
+            <option value="">Select Category</option>
+            <option value="Gadgets">Gadgets</option>
+            <option value="Personal Belongings">Personal Belongings</option>
+            <option value="School Supplies">School Supplies</option>
+            <option value="Wearables">Wearables</option>
+            <option value="Identification Card">Identification Card</option>
+            <option value="Others">Others</option>
+          </select>
+        </p>
       </div>
+    )}
 
-      {/* Step 2: Category */}
-      {registerData.reportType && (
+    {/* Step 3: Key Item */}
+    {registerData.reportType && (
+      <div>
+        <p>
+          Key Item{" "}
+          {registerData.category === "Others" ? (
+            <input
+              type="text"
+              name="keyItem"
+              value={registerData.keyItem}
+              onChange={handleChange}
+              placeholder="Enter Item"
+            />
+          ) : (
+            <select
+              name="keyItem"
+              value={registerData.keyItem}
+              onChange={handleChange}
+              disabled={!registerData.category}
+            >
+              <option value="">Select Item</option>
+
+              {/* Gadgets */}
+              {registerData.category === "Gadgets" && (
+                <>
+                  <option>Mobile Device</option>
+                  <option>Laptop</option>
+                  <option>Watch</option>
+                  <option>Calculator</option>
+                  <option>Power Bank</option>
+                  <option>Charging Utilities</option>
+                  <option>CPU</option>
+                  <option>Audio Device</option>
+                  <option>Others</option>
+                </>
+              )}
+
+              {/* Personal Belongings */}
+              {registerData.category === "Personal Belongings" && (
+                <>
+                  <option>Wallet</option>
+                  <option>Tumbler</option>
+                  <option>Bag</option>
+                  <option>Accessories</option>
+                  <option>Cosmetic Products</option>
+                  <option>Handkerchief</option>
+                  <option>Umbrella</option>
+                  <option>Keys</option>
+                  <option>Others</option>
+                </>
+              )}
+
+              {/* School Supplies */}
+              {registerData.category === "School Supplies" && (
+                <>
+                  <option>Office Supplies</option>
+                  <option>Pen</option>
+                  <option>Books</option>
+                  <option>Architecture Materials</option>
+                  <option>Medical Materials</option>
+                  <option>Others</option>
+                </>
+              )}
+
+              {/* Wearables */}
+              {registerData.category === "Wearables" && (
+                <>
+                  <option>Eyeglass</option>
+                  <option>Jacket</option>
+                  <option>Hat</option>
+                  <option>T-shirt</option>
+                  <option>Lab Gown</option>
+                  <option>Uniform</option>
+                  <option>Foot Wearables</option>
+                  <option>Cap</option>
+                  <option>Trousers</option>
+                  <option>Others</option>
+                </>
+              )}
+
+              {/* Identification Card */}
+              {registerData.category === "Identification Card" && (
+                <>
+                  <option>School ID</option>
+                  <option>National ID</option>
+                  <option>Passport</option>
+                  <option>Driver’s License</option>
+                  <option>Others</option>
+                </>
+              )}
+            </select>
+          )}
+        </p>
+      </div>
+    )}
+
+    {/* Step 4: Item Brand */}
+    {registerData.keyItem && (
+      <div>
+        <p>
+          Item Brand{" "}
+          <input
+            type="text"
+            name="itemBrand"
+            placeholder="Enter Item Brand"
+            value={registerData.itemBrand}
+            onChange={handleChange}
+          />
+        </p>
+      </div>
+    )}
+
+    {/* Step 5: Location */}
+    {registerData.itemBrand && (
+      <div>
+        <p>
+          Location{" "}
+          <input
+            type="text"
+            name="location"
+            placeholder="Enter Location"
+            value={registerData.location}
+            onChange={handleChange}
+          />
+        </p>
+      </div>
+    )}
+
+    {/* Step 6: Date Inputs */}
+    {registerData.reportType === "Lost" && registerData.location && (
+      <>
+        <p>
+          Start Date{" "}
+          <input
+            type="date"
+            name="startDate"
+            value={registerData.startDate}
+            onChange={handleChange}
+          />
+        </p>
+        <p>
+          End Date{" "}
+          <input
+            type="date"
+            name="endDate"
+            value={registerData.endDate}
+            onChange={handleChange}
+          />
+        </p>
+      </>
+    )}
+
+    {registerData.reportType === "Found" && registerData.location && (
+      <p>
+        Date Found{" "}
+        <input
+          type="date"
+          name="dateFound"
+          value={registerData.dateFound}
+          onChange={handleChange}
+        />
+      </p>
+    )}
+
+    {/* Step 7: Description and File Upload */}
+    {((registerData.reportType === "Lost" &&
+      registerData.startDate &&
+      registerData.endDate) ||
+      (registerData.reportType === "Found" &&
+        registerData.dateFound)) && (
+      <>
         <div>
           <p>
-            Category{" "}
-            <select
-              name="category"
-              value={registerData.category}
+            Description{" "}
+            <textarea
+              name="description"
+              placeholder="Enter Description"
+              value={registerData.description}
               onChange={handleChange}
-            >
-              <option value="">Select Category</option>
-              <option>Gadgets</option>
-              <option>Personal Belongings</option>
-              <option>School Supplies</option>
-              <option>Wearables</option>
-              <option>Student ID</option>
-              <option>Others</option>
-            </select>
+            />
           </p>
         </div>
-      )}
 
-      {/* Step 3: KeyItem & Brand */}
-      {registerData.category && (
-        <>
-          <div>
-            <p>
-              Item{" "}
-              <input
-                type="text"
-                name="keyItem"
-                placeholder="Item"
-                value={registerData.keyItem}
-                onChange={handleChange}
-              />
-            </p>
-          </div>
+        <div>
+          <p>
+            Upload Photo{" "}
+            <input type="file" name="file" onChange={handleFileChange} />
+          </p>
+        </div>
 
-          <div>
-            <p>
-              Item Brand{" "}
-              <input
-                type="text"
-                name="itemBrand"
-                placeholder="Brand (optional)"
-                value={registerData.itemBrand}
-                onChange={handleChange}
-              />
-            </p>
-          </div>
-        </>
-      )}
-
-      {/* Step 4: Lost vs Found */}
-      {registerData.keyItem && (
-        <>
-          {/* Location */}
-          <div>
-            <p>
-              Location{" "}
-              <input
-                type="text"
-                name="location"
-                placeholder="Location"
-                value={registerData.location}
-                onChange={handleChange}
-              />
-            </p>
-          </div>
-
-          {/* Lost: Start + End Dates */}
-          {registerData.reportType === "Lost" && registerData.location && (
-            <>
-              <p>
-                Start Date{" "}
-                <input
-                  type="date"
-                  name="startDate"
-                  value={registerData.startDate}
-                  onChange={handleChange}
-                />
-              </p>
-              <p>
-                End Date{" "}
-                <input
-                  type="date"
-                  name="endDate"
-                  value={registerData.endDate}
-                  onChange={handleChange}
-                />
-              </p>
-            </>
-          )}
-
-          {/* Found: Date Found */}
-          {registerData.reportType === "Found" &&
-            registerData.location && (
-              <p>
-                Date Found{" "}
-                <input
-                  type="date"
-                  name="dateFound"
-                  value={registerData.dateFound}
-                  onChange={handleChange}
-                />
-              </p>
-            )}
-
-          {/* Description */}
-          {((registerData.reportType === "Lost" &&
-            registerData.startDate &&
-            registerData.endDate) ||
-            (registerData.reportType === "Found" &&
-              registerData.dateFound)) && (
-            <>
-              <div>
-                <p>
-                  Description{" "}
-                  <textarea
-                    name="description"
-                    placeholder="Description"
-                    value={registerData.description}
-                    onChange={handleChange}
-                  />
-                </p>
-              </div>
-
-              {/* File Upload */}
-              <div>
-                <p>
-                  Upload Photo{" "}
-                  <input
-                    type="file"
-                    name="file"
-                    onChange={handleFileChange}
-                  />
-                </p>
-              </div>
-
-              <div>
-                <button type="submit">SUBMIT REPORT</button>
-              </div>
-            </>
-          )}
-        </>
-      )}
-    </form>
-  );
+        <div>
+          <button type="submit">SUBMIT REPORT</button>
+        </div>
+      </>
+    )}
+  </form>
+);
 }
