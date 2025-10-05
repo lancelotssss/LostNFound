@@ -207,16 +207,24 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       .find({ reportedBy: studentId, reportType: "Found" })
       .toArray();
 
+      const claimReports = await db
+      .collection("lost_found_db")
+      .find({status: { $in: ["Claimed", "Pending Claim", "Claim"] }})
+      .toArray();
+
     res.json({
       success: true,    
       lostReports,              
       foundReports,
+      claimReports
     });
   } catch (err) {
     console.error("Error fetching reports:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+
 
 userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
   try {
@@ -256,6 +264,43 @@ userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Error deleted report:", err);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+userRoutes.get("/claim-items/:id", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const itemId = req.params.id;
+
+    // 🔹 1. Find the item in lost_found_db
+    const item = await db.collection("lost_found_db").findOne({
+      _id: new ObjectId(itemId),
+      status: { $in: ["Pending Claim", "Claimed", "Claim Denied"] },
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Item not found or not claimable",
+      });
+    }
+
+    // 🔹 2. Find matching claim info from claims_db
+    const claim = await db.collection("claims_db").findOne({ itemId });
+
+    // 🔹 3. Respond separately
+    res.json({
+      success: true,
+      item,
+      claim: claim || null,
+    });
+
+  } catch (err) {
+    console.error("Error fetching claim item:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
 

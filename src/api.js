@@ -72,6 +72,18 @@ export async function deleteReport(id, token) {
   }
 }
 
+export async function getClaimDetailsClient(token, itemId) {
+  try {
+    const response = await axios.get(`${URL}/cli/claim-items/${itemId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error fetching claim details:", err);
+    return null;
+  }
+}
+
 export async function getAllClaim(token){
   try {
     const response = await axios.get(`${URL}/cli/claims`, {
