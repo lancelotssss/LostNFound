@@ -8,7 +8,7 @@ import {
 import axios from "axios";
 import RegisterPage from "./Pages/RegisterPage";
 import ReportItem from "./Pages/ReportItem";
-import Home from "./Pages/Home";
+import {Home} from "./Pages/Home";
 import { Layout } from "./components/Layout";
 import { useEffect } from "react";
 import { AdminLost } from "./Pages/AdminLost";

@@ -80,10 +80,27 @@ export const Home = () => {
     }
   };
 
+  const handleClaimSuccess = (claimedId) => {
+  // Remove claimed item from Found table
+  setFound(prev => prev.filter(item => item._id !== claimedId));
+
+  // Optionally remove from Lost table if needed
+  setLost(prev => prev.filter(item => item._id !== claimedId));
+
+  // Close modal if the claimed item is currently open
+  if (selectedItem?._id === claimedId) {
+    handleModalClose();
+  }
+
+  message.success("Item claimed successfully!");
+};
+
   const handleModalClose = () => {
     setIsModalVisible(false);
     setSelectedItem(null);
   };
+
+  
 
 
   const handleDispose = async (id, type) => {

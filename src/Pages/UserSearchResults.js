@@ -59,6 +59,12 @@ export function UserSearchResults() {
     fetchRecommendations();
   }, [selectedItem]);
 
+  // Callback to remove a claimed item
+  const handleClaimSuccess = (claimedId) => {
+    setRecommendations(prev => prev.filter(item => item._id !== claimedId));
+    message.success("Item claimed successfully!");
+  };
+
   if (!selectedItem) {
     return <Empty description="No selected item" style={{ marginTop: 100 }} />;
   }
@@ -74,7 +80,10 @@ export function UserSearchResults() {
         <Row gutter={[16, 16]}>
           {recommendations.map((item) => (
             <Col key={item._id} xs={24} sm={12} md={8} lg={6}>
-              <SearchResultCardModal item={item} />
+              <SearchResultCardModal 
+                item={item} 
+                onClaimSuccess={handleClaimSuccess} // <-- pass callback here
+              />
             </Col>
           ))}
         </Row>
