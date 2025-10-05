@@ -8,9 +8,13 @@ require("dotenv").config({path: "./config.env"})
 let adminRoutes = express.Router()
 const SALT_ROUNDS = 6
 
+
+//---------------------------------------------------------------------------DASHBOARD---------------------------------------------------------------------------
 adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
 });
 
+
+//---------------------------------------------------------------------------REVIEW FOUND TABLE---------------------------------------------------------------------------
 adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
   try {
     let db = database.getDb();
@@ -97,6 +101,9 @@ adminRoutes.put("/found/approve", verifyToken, async (req, res) => {
   }
 });
 
+//---------------------------------------------------------------------------????---------------------------------------------------------------------------
+
+
 adminRoutes.delete("/delete/:id", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
@@ -118,6 +125,8 @@ adminRoutes.delete("/delete/:id", verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: "Server error during deletion" });
   }
 });
+
+//---------------------------------------------------------------------------VERIFY LOST ITEMS---------------------------------------------------------------------------
 
 adminRoutes.put("/lost/approve", verifyToken, async (req, res) => {
   try {
@@ -204,6 +213,8 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
   }
 });
 
+//---------------------------------------------------------------------------HISTORY---------------------------------------------------------------------------
+
 adminRoutes.route("/history").get(verifyToken, async (req, res) => {
   try {
     let db = database.getDb();
@@ -218,6 +229,8 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+//---------------------------------------------------------------------------REVIEW CLAIM ITEMS---------------------------------------------------------------------------
 
     adminRoutes.route("/claim-items").get(async (req, res) => {
       try {
@@ -257,32 +270,123 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
         console.error("Error fetching claim items: ", err)
         res.status(500), json ({success: false, error: err.message, results: []})
       }
-    /*try {
-      let db = database.getDb();
+    });
 
-      const claims = await db.collection("claims_db").find().toArray();
+adminRoutes.get("/claim-items/:itemId", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { itemId } = req.params;
 
-      const results = await Promise.all(
-        claims.map(async (claim) => {
-          const item = await db
-            .collection("lost_found_db")
-            .findOne({ tid: String(claim.itemId).trim() });
-
-          return {
-            ...claim,
-            itemDetails: item || null,
-          };
-        })
-      );
-
-      res.json({ success: true, results }); // ✅ match frontend expectation
-    } catch (err) {
-      console.error(" Error fetching claim items:", err);
-      res.status(500).json({ success: false, error: err.message, results: [] });
+    if (!ObjectId.isValid(itemId)) {
+      return res.status(400).json({ success: false, message: "Invalid itemId", claim: null });
     }
-     */
-  });
+
+    // Look up claim record by itemId
+    const claim = await db.collection("claims_db").findOne({ itemId });
+
+    if (!claim) {
+      return res.json({ success: true, claim: null });
+    }
+
+    res.json({ success: true, claim });
+  } catch (err) {
+    console.error("Error fetching claim details:", err);
+    res.status(500).json({ success: false, error: err.message, claim: null });
+  }
+});
+
+
+      adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { itemObjectId, status, approvedBy } = req.body;
+
+    console.log("Incoming Claim Approve Payload:", req.body);
+
+    // 🔸 Validation
+    if (!itemObjectId || !status || !approvedBy) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    if (!ObjectId.isValid(itemObjectId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid itemObjectId",
+      });
+    }
+
+    const objectId = new ObjectId(itemObjectId);
+
+    // 🔸 Check claim record
+    const claim = await db.collection("claims_db").findOne({ itemId: itemObjectId });
+    if (!claim) {
+      return res.status(404).json({
+        success: false,
+        message: "Claim record not found",
+      });
+    }
+
+    // 🔸 Update lost_found_db item
+    const item = await db.collection("lost_found_db").findOne({ _id: objectId });
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Item not found in lost_found_db",
+      });
+    }
+
+    await db.collection("lost_found_db").updateOne(
+      { _id: objectId },
+      { $set: { status, approvedBy, updatedAt: new Date() } }
+    );
+
+    // 🔸 Update claim status
+    const claimUpdate = await db.collection("claims_db").updateOne(
+      { itemId: itemObjectId },
+      { $set: { status, reviewedBy: approvedBy, reviewedAt: new Date() } }
+    );
+
+    if (claimUpdate.modifiedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Failed to update claim record",
+      });
+    }
+
+    // 🔸 Audit trail
+    const auditMongo = {
+      aid: `A-${Date.now()}`,
+      action: status === "Approved" ? "APPROVE_CLAIM" : "DENY_CLAIM",
+      targetUser: claim.claimant || "",
+      performedBy: approvedBy,
+      timestamp: new Date(),
+      ticketId: item.tid,
+      details: `${approvedBy} set claim for item ${item.tid} to ${status}.`,
+    };
+
+    await db.collection("audit_db").insertOne(auditMongo);
+
+    // 🔸 Response
+    res.json({
+      success: true,
+      message: `Claim ${status}`,
+      audit: auditMongo,
+    });
+  } catch (err) {
+    console.error("Error approving/denying claim:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
   
+  
+
+//---------------------------------------------------------------------------STORAGE---------------------------------------------------------------------------
 adminRoutes.route("/storage").get(verifyToken, async (req, res) => {
   try {
     let db = database.getDb();
@@ -298,6 +402,7 @@ adminRoutes.route("/storage").get(verifyToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 adminRoutes.put("/storage/approve", verifyToken, async (req, res) => {
   try {
@@ -349,7 +454,7 @@ adminRoutes.put("/storage/approve", verifyToken, async (req, res) => {
   }
 });
 
-
+//---------------------------------------------------------------------------AUDIT LOGS
 adminRoutes.route("/logs").get(verifyToken, async (req, res) => {
   try {
     let db = database.getDb();

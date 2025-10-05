@@ -308,6 +308,32 @@ export async function getClaimReport(token) {
   }
 }
 
+export async function getClaimDetails(token, itemId) {
+  try {
+    const response = await axios.get(`${URL}/main/claim-items/${itemId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data.claim;
+  } catch (err) {
+    console.error("Error fetching claim details:", err);
+    return null;
+  }
+}
+
+export async function approveClaim(token, itemObjectId, status, approvedBy) {
+  try {
+    const response = await axios.put(
+      `${URL}/main/claim-items/approve`,
+      { itemObjectId, status, approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error approving claim:", err);
+    throw err;
+  }
+}
+
 export async function getAuditLogs(token) {
    try {
     const response = await axios.get(`${URL}/main/logs`, {
