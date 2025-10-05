@@ -28,21 +28,32 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
 
   const showModal = () => setOpen(true);
   const handleCancel = () => {
+    localStorage.removeItem("lostReferenceFound");
     setOpen(false);
     setClaimMode(false);
     form.resetFields();
   };
-  const handleClaim = () => setClaimMode(true);
+  const handleClaim = () => {
 
+    localStorage.setItem("lostReferenceFound", item._id)
+
+    setClaimMode(true);
+  }
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
       const token = sessionStorage.getItem("User");
+      const selectedLostId = localStorage.getItem("selectedLostId");
+      const lostReferenceFound = localStorage.getItem("lostReferenceFound");
+
 
       const formData = new FormData();
       formData.append("itemId", item._id);
       formData.append("claimerId", user?.studentId);
       formData.append("reason", values.reason);
+      if (selectedLostId) formData.append("selectedLostId", selectedLostId);
+      if (lostReferenceFound) formData.append("lostReferenceFound", lostReferenceFound);
+
 
       if (values.image && values.image[0]) {
         formData.append("photo", values.image[0].originFileObj);
@@ -51,6 +62,8 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
       const result = await createClaim(formData, token);
 
       if (result.success) {
+        localStorage.removeItem("selectedLostId");
+        
         handleCancel();
 
         // Notify parent to remove this item

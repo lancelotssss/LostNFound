@@ -10,7 +10,7 @@ const { Column } = Table;
 export const Home  = () => {
   const [lost, setLost] = useState([]);
   const [found, setFound] = useState([]);
-  const [claim, setClaim] = useState([]); // ✅ FIXED (was wrong earlier)
+  const [claim, setClaim] = useState([]); 
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -79,10 +79,16 @@ export const Home  = () => {
   const handleRowClick = (record) => {
     setSelectedItem(record);
     setIsModalVisible(true);
+
+    
   };
 
   const handleRowLost = (record) => {
     if (selectedItem) {
+      //dito istore yung global variables
+      
+      localStorage.setItem("selectedLostId", record._id);
+     
       navigate("/cli/search/result", {
         state: { selectedItem },
       });
@@ -141,9 +147,16 @@ const handleClaimRowClick = async (record) => {
     setSelectedClaim(record);
     setIsClaimModalVisible(true);
 
+    localStorage.setItem("selectedClaimId", record._id);
+
     const claimData = await getClaimDetailsClient(token, record._id);
+
     if (claimData && claimData.success) {
-  setClaimDetails(claimData.claim || null);
+      setClaimDetails({
+        claim: claimData.claim || null,
+        lostItem: claimData.lostItem || null,
+        foundItem: claimData.foundItem || null,
+      });
     } else {
       setClaimDetails(null);
       message.warning("No claim details found for this item.");
@@ -216,7 +229,7 @@ const handleClaimRowClick = async (record) => {
           selectedItem?.reportType?.toLowerCase() === "lost" && (
             <Button
               key="find"
-              onClick={handleRowLost}
+              onClick={() => handleRowLost(selectedItem)}
               disabled={selectedItem?.status?.toLowerCase() !== "active"}
             >
               See similar items
@@ -269,85 +282,112 @@ const handleClaimRowClick = async (record) => {
           style: { cursor: "pointer" },
         })}
       >
-        <Column title="Title" dataIndex="title" key="title" />
-        <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
-        <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
-        <Column title="Status" dataIndex="status" key="status" />
-        <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
-        <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+        <Column title="Claim ID" dataIndex="cid" key="cid" />
+        <Column title="Claimer ID" dataIndex="claimerId" key="claimerId" />
+        <Column title="Claim Status" dataIndex="claimStatus" key="claimStatus" />
+        <Column title="Created At" dataIndex="createdAt" key="createdAt" />
       </Table>
 
-      {/* 🔹 CLAIM MODAL (side-by-side layout) */}
-      <Modal
-        title={selectedClaim ? selectedClaim.title : "Claim Details"}
-        open={isClaimModalVisible}
-        onCancel={handleClaimModalClose}
-        footer={[
-          <Button key="close" onClick={handleClaimModalClose}>
-            Close
-          </Button>,
-        ]}
-        width={1100}
-        maskClosable={false}
-        bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
-      >
-        {selectedClaim && (
-          <div style={{ display: "flex", gap: 24 }}>
-            {/* Left Side */}
-            <div style={{ flex: 1 }}>
-              <h3>Lost/Found Item Information</h3>
-              {selectedClaim.photoUrl && (
-                <div style={{ textAlign: "center", marginBottom: 16 }}>
-                  <Image src={selectedClaim.photoUrl} width={220} />
-                </div>
-              )}
-              <Descriptions bordered column={1} size="middle">
-                <Descriptions.Item label="TID">{selectedClaim.tid}</Descriptions.Item>
-                <Descriptions.Item label="Title">{selectedClaim.title}</Descriptions.Item>
-                <Descriptions.Item label="Report Type">{selectedClaim.reportType}</Descriptions.Item>
-                <Descriptions.Item label="Category">{selectedClaim.category}</Descriptions.Item>
-                <Descriptions.Item label="Key Item">{selectedClaim.keyItem}</Descriptions.Item>
-                <Descriptions.Item label="Brand">{selectedClaim.itemBrand}</Descriptions.Item>
-                <Descriptions.Item label="Status">{selectedClaim.status}</Descriptions.Item>
-                <Descriptions.Item label="Reported By">{selectedClaim.reportedBy}</Descriptions.Item>
-                <Descriptions.Item label="Approved By">{selectedClaim.approvedBy}</Descriptions.Item>
-                <Descriptions.Item label="Location">{selectedClaim.location}</Descriptions.Item>
-                <Descriptions.Item label="Date Reported">{selectedClaim.dateReported}</Descriptions.Item>
-                <Descriptions.Item label="Date Found">{selectedClaim.dateFound}</Descriptions.Item>
-                <Descriptions.Item label="Description">{selectedClaim.description}</Descriptions.Item>
-              </Descriptions>
-            </div>
-
-            {/* Right Side */}
-            <div style={{ flex: 1 }}>
-              <h3>Claim Information</h3>
-              {claimDetails ? (
-                <>
-                  {claimDetails.photoUrl && (
-                    <div style={{ textAlign: "center", marginBottom: 16 }}>
-                      <Image src={claimDetails.photoUrl} width={200} />
-                    </div>
-                  )}
-                  <Descriptions bordered column={1} size="middle">
-                    <Descriptions.Item label="Claim ID">{claimDetails.cid}</Descriptions.Item>
-                    <Descriptions.Item label="Claimer ID">{claimDetails.claimerId}</Descriptions.Item>
-                    <Descriptions.Item label="Claim Status">{claimDetails.status}</Descriptions.Item>
-                    <Descriptions.Item label="Reason">{claimDetails.reason}</Descriptions.Item>
-                    <Descriptions.Item label="Admin Decision By">{claimDetails.reviewedBy}</Descriptions.Item>
-                    <Descriptions.Item label="Created At">
-                      {claimDetails.createdAt
-                        ? new Date(claimDetails.createdAt).toLocaleString()
-                        : "N/A"}
-                    </Descriptions.Item>
-                  </Descriptions>
-                </>
-              ) : (
-                <p style={{ color: "gray" }}>No claim record found for this item.</p>
-              )}
-            </div>
+      {/* 🔹 CLAIM MODAL (Triple layout like AdminClaims) */}
+<Modal
+  title={selectedClaim ? "Claim Details" : "Item Details"}
+  open={isClaimModalVisible}
+  onCancel={handleClaimModalClose}
+  footer={[
+    <Button key="close" onClick={handleClaimModalClose}>
+      Close
+    </Button>,
+  ]}
+  width={1300}
+  maskClosable={false}
+  bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+>
+  {claimDetails ? (
+    <div style={{ display: "flex", gap: 24 }}>
+      {/* 🔹 Found Item */}
+      <div style={{ flex: 1 }}>
+        <h3>Found Item Information</h3>
+        {claimDetails?.foundItem?.photoUrl && (
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <Image src={claimDetails.foundItem.photoUrl} width={220} />
           </div>
         )}
-      </Modal>
+        {claimDetails?.foundItem ? (
+          <Descriptions bordered column={1} size="middle">
+            <Descriptions.Item label="TID">{claimDetails.foundItem.tid}</Descriptions.Item>
+            <Descriptions.Item label="Title">{claimDetails.foundItem.title}</Descriptions.Item>
+            <Descriptions.Item label="Category">{claimDetails.foundItem.category}</Descriptions.Item>
+            <Descriptions.Item label="Location">{claimDetails.foundItem.location}</Descriptions.Item>
+            <Descriptions.Item label="Date Found">
+              {claimDetails.foundItem.dateFound
+                ? new Date(claimDetails.foundItem.dateFound).toLocaleString()
+                : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Status">{claimDetails.foundItem.status}</Descriptions.Item>
+          </Descriptions>
+        ) : (
+          <p style={{ color: "gray" }}>No found item data.</p>
+        )}
+      </div>
+
+      {/* 🔹 Lost Item Reference */}
+      <div style={{ flex: 1 }}>
+        <h3>Lost Item Reference</h3>
+        {claimDetails?.lostItem?.photoUrl && (
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <Image src={claimDetails.lostItem.photoUrl} width={220} />
+          </div>
+        )}
+        {claimDetails?.lostItem ? (
+          <Descriptions bordered column={1} size="middle">
+            <Descriptions.Item label="TID">{claimDetails.lostItem.tid}</Descriptions.Item>
+            <Descriptions.Item label="Title">{claimDetails.lostItem.title}</Descriptions.Item>
+            <Descriptions.Item label="Category">{claimDetails.lostItem.category}</Descriptions.Item>
+            <Descriptions.Item label="Location">{claimDetails.lostItem.location}</Descriptions.Item>
+            <Descriptions.Item label="Date Reported">
+              {claimDetails.lostItem.dateReported
+                ? new Date(claimDetails.lostItem.dateReported).toLocaleString()
+                : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Status">{claimDetails.lostItem.status}</Descriptions.Item>
+          </Descriptions>
+        ) : (
+          <p style={{ color: "gray" }}>No linked lost item found.</p>
+        )}
+      </div>
+
+      {/* 🔹 Claim Information */}
+      <div style={{ flex: 1 }}>
+        <h3>Claim Information</h3>
+        {claimDetails?.claim ? (
+          <>
+            {claimDetails.claim.photoUrl && (
+              <div style={{ textAlign: "center", marginBottom: 16 }}>
+                <Image src={claimDetails.claim.photoUrl} width={200} />
+              </div>
+            )}
+            <Descriptions bordered column={1} size="middle">
+              <Descriptions.Item label="Claim ID">{claimDetails.claim.cid}</Descriptions.Item>
+              <Descriptions.Item label="Claimer ID">{claimDetails.claim.claimerId}</Descriptions.Item>
+              <Descriptions.Item label="Claim Status">{claimDetails.claim.claimStatus}</Descriptions.Item>
+              <Descriptions.Item label="Reason">{claimDetails.claim.reason}</Descriptions.Item>
+              <Descriptions.Item label="Admin Decision By">{claimDetails.claim.reviewedBy}</Descriptions.Item>
+              <Descriptions.Item label="Created At">
+                {claimDetails.claim.createdAt
+                  ? new Date(claimDetails.claim.createdAt).toLocaleString()
+                  : "N/A"}
+              </Descriptions.Item>
+            </Descriptions>
+          </>
+        ) : (
+          <p style={{ color: "gray" }}>No claim record found for this item.</p>
+        )}
+      </div>
+    </div>
+  ) : (
+    <p style={{ color: "gray" }}>No claim details available.</p>
+  )}
+</Modal>
     </>
   );
 };
