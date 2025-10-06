@@ -81,7 +81,7 @@ export async function getClaimDetailsClient(token, itemId) {
 
 export async function getAllClaim(token){
   try {
-    const response = await axios.get(`${URL}/cli/claims`, {
+    const response = await axios.get(`${URL}/cli/claim`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

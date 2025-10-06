@@ -33,8 +33,8 @@ export function UserSettings() {
     password: "",
   });
 
-  const [isEditing, setIsEditing] = useState(false);               // phone edit mode
-  const [isPasswordEditing, setIsPasswordEditing] = useState(false); // password edit mode
+  const [isEditing, setIsEditing] = useState(false);               
+  const [isPasswordEditing, setIsPasswordEditing] = useState(false); 
 
   const [passwordForm, setPasswordForm] = useState({
     oldPassword: "",
@@ -71,7 +71,7 @@ export function UserSettings() {
     loadUserData();
   }, []);
 
-  // ---- Apply actions (no auto-submit; called only by Apply buttons) ----
+  
   async function handleSave() {
     try {
       if (formData.phone === user.phone) {
@@ -196,7 +196,7 @@ export function UserSettings() {
                 onChange={handleChange}
                 placeholder="Phone Number"
                 prefix={<PhoneOutlined />}
-                disabled={!isEditing}              // disabled by default
+                disabled={!isEditing}              
                 className="settings-input"
               />
 
@@ -205,7 +205,7 @@ export function UserSettings() {
                   <>
                     <Button
                       type="default"
-                      onClick={() => setIsEditing(true)} // just toggles edit mode
+                      onClick={() => setIsEditing(true)} 
                     >
                       Edit
                     </Button>
@@ -218,7 +218,7 @@ export function UserSettings() {
                     <Button
                       type="default"
                       onClick={() => {
-                        // revert and exit edit mode
+                        
                         setFormData((prev) => ({ ...prev, phone: user.phone || "" }));
                         setIsEditing(false);
                       }}
@@ -227,7 +227,7 @@ export function UserSettings() {
                     </Button>
                     <Button
                       type="primary"
-                      onClick={handleSave}          // explicit apply
+                      onClick={handleSave}          
                     >
                       Apply
                     </Button>
@@ -296,7 +296,7 @@ export function UserSettings() {
                   <>
                     <Button
                       type="default"
-                      onClick={() => setIsPasswordEditing(true)} // just toggles edit mode
+                      onClick={() => setIsPasswordEditing(true)} 
                     >
                       Edit
                     </Button>
@@ -317,7 +317,7 @@ export function UserSettings() {
                     </Button>
                     <Button
                       type="primary"
-                      onClick={handlePasswordSave}  // explicit apply
+                      onClick={handlePasswordSave}  
                     >
                       Apply
                     </Button>

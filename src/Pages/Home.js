@@ -18,7 +18,7 @@ import {
   FolderOpenOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
-import { getAllReport, getAllClaim, getClaimDetailsClient } from "../api";
+import { getAllReport, getClaimDetailsClient } from "../api";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -87,7 +87,10 @@ export const Home = () => {
     "claim rejected": "volcano",
   };
   const normalizeStatus = (s) =>
-    String(s || "").toLowerCase().replace(/[-_]/g, " ").trim();
+    String(s || "")
+      .toLowerCase()
+      .replace(/[-_]/g, " ")
+      .trim();
   const StatusTag = ({ status }) => {
     const key = normalizeStatus(status);
     const color = STATUS_COLORS[key] || "default";
@@ -109,88 +112,101 @@ export const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchData = async (tkn) => {
-    try {
-      setLoading(true);
+const fetchData = async (tkn) => {
+  try {
+    setLoading(true);
 
-      // You wanted to keep your separate calls (reports + claims)
-      const [reportRes, claimRes] = await Promise.all([
-        getAllReport(tkn),
-        getAllClaim(tkn),
-      ]);
+    // Only fetch reports (lost, found, and claimReports come from here)
+    const reportRes = await getAllReport(tkn);
 
-      if (reportRes && reportRes.success) {
-        // LOST
-        const lostFormatted = (reportRes.lostReports || [])
-          .map((item, index) => ({
-            key: item._id || `lost-${index}`,
-            ...item,
-            dateReported: formatDate(item.dateReported),
-            dateFound: formatDate(item.dateFound),
-          }))
-          .sort(
-            (a, b) =>
-              lostStatusOrder.indexOf(a.status) -
-              lostStatusOrder.indexOf(b.status)
-          );
+    if (reportRes && reportRes.success) {
+      // ---- CLAIMS (from reportRes.claimReports) ----
+      const claimFormatted = (reportRes.claimReports || [])
+        .map((item, index) => {
+          const cid =
+            item.cid ||
+            item.claimId ||
+            item.claim?.cid ||
+            item._id ||
+            `claim-${index}`;
+          const claimerId =
+            item.claimerId ||
+            item.claimer?.id ||
+            item.userId ||
+            item.user?.id ||
+            item.user ||
+            "N/A";
+          const claimStatus =
+            item.claimStatus || item.status || item.claim?.status || "N/A";
 
-        // FOUND
-        const foundFormatted = (reportRes.foundReports || [])
-          .map((item, index) => ({
-            key: item._id || `found-${index}`,
-            ...item,
-            dateReported: formatDate(item.dateReported),
-            dateFound: formatDate(item.dateFound),
-          }))
-          .sort(
-            (a, b) =>
-              foundStatusOrder.indexOf(a.status) -
-              foundStatusOrder.indexOf(b.status)
-          );
+          const createdRaw =
+            item.createdAt || item.created_at || item.dateCreated || item.created;
 
-        setLost(lostFormatted);
-        setFound(foundFormatted);
-      } else {
-        message.error("Failed to load lost/found reports.");
-        setLost([]);
-        setFound([]);
-      }
-
-      // CLAIMS — be forgiving about server shape (your approach)
-      if (
-        claimRes &&
-        (claimRes.success ||
-          Array.isArray(claimRes?.results) ||
-          Array.isArray(claimRes?.claims) ||
-          Array.isArray(claimRes?.claimReports))
-      ) {
-        const rawClaims =
-          claimRes.claims || claimRes.claimReports || claimRes.results || [];
-
-        const claimsFormatted = rawClaims
-          .map((item, index) => ({
+          return {
             key: item._id || `claim-${index}`,
             ...item,
-            dateReported: formatDate(item.dateReported),
-            dateFound: formatDate(item.dateFound),
-            dateClaimed: formatDate(item.dateClaimed || item.claimDate),
-          }))
-          // newest first
-          .sort(
-            (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-          );
+            // normalized fields for the table
+            cid,
+            claimerId,
+            claimStatus,
+            createdAtRaw: createdRaw ? new Date(createdRaw).toISOString() : null, // for sorting
+            createdAt: formatDate(createdRaw), // for display
+          };
+        })
+        .sort((a, b) => {
+          const A = a.createdAtRaw ? Date.parse(a.createdAtRaw) : 0;
+          const B = b.createdAtRaw ? Date.parse(b.createdAtRaw) : 0;
+          return B - A; // newest first
+        });
 
-        setClaims(claimsFormatted);
-      } else {
-        setClaims([]);
-      }
-    } catch (err) {
-      console.error("Error fetching data:", err);
-      message.error("Failed to load data.");
-    } finally {
-      setLoading(false);
+      // ---- LOST ----
+      const lostFormatted = (reportRes.lostReports || [])
+        .map((item, index) => ({
+          key: item._id || `lost-${index}`,
+          ...item,
+          dateReported: formatDate(item.dateReported),
+          dateFound: formatDate(item.dateFound),
+        }))
+        .sort(
+          (a, b) =>
+            lostStatusOrder.indexOf(a.status) - lostStatusOrder.indexOf(b.status)
+        );
+
+      // ---- FOUND ----
+      const foundFormatted = (reportRes.foundReports || [])
+        .map((item, index) => ({
+          key: item._id || `found-${index}`,
+          ...item,
+          dateReported: formatDate(item.dateReported),
+          dateFound: formatDate(item.dateFound),
+        }))
+        .sort(
+          (a, b) =>
+            foundStatusOrder.indexOf(a.status) - foundStatusOrder.indexOf(b.status)
+        );
+
+      setLost(lostFormatted);
+      setFound(foundFormatted);
+      setClaims(claimFormatted);
+
+      // Optional sanity check
+      // console.log("claimReports:", reportRes.claimReports?.length, claimFormatted);
+    } else {
+      message.error("Failed to load lost/found reports.");
+      setLost([]);
+      setFound([]);
+      setClaims([]);
     }
-  };
+
+    // IMPORTANT: remove the old claimRes branch entirely.
+    // It was overwriting claims with [] because claimRes was undefined.
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    message.error("Failed to load data.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Pagination (keep your UX copy)
   const paginationConfig = {
@@ -226,11 +242,14 @@ export const Home = () => {
 
   // Navigate to similar for LOST (preserve your classnames/route)
   const handleRowLostSeeSimilar = () => {
-    if (!selectedLost) return;
+    if (!selectedLost?._id) return;
+    // store the Mongo _id in localStorage
+    localStorage.setItem("selectedLostId", selectedLost._id);
+
+    // keep your existing navigation payload
     navigate("/cli/search/result", { state: { selectedItem: selectedLost } });
     handleLostModalClose();
   };
-
   // Dispose (friend’s “soft delete” update + your endpoint)
   const handleDispose = async (id, type) => {
     const confirm = window.confirm(
@@ -418,26 +437,10 @@ export const Home = () => {
           pagination={paginationConfig}
           scroll={{ x: "max-content" }}
         >
-          <Column title="Title" dataIndex="title" key="title" />
-          <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
-          <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
-          <Column
-            title="Status"
-            dataIndex="status"
-            key="status"
-            render={(status) => <StatusTag status={status} />}
-          />
-          <Column
-            title="Date Reported"
-            dataIndex="dateReported"
-            key="dateReported"
-          />
-          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
-          <Column
-            title="Date Claimed"
-            dataIndex="dateClaimed"
-            key="dateClaimed"
-          />
+          <Column title="Claim ID" dataIndex="cid" key="cid" />
+          <Column title="Claimer ID" dataIndex="claimerId" key="claimerId" />
+          <Column title="Claim Status" dataIndex="claimStatus" key="claimStatus" />
+          <Column title="Created At" dataIndex="createdAt" key="createdAt" />
         </Table>
       </div>
 
@@ -503,7 +506,9 @@ export const Home = () => {
                 {selectedLost.reportedBy}
               </Descriptions.Item>
               <Descriptions.Item label="Approved By">
-                {selectedLost.approvedBy ? selectedLost.approvedBy : "No actions yet."}
+                {selectedLost.approvedBy
+                  ? selectedLost.approvedBy
+                  : "No actions yet."}
               </Descriptions.Item>
               <Descriptions.Item label="Location">
                 {selectedLost.location}
@@ -519,15 +524,21 @@ export const Home = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Date Range Lost">
                 {selectedLost.startDate && selectedLost.endDate
-                  ? `${new Date(selectedLost.startDate).toLocaleDateString("en-US", {
-                      month: "2-digit",
-                      day: "2-digit",
-                      year: "numeric",
-                    })} - ${new Date(selectedLost.endDate).toLocaleDateString("en-US", {
-                      month: "2-digit",
-                      day: "2-digit",
-                      year: "numeric",
-                    })}`
+                  ? `${new Date(selectedLost.startDate).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "2-digit",
+                        day: "2-digit",
+                        year: "numeric",
+                      }
+                    )} - ${new Date(selectedLost.endDate).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "2-digit",
+                        day: "2-digit",
+                        year: "numeric",
+                      }
+                    )}`
                   : "No Information Provided"}
               </Descriptions.Item>
             </Descriptions>
@@ -616,7 +627,11 @@ export const Home = () => {
         title={selectedClaim ? selectedClaim.title : "Claim Details"}
         open={isClaimModalVisible}
         onCancel={handleClaimModalClose}
-        footer={[<Button key="close" onClick={handleClaimModalClose}>Close</Button>]}
+        footer={[
+          <Button key="close" onClick={handleClaimModalClose}>
+            Close
+          </Button>,
+        ]}
         width={1200}
         maskClosable={false}
         bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
@@ -647,10 +662,13 @@ export const Home = () => {
                   </Descriptions.Item>
                   <Descriptions.Item label="Date Found">
                     {claimDetails.foundItem.dateFound
-                      ? new Date(claimDetails.foundItem.dateFound).toLocaleDateString(
-                          "en-US",
-                          { month: "2-digit", day: "2-digit", year: "numeric" }
-                        )
+                      ? new Date(
+                          claimDetails.foundItem.dateFound
+                        ).toLocaleDateString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                        })
                       : "N/A"}
                   </Descriptions.Item>
                   <Descriptions.Item label="Status">
@@ -689,18 +707,24 @@ export const Home = () => {
                   </Descriptions.Item>
                   <Descriptions.Item label="Start Date">
                     {claimDetails.lostItem.startDate
-                      ? new Date(claimDetails.lostItem.startDate).toLocaleDateString(
-                          "en-US",
-                          { month: "2-digit", day: "2-digit", year: "numeric" }
-                        )
+                      ? new Date(
+                          claimDetails.lostItem.startDate
+                        ).toLocaleDateString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                        })
                       : "N/A"}
                   </Descriptions.Item>
                   <Descriptions.Item label="End Date">
                     {claimDetails.lostItem.endDate
-                      ? new Date(claimDetails.lostItem.endDate).toLocaleDateString(
-                          "en-US",
-                          { month: "2-digit", day: "2-digit", year: "numeric" }
-                        )
+                      ? new Date(
+                          claimDetails.lostItem.endDate
+                        ).toLocaleDateString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                        })
                       : "N/A"}
                   </Descriptions.Item>
                   <Descriptions.Item label="Status">
@@ -742,10 +766,13 @@ export const Home = () => {
                     </Descriptions.Item>
                     <Descriptions.Item label="Created At">
                       {claimDetails.claim.createdAt
-                        ? new Date(claimDetails.claim.createdAt).toLocaleDateString(
-                            "en-US",
-                            { month: "2-digit", day: "2-digit", year: "numeric" }
-                          )
+                        ? new Date(
+                            claimDetails.claim.createdAt
+                          ).toLocaleDateString("en-US", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            year: "numeric",
+                          })
                         : "N/A"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Reason">

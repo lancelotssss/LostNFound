@@ -96,7 +96,7 @@ export default function RegisterPage2() {
         .join(" "),
     };
 
-    setErrors({ email: "", studentId: "", general: "" }); // reset errors
+    setErrors({ email: "", studentId: "", general: "" }); 
 
     try {
       const response = await createUser(newRegisterData);
@@ -179,7 +179,7 @@ export default function RegisterPage2() {
   const showCenteredSuccess = (text) => {
     const h =
       window.innerHeight || document.documentElement.clientHeight || 800;
-    const msgTop = Math.max(0, Math.round(h / 2 - 24)); // ~vertical center
+    const msgTop = Math.max(0, Math.round(h / 2 - 24));
 
     message.config({ top: 0 });
     messageApi.open({
@@ -280,7 +280,6 @@ export default function RegisterPage2() {
           </div>
 
           {/* -------------------------------------------------------------------------------------------------------------------- */}
-          {/* Contacts / IDs */}
           <h2 id="secondHeader" className="reg-form-headers">
             ACCOUNT INFORMATION
           </h2>
@@ -335,7 +334,6 @@ export default function RegisterPage2() {
 
             <div>
               <label>Birthday</label>
-              {/* Keep native date via AntD Input to avoid handler changes */}
               <Input
                 name="birthday"
                 type="date"

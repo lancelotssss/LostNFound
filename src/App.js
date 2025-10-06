@@ -20,7 +20,9 @@ import { UserSettings } from "./Pages/UserSettings";
 import { AdminLayout } from "./components/AdminLayout";
 import { ActivityLog } from "./Pages/ActivityLog";
 import { UserSearchResults } from "./Pages/UserSearchResults";
-
+import { AdminStorage } from "./Pages/AdminStorage"
+import { AdminSettings } from "./Pages/AdminSettings"
+import { AdminHistory } from "./Pages/AdminHistory"
 
 function App() {
   useEffect(() => {

@@ -26,14 +26,14 @@ export default function ReportItem() {
 
   const [current, setCurrent] = useState(0);
 
-  // Reset category whenever we go back to Step 2
+
   useEffect(() => {
     if (current === 1) {
       setRegisterData((prev) => ({ ...prev, category: "" }));
     }
   }, [current]);
 
-  // helpers
+
   function setField(name, value) {
     setRegisterData((prev) => ({ ...prev, [name]: value }));
   }
@@ -133,7 +133,7 @@ export default function ReportItem() {
   ];
 
   const handleStepChange = (value) => {
-    if (value <= current) setCurrent(value); // allow going back only
+    if (value <= current) setCurrent(value); 
   };
 
   const canGoNextFrom3 = registerData.keyItem?.trim();
@@ -146,10 +146,10 @@ export default function ReportItem() {
     return false;
   })();
 
-  // 🔒 disable future dates (today OK)
+
   const disableFuture = (cur) => cur && cur > dayjs().endOf("day");
 
-  // -------------------- Step content (kept your Step 1 structure) --------------------
+  // -------------------- Step content  --------------------
   const StepOne = (
     <div className="step-one">
       <Title level={4} className="step-title">WHAT DO YOU WANT TO REPORT</Title>
