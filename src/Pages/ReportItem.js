@@ -367,7 +367,7 @@ export default function ReportItem() {
           value="Lost"
           checked={registerData.reportType === "Lost"}
           onChange={handleChange}
-        />{" "}
+        />{"  "}
         Lost
       </label>
       <label>
