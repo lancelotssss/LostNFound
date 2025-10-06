@@ -343,6 +343,20 @@ export async function approveClaim(token, claimId, status, approvedBy) {
   }
 }
 
+export async function completeTransaction(token, claimId, status, approvedBy) {
+  try {
+    const response = await axios.put(
+      `${URL}/main/claim-items/complete`,
+      { claimId, status, approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error approving claim:", err);
+    return { success: false };
+  }
+}
+
 export async function getAuditLogs(token) {
    try {
     const response = await axios.get(`${URL}/main/logs`, {

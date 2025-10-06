@@ -15,7 +15,7 @@ export default function ReportItem() {
     description: "",
     photoUrl: "",
     title: "",
-    file: null, // include file for upload
+    file: null, 
   });
 
   function handleChange(e) {
@@ -55,12 +55,12 @@ export default function ReportItem() {
         return;
       }
 
-      // Generate dynamic title
+      
       const { reportType, category, keyItem, itemBrand } = registerData;
       const brandPart = itemBrand ? `, ${itemBrand}` : "";
       const generatedTitle = `${reportType} Item: ${category}: ${keyItem}${brandPart}`;
 
-      // Prepare FormData to include file if present
+      
       const formData = new FormData();
       for (const key in registerData) {
         if (key === "file" && registerData.file) {
