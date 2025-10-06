@@ -15,7 +15,7 @@ export const AdminFound = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
 
-  // 🔹 Fetch user info from token
+ 
   useEffect(() => {
     const token = sessionStorage.getItem("User");
     if (token) {
@@ -24,7 +24,7 @@ export const AdminFound = () => {
     }
   }, []);
 
-  // 🔹 Fetch all found reports
+
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem("User"); 
@@ -145,6 +145,7 @@ const confirmDeny = async () => {
             <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
+              <Descriptions.Item label="Report Type">{selectedItem.reportType}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
               <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
@@ -153,16 +154,15 @@ const confirmDeny = async () => {
               <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
               <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
               <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
-              <Descriptions.Item label="Report Type">{selectedItem.reportType}</Descriptions.Item>
-              <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
               <Descriptions.Item label="Date Found">{selectedItem.dateFound}</Descriptions.Item>
+              <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
             </Descriptions>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button type="primary" onClick={handleApprove}>
+              <Button type="primary" onClick={handleApprove}  disabled={selectedItem.status === "Active"}>
                 Approve
               </Button>
-              <Button danger onClick={handleDeny}>
+              <Button danger onClick={handleDeny} disabled={selectedItem.status === "Denied"}>
                 Deny
               </Button>
               <Button onClick={handleModalClose}>Cancel</Button>

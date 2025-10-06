@@ -16,7 +16,7 @@ export const pageDataClient = [
   { key: "report", name: "Report Item", path: "/cli/report", icon: <FileAddOutlined /> },
   // Your router shows results under /cli/search/result. If you also have a search page,
   // you can add it too. For now we link to the results route you’re using.
-  { key: "search", name: "Search", path: "/cli/search/result", icon: <SearchOutlined /> },
+  // { key: "search", name: "Search", path: "/cli/search/result", icon: <SearchOutlined /> },
   { key: "settings", name: "User Settings", path: "/cli/settings", icon: <SettingOutlined /> },
   { key: "logout", name: "Logout", icon: <LogoutOutlined /> },
 ];

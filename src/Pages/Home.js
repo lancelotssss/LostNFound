@@ -1,270 +1,514 @@
-
-import { useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
-import { getAllReport, deleteReport} from "../api";
-
+import React, { useEffect, useState } from "react";
 import {
   Table,
+  Button,
   Modal,
   Descriptions,
-  Typography,
+  Image,
+  message,
+  Tag,
   Row,
   Col,
   Card,
   Statistic,
-  Tag,
-  Spin,
-  Image,
-  message
 } from "antd";
+import { getAllReport, getAllClaim } from "../api";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Button } from "antd";
-const { Title, Text } = Typography;
+import {
+  SearchOutlined,
+  FolderOpenOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
+import "./styles/Home.css";
 
-export function Profile() {
-  const [rows, setRows] = useState([]);
-  const [user, setUser] = useState({});
-  const [foundCounts, setFoundCounts] = useState(0);
-  const [lostCounts, setLostCounts] = useState(0);
-  const [loading, setLoading] = useState(true);
+const { Column } = Table;
+
+export const Home = () => {
+  const [lost, setLost] = useState([]);
+  const [found, setFound] = useState([]);
+  const [claims, setClaims] = useState([]);
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [isClaimModalVisible, setIsClaimModalVisible] = useState(false);
+
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const token = sessionStorage.getItem("User");
 
- 
-  const handleRowLost = (record) => {
-    if (selectedItem) {
-      navigate("/cli/search/result", {
-        state: { selectedItem },
-      });
-      setIsModalVisible(false);
+  // status → color map
+  const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+  };
+  const normalizeStatus = (s) =>
+    String(s || "")
+      .toLowerCase()
+      .replace(/[-_]/g, " ")
+      .trim();
+  const StatusTag = ({ status }) => {
+    const key = normalizeStatus(status);
+    const color = STATUS_COLORS[key] || "default";
+    return <Tag color={color}>{String(status || "—").toUpperCase()}</Tag>;
+  };
+
+  useEffect(() => {
+    if (token) {
+      const decodedUser = jwtDecode(token);
+      setUser(decodedUser);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      fetchData(token);
+    }
+  }, []); // mount only
+
+  const formatDate = (d) => (d ? new Date(d).toLocaleString() : "N/A");
+
+  const fetchData = async (tkn) => {
+    try {
+      setLoading(true);
+
+      // Fetch lost/found and claims (separately; keeps api.js unchanged)
+      const [reportRes, claimRes] = await Promise.all([
+        getAllReport(tkn),
+        getAllClaim(tkn),
+      ]);
+
+      // LOST/FOUND
+      if (reportRes && reportRes.success) {
+        const lostFormatted = (reportRes.lostReports || []).map(
+          (item, index) => ({
+            key: item._id || `lost-${index}`,
+            ...item,
+            dateReported: formatDate(item.dateReported),
+            dateFound: formatDate(item.dateFound),
+          })
+        );
+
+        const foundFormatted = (reportRes.foundReports || []).map(
+          (item, index) => ({
+            key: item._id || `found-${index}`,
+            ...item,
+            dateReported: formatDate(item.dateReported),
+            dateFound: formatDate(item.dateFound),
+          })
+        );
+
+        setLost(lostFormatted);
+        setFound(foundFormatted);
+      } else {
+        message.error("Failed to load lost/found reports.");
+      }
+
+      // CLAIMS (be forgiving about server shape)
+      if (
+        claimRes &&
+        (claimRes.success ||
+          Array.isArray(claimRes?.results) ||
+          Array.isArray(claimRes?.claims) ||
+          Array.isArray(claimRes?.claimReports))
+      ) {
+        const rawClaims =
+          claimRes.claims || claimRes.claimReports || claimRes.results || [];
+
+        const claimsFormatted = rawClaims.map((item, index) => ({
+          key: item._id || `claim-${index}`,
+          ...item,
+          dateReported: formatDate(item.dateReported),
+          dateFound: formatDate(item.dateFound),
+          dateClaimed: formatDate(item.dateClaimed || item.claimDate),
+        }));
+
+        setClaims(claimsFormatted);
+      } else {
+        setClaims([]);
+      }
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      message.error("Failed to load data.");
+    } finally {
+      setLoading(false);
     }
   };
-  
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailRecord, setDetailRecord] = useState(null);
 
-  const openModal = (record) => {
-    setDetailRecord(record);
-    setDetailOpen(true);
+  // LOST/FOUND modal handlers
+  const handleRowClick = (record) => {
+    setSelectedItem(record);
+    setIsModalVisible(true);
   };
-  const closeModal = () => {
-    setDetailOpen(false);
-    setDetailRecord(null);
+  const handleRowLost = () => {
+    if (selectedItem) {
+      navigate("/cli/search/result", { state: { selectedItem } });
+      handleModalClose();
+    }
   };
   const handleModalClose = () => {
     setIsModalVisible(false);
     setSelectedItem(null);
   };
- const handleRowClick = (record) => {
-    setSelectedItem(record);
-    setIsModalVisible(true);
+
+  // CLAIMS modal handlers
+  const handleClaimRowClick = (record) => {
+    setSelectedClaim(record);
+    setIsClaimModalVisible(true);
   };
-  const handleDelete = async (id) => {
- 
-    const confirm = window.confirm("Are you sure you want to delete this report?");
-    if (!confirm) return;
- 
-    try {
-    const response = await deleteReport(id, token);
-    if (response.success) {
-      message.success("Report deleted successfully");
-      await fetchData(token);
-    } else {
-      message.error("Failed to delete report");
-    }
-  } catch (error) {
-    console.error("Delete error:", error);
-    message.error("An error occurred while deleting the report.");
-  }
-};
-  useEffect(() => {
-    async function loadUserData() {
-      const token = sessionStorage.getItem("User");
-      if (!token) return;
+  const handleClaimModalClose = () => {
+    setIsClaimModalVisible(false);
+    setSelectedClaim(null);
+  };
 
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      const decodedUser = jwtDecode(token);
-      setUser(decodedUser);
-
-      const allReports = await getAllReport(token);
-
-      const formatted = (allReports.results || []).map((item, index) => ({
-        
-        key: item._id ? String(item._id) : `row-${index}`,
-        
-        tid: item.tid || "N/A",
-        category: item.category || "N/A",
-        photoUrl: item.photoUrl || "N/A",
-        dateFound: item.dateFound || "N/A",
-        description: item.description || "N/A",
-        reportedBy: item.reportedBy || "N/A",
-        approvedBy: item.approvedBy || "N/A",
-        title: item.title || "N/A",
-        keyItem: item.keyItem || "N/A",
-        itemBrand: item.itemBrand || "N/A",
-        location: item.location || "N/A",
-        dateReported: item.dateReported || "N/A",
-        reportType: (item.reportType || "N/A").toLowerCase(),
-        status: (item.status || "N/A").toLowerCase(),
-        _raw: item, 
-      }));
-
-      setFoundCounts(allReports.countFound?.length || 0);
-      setLostCounts(allReports.countLost?.length || 0);
-      setRows(formatted);
-      setLoading(false);
-    }
-
-    loadUserData();
-  }, []);
-
-  const reportColumns = [
-    { title: "Title", dataIndex: "title", key: "title" },
-    { title: "Key Item", dataIndex: "keyItem", key: "keyItem" },
-    { title: "Brand", dataIndex: "itemBrand", key: "itemBrand" },
-    { title: "Location", dataIndex: "location", key: "location" },
-    { title: "Date Reported", dataIndex: "dateReported", key: "dateReported" },
-    {
-      title: "Type",
-      dataIndex: "reportType",
-      key: "reportType",
-      render: (v) => (v ? v.toUpperCase() : "—"),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (v) =>
-        v ? <Tag color={v === "claimed" ? "green" : "default"}>{v.toUpperCase()}</Tag> : "—",
-    },
-  ];
-
-  
-  const clickableRow = (record) => ({
-    onClick: () => openModal(record),
-    style: { cursor: "pointer" },
-  });
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: 360, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Spin size="large" tip="Loading..." />
-      </div>
+  // Optional custom action you added earlier
+  const handleDispose = async (id, type) => {
+    const confirm = window.confirm(
+      "Are you sure you want to dispose this report?"
     );
-  }
- 
+    if (!confirm) return;
+
+    try {
+      const response = await axios.put(
+        `http://localhost:3110/home/${id}/dispose`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response?.data?.success) {
+        message.success(response.data.message);
+
+        const t = String(type || "").toLowerCase();
+        if (t === "lost") {
+          setLost((prev) => prev.filter((r) => r._id !== id));
+        } else if (t === "found") {
+          setFound((prev) => prev.filter((r) => r._id !== id));
+        }
+
+        if (selectedItem?._id === id) handleModalClose();
+      } else {
+        message.error("Failed to dispose report");
+      }
+    } catch (err) {
+      console.error("Dispose error:", err);
+      message.error("An error occurred while disposing the report.");
+    }
+  };
+
+  // shared pagination config: shows “Showing X of Y records”
+  const paginationConfig = {
+    pageSize: 10,
+    showSizeChanger: true,
+    showTotal: (total, range) =>
+      `Showing ${range[1] - range[0] + 1} of ${total} records`,
+  };
 
   return (
-    <>
-      
-      <div style={{ marginBottom: 12 }}>
-        <Text strong>Student-ID:</Text> <Text>{user.studentId || "Unknown"}</Text>
-        <br />
-        <Text strong>Name:</Text> <Text>{user.name}</Text>
-        <br />
-        <Text strong>Email:</Text> <Text>{user.email || "Unknown"}</Text>
+    <div className="main-container">
+      <div className="home-header">
+        <p className="home-header__welcome">
+          GOOD DAY, {user ? user.name : "Guest"}!
+          {console.log(user ? user.name : "tanginamo")}
+        </p>
       </div>
 
-      
-      <Title level={5} style={{ marginBottom: 12 }}>OVERVIEW</Title>
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} md={8}>
-          <Card>
-            <Statistic title="TOTAL LOST ITEM REPORTED" value={lostCounts} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card>
-            <Statistic title="TOTAL MISSING ITEM REPORTED" value={foundCounts} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card>
-            <Statistic title="TOTAL ITEMS CLAIMED" value={rows.filter(r => r.status === "claimed").length} />
-          </Card>
-        </Col>
-      </Row>
+      {/* OVERVIEW CARDS */}
+      <div className="overview">
+        <h3 className="overview__title">OVERVIEW</h3>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8}>
+            <Card className="overview__card">
+              <Statistic
+                title="TOTAL LOST ITEM REPORTED"
+                value={lost.length}
+                prefix={<SearchOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card className="overview__card">
+              <Statistic
+                title="TOTAL FOUND ITEM REPORTED"
+                value={found.length}
+                prefix={<FolderOpenOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card className="overview__card">
+              <Statistic
+                title="TOTAL ITEMS CLAIMED"
+                value={claims.length}
+                prefix={<CheckCircleOutlined />}
+              />
+            </Card>
+          </Col>
+        </Row>
+      </div>
 
-      <Title level={5} style={{ marginTop: 8 }}>MY REPORTS</Title>
-      <Card>
+      {/* LOST */}
+      <h3 className="section-title section-title--mt8">MY LOST REPORTS</h3>
+      <div className="table-responsive">
         <Table
-          dataSource={rows}
-          columns={reportColumns}
-          rowKey="key"
-          pagination={{ pageSize: 8, showSizeChanger: true }}
-          scroll={{ x: "max-content" }}      
-          onRow={clickableRow}                
-        />
-      </Card>
+          loading={loading}
+          dataSource={lost}
+          rowClassName={() => "clickable-row"}
+          onRow={(record) => ({
+            onClick: () => handleRowClick(record),
+          })}
+          pagination={paginationConfig}
+          scroll={{ x: "max-content" }}
+        >
+          <Column title="TITLE / LOST ITEMS" dataIndex="title" key="title" />
+          <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
+          <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
+          <Column
+            title="Status"
+            dataIndex="status"
+            key="status"
+            render={(status) => <StatusTag status={status} />}
+          />
+          <Column
+            title="Date Reported"
+            dataIndex="dateReported"
+            key="dateReported"
+          />
+          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+        </Table>
+      </div>
 
-      
-      <Title level={5} style={{ marginTop: 8 }}>MY REPORTS</Title>
-      <Card>
+      {/* FOUND */}
+      <h3 className="section-title section-title--mt24">MY FOUND REPORTS</h3>
+      <div className="table-responsive">
         <Table
-          dataSource={rows}
-          columns={reportColumns}
-          rowKey="key"
-          pagination={{ pageSize: 8, showSizeChanger: true }}
-          scroll={{ x: "max-content" }}      
-          onRow={clickableRow}                
-        />
-      </Card>
+          loading={loading}
+          dataSource={found}
+          rowClassName={() => "clickable-row"}
+          onRow={(record) => ({
+            onClick: () => handleRowClick(record),
+          })}
+          pagination={paginationConfig}
+          scroll={{ x: "max-content" }}
+        >
+          <Column title="Title" dataIndex="title" key="title" />
+          <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
+          <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
+          <Column
+            title="Status"
+            dataIndex="status"
+            key="status"
+            render={(status) => <StatusTag status={status} />}
+          />
+          <Column
+            title="Date Reported"
+            dataIndex="dateReported"
+            key="dateReported"
+          />
+          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+        </Table>
+      </div>
 
-      
+      {/* CLAIM TRANSACTIONS */}
+      <h3 className="section-title section-title--mt24">CLAIM TRANSACTIONS</h3>
+      <div className="table-responsive">
+        <Table
+          loading={loading}
+          dataSource={claims}
+          rowClassName={() => "clickable-row"}
+          onRow={(record) => ({
+            onClick: () => handleClaimRowClick(record),
+          })}
+          pagination={paginationConfig}
+          scroll={{ x: "max-content" }}
+        >
+          <Column title="Title" dataIndex="title" key="title" />
+          <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
+          <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
+          <Column
+            title="Status"
+            dataIndex="status"
+            key="status"
+            render={(status) => <StatusTag status={status} />}
+          />
+          <Column
+            title="Date Reported"
+            dataIndex="dateReported"
+            key="dateReported"
+          />
+          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+          <Column
+            title="Date Claimed"
+            dataIndex="dateClaimed"
+            key="dateClaimed"
+          />
+        </Table>
+      </div>
+
+      {/* LOST/FOUND MODAL */}
       <Modal
-        open={detailOpen}
-        onCancel={closeModal}
-        onOk={closeModal}
-        title={detailRecord?.title || "Report Details"}
-        okText="Close"
-        cancelButtonProps={{ style: { display: "none" } }}
-        centered
+        title={selectedItem ? selectedItem.title : "Item Details"}
+        open={isModalVisible}
         onCancel={handleModalClose}
         footer={[
           <Button key="close" onClick={handleModalClose}>
             Close
           </Button>,
           selectedItem?.reportType?.toLowerCase() === "lost" && (
-          <Button key ="find" onClick = {handleRowLost} disabled={selectedItem?.status?.toLowerCase() !== "active"}>See similar items</Button>),
-          <Button key="delete" danger onClick={async () => {await handleDelete(selectedItem._id);handleModalClose();}}>Delete </Button>,
+            <Button
+              key="find"
+              onClick={handleRowLost}
+              disabled={selectedItem?.status?.toLowerCase() !== "active"}
+            >
+              See similar items
+            </Button>
+          ),
+          <Button
+            key="dispose"
+            danger
+            onClick={() => {
+              if (!selectedItem?._id) {
+                message.error("Missing item id.");
+                return;
+              }
+              handleDispose(selectedItem._id, selectedItem.reportType);
+            }}
+          >
+            Dispose
+          </Button>,
         ]}
+        width={700}
+        maskClosable={false}
       >
-        {detailRecord ? (
-          <Descriptions bordered column={1} size="small" labelStyle={{ width: 160 }}>
-            {detailRecord.photoUrl && detailRecord.photoUrl !== "N/A" && (
-              <Descriptions.Item label="Photo">
-                <Image
-                  src={detailRecord.photoUrl}
-                  alt={detailRecord.title || "Item photo"}
-                  
-                  style={{ width: "100%", maxHeight: 260, objectFit: "cover", borderRadius: 8 }}
-                  fallback="/assets/placeholder.png"   
-                />
-              </Descriptions.Item>
+        {selectedItem && (
+          <>
+            {selectedItem.photoUrl && (
+              <div className="photo-wrap">
+                <Image src={selectedItem.photoUrl} width={250} />
+              </div>
             )}
-            <Descriptions.Item label="tid">{detailRecord.tid}</Descriptions.Item>
-            <Descriptions.Item label="Title">{detailRecord.title}</Descriptions.Item>
-            <Descriptions.Item label="Category">{detailRecord.category}</Descriptions.Item>
-            <Descriptions.Item label="Key Item">{detailRecord.keyItem}</Descriptions.Item>
-            <Descriptions.Item label="Item Brand">{detailRecord.itemBrand}</Descriptions.Item>
-            <Descriptions.Item label="Status">{detailRecord.status?.toUpperCase()}</Descriptions.Item>
-            <Descriptions.Item label="reportedBy">{detailRecord.reportedBy?.toUpperCase()}</Descriptions.Item>
-            <Descriptions.Item label="approvedBy">{detailRecord.approvedBy?.toUpperCase()}</Descriptions.Item>
-            <Descriptions.Item label="Location">{detailRecord.location}</Descriptions.Item>
-            <Descriptions.Item label="Date Reported">{detailRecord.dateReported}</Descriptions.Item>
-            <Descriptions.Item label="Type">{detailRecord.reportType?.toUpperCase()}</Descriptions.Item>
-            <Descriptions.Item label="description">{detailRecord.description?.toUpperCase()}</Descriptions.Item>
-            <Descriptions.Item label="dateFound">{detailRecord.dateFound?.toUpperCase()}</Descriptions.Item>
-          </Descriptions>
-        ) : null}
+
+            <Descriptions bordered column={1} size="middle">
+              <Descriptions.Item label="TID">
+                {selectedItem.tid}
+              </Descriptions.Item>
+              <Descriptions.Item label="Title">
+                {selectedItem.title}
+              </Descriptions.Item>
+              <Descriptions.Item label="Category">
+                {selectedItem.category}
+              </Descriptions.Item>
+              <Descriptions.Item label="Key Item">
+                {selectedItem.keyItem}
+              </Descriptions.Item>
+              <Descriptions.Item label="Item Brand">
+                {selectedItem.itemBrand}
+              </Descriptions.Item>
+              <Descriptions.Item label="Status">
+                {selectedItem.status}
+              </Descriptions.Item>
+              <Descriptions.Item label="Reported By">
+                {selectedItem.reportedBy}
+              </Descriptions.Item>
+              <Descriptions.Item label="Approved By">
+                {selectedItem.approvedBy}
+              </Descriptions.Item>
+              <Descriptions.Item label="Location">
+                {selectedItem.location}
+              </Descriptions.Item>
+              <Descriptions.Item label="Date Reported">
+                {selectedItem.dateReported}
+              </Descriptions.Item>
+              <Descriptions.Item label="Report Type">
+                {selectedItem.reportType}
+              </Descriptions.Item>
+              <Descriptions.Item label="Description">
+                {selectedItem.description}
+              </Descriptions.Item>
+              <Descriptions.Item label="Date Found">
+                {selectedItem.dateFound}
+              </Descriptions.Item>
+            </Descriptions>
+          </>
+        )}
       </Modal>
-    </>
+
+      {/* CLAIM DETAILS MODAL (close-only footer) */}
+      <Modal
+        title={selectedClaim ? selectedClaim.title : "Claim Details"}
+        open={isClaimModalVisible}
+        onCancel={handleClaimModalClose}
+        footer={[
+          <Button key="close" onClick={handleClaimModalClose}>
+            Close
+          </Button>,
+        ]}
+        width={700}
+        maskClosable={false}
+      >
+        {selectedClaim && (
+          <>
+            {selectedClaim.photoUrl && (
+              <div className="photo-wrap">
+                <Image src={selectedClaim.photoUrl} width={250} />
+              </div>
+            )}
+
+            <Descriptions bordered column={1} size="middle">
+              <Descriptions.Item label="TID">
+                {selectedClaim.tid}
+              </Descriptions.Item>
+              <Descriptions.Item label="Title">
+                {selectedClaim.title}
+              </Descriptions.Item>
+              <Descriptions.Item label="Category">
+                {selectedClaim.category}
+              </Descriptions.Item>
+              <Descriptions.Item label="Key Item">
+                {selectedClaim.keyItem}
+              </Descriptions.Item>
+              <Descriptions.Item label="Item Brand">
+                {selectedClaim.itemBrand}
+              </Descriptions.Item>
+              <Descriptions.Item label="Status">
+                {selectedClaim.status}
+              </Descriptions.Item>
+              <Descriptions.Item label="Reported By">
+                {selectedClaim.reportedBy}
+              </Descriptions.Item>
+              <Descriptions.Item label="Approved By">
+                {selectedClaim.approvedBy}
+              </Descriptions.Item>
+              <Descriptions.Item label="Location">
+                {selectedClaim.location}
+              </Descriptions.Item>
+              <Descriptions.Item label="Date Reported">
+                {selectedClaim.dateReported}
+              </Descriptions.Item>
+              <Descriptions.Item label="Report Type">
+                {selectedClaim.reportType}
+              </Descriptions.Item>
+              <Descriptions.Item label="Description">
+                {selectedClaim.description}
+              </Descriptions.Item>
+              <Descriptions.Item label="Date Found">
+                {selectedClaim.dateFound}
+              </Descriptions.Item>
+              {selectedClaim.dateClaimed && (
+                <Descriptions.Item label="Date Claimed">
+                  {selectedClaim.dateClaimed}
+                </Descriptions.Item>
+              )}
+            </Descriptions>
+          </>
+        )}
+      </Modal>
+    </div>
   );
-}
+};
 
-
-export default Profile;
+export default Home;

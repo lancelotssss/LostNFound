@@ -38,3 +38,40 @@ html, body, #root {
   /* remove gap/background centering from here */
   /* background-color: #F5F5F5;  // optional if you want a global fallback */
 }
+
+
+
+
+/* SCROLL BAR ------------------------------------------------------------------------------ */
+/* SCROLL BAR ------------------------------------------------------------------------------ */
+/* SCROLL BAR ------------------------------------------------------------------------------ */
+/* SCROLL BAR ------------------------------------------------------------------------------ */
+/* SCROLL BAR ------------------------------------------------------------------------------ */
+/* SCROLL BAR ------------------------------------------------------------------------------ */
+/* Target the whole browser window's scrollbar */
+::-webkit-scrollbar {
+  width: 10px; /* Width of the vertical scrollbar */
+  height: 10px; /* Height of the horizontal scrollbar */
+}
+
+/* The track (the background part) */
+::-webkit-scrollbar-track {
+  background: #f0f2f5; /* Light gray background, matching AntD's feel */
+  border-radius: 5px;
+}
+
+/* The thumb (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1; /* Darker gray for the thumb */
+  border-radius: 5px;
+}
+
+/* Change the thumb color on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* To style the scrollbar inside a specific Ant Design component (e.g., a Table or Modal Body) */
+.ant-table-body::-webkit-scrollbar {
+  /* ... custom styles for the table scrollbar ... */
+}

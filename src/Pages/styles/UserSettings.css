@@ -1,0 +1,43 @@
+.settings-wrap {
+  width: 100%;
+}
+
+.settings-card {
+  height: 100%;
+  box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
+}
+
+.settings-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-label {
+  font-size: 12px;
+  color: rgba(0,0,0,0.55);
+}
+
+.settings-input {
+  height: 40px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .settings-actions {
+    justify-content: stretch;
+  }
+}

@@ -3,75 +3,63 @@ import { Outlet } from "react-router-dom";
 import { Layout as AntLayout, Avatar, Space, Typography, Image } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { NavBar } from "./NavBar";
+// import "./Layout.css"; // ⬅️ add this import
+import "../../src/Pages/styles/Layout.css"
 
 const { Header, Sider, Content } = AntLayout;
 const { Title } = Typography;
 
 export function Layout() {
   return (
+    <AntLayout className="app-layout">
 
-   <AntLayout style={{ minHeight: "100vh", overflowX: "hidden" }}>
-      {/* LEFT SIDEBAR */}
 
-     <Sider
-        className="app-sider"
-         breakpoint="lg"
-         collapsedWidth={64}
-         width={220}
+      {/* Full-width header at the very top */}
+      <Header className="app-header">
 
-        style={{
-          background: "#063970",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            height: 64,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingInline: 16,
-            color: "#fff",
-            fontWeight: 800,
-            letterSpacing: 0.5,
-          }}
-        >
+
+        <div className="sider-logo">
+          {/* -----> DESKTOP LOGO */}
           <Image
-            src="/assets/foundhub1.png"
-            alt="Toolbox"
-            width={100}
-            preview={false}
-            className="register-header__icon"
+          src="/assets/foundhub1.png"
+          alt="FoundHub"
+          preview={false}
+          className="register-header__icon logo-desktop"
+          />
+
+          {/* -----> MOBILE LOGO */} 
+          <Image
+          src="/assets/kit.png"
+          alt="FoundHub Small"
+          preview={false}
+          className="register-header__icon logo-mobile"
           />
         </div>
 
-        <div style={{ height: "calc(100% - 64px)" }}>
 
-         <NavBar />
-        </div>
-      </Sider>
+        <Space>
+          <Title level={5} style={{ margin: 0 }}>Dashboard</Title>
+          <Avatar size="large" icon={<UserOutlined />} />
+        </Space>
 
-      <AntLayout>
-        <Header
-          style={{
-            background: "#fff",
-            borderBottom: "1px solid #f0f0f0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingInline: 16,
-            height: 64,
-          }}
+
+      </Header>
+
+      {/* Body: Sider + Content below the header */}
+      <AntLayout className="app-body">
+        <Sider
+          className="app-sider"
+          breakpoint="lg"
+          collapsedWidth={64}
+          width={220}
         >
-          <div />
-          <Space>
-            <Title level={5} style={{ margin: 0 }}>Dashboard</Title>
-            <Avatar size="large" icon={<UserOutlined />} />
-          </Space>
-        </Header>
 
+          <div className="sider-scroll">
+            <NavBar />
+          </div>
+        </Sider>
 
-       <Content className="app-content" style={{ padding: 16, background: "#f5f5f5", overflowX: "auto" }}>
+        <Content className="app-content">
           <Outlet />
         </Content>
       </AntLayout>

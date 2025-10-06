@@ -1,0 +1,157 @@
+
+
+
+/* HEADER TO CHONG ---------------------------------- */ 
+/* 1. CONTAINER NYA */
+/* 2. GOOD DAY MR wkwkwk 😴*/
+.home-header {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  /* background-color: red; */
+}
+.home-header__welcome {
+  margin: 0;
+  /* background-color: blue; */
+}
+
+
+
+.main-container{
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: column;
+    width: 100% !important;
+    /* background-color: red; */
+    /* border: 1px solid red; */
+    
+}
+
+
+
+/* OVERVIEW -------------------------------------------------------------------- */
+/* 1. OVERVIEW*/
+/* 2. Container nya*/
+/* 3. TOTAL {} REPORTED <-  yung title ng each card*/
+/* 4.  icon at 11 <- mismong value*/
+.overview {
+    width: 100%;
+    margin-bottom: 16px;
+  /* background-color: red; */
+}
+.overview__title {
+  margin: 8px 0 12px;
+  color: #525252ff;
+  /* background-color: violet; */
+}
+.overview .ant-statistic .ant-statistic-title {
+  margin-bottom: 22px;
+  /* background-color: blue; */
+}
+.overview .ant-statistic .ant-statistic-content {
+  line-height: 1.1;
+  display: flex;
+  justify-content: flex-start;
+  gap: 20px;
+  align-items: center;
+  flex-direction: row;
+  /* background-color: green; */
+}
+
+.overview__card {
+  /* background-color: red; */
+  box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
+  font-family: 'Poppins', sans-serif;
+  font-weight: bold;
+  /* background-color: yellow; */
+}
+
+
+
+
+
+/* SECTION -------------------------------------------------------------------- */
+/* PURO H3 lang 'to */
+/* 1. MY LOST REPORT <- mga title ng bawat table*/
+.section-title {
+  margin: 0;
+  margin-bottom: 20px;
+  color: #525252ff;
+  /* background-color: red; */
+}
+
+
+/* TABLE CELL -------------------------------------------------------------------- */
+.clickable-row {
+  cursor: pointer;
+  /* background-color: red; */
+}
+
+/* PICTURE SA LOOB NG MODAL -------------------------------------------------------------------- */
+.photo-wrap {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+
+
+
+/* LAHAT NG TABLE -------------------------------------------------------------------- */
+/* 1. Container*/
+/* 2. Mismong Ant Table*/
+.table-responsive {
+  /* background-color: blue; */
+  width: 100%;
+  overflow-x: auto;
+  box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
+}
+.ant-table-wrapper {
+  border-radius: 6px;
+  max-width: 100%;
+  background: white;
+  padding: 35px;
+  /* background-color: red; */
+  
+}
+
+/* PAGINATION TO MEN -------------------------------------------------------------------- */
+.ant-pagination-total-text {
+  margin-right: 12px;
+  white-space: nowrap;
+  /* background-color: red; */
+}
+
+/* MOBILE TWEAKS --------------------------------------------------------------- */
+@media (max-width: 576px) {
+  .overview .ant-statistic .ant-statistic-title {
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .overview .ant-statistic .ant-statistic-content {
+    gap: 10px;
+  }
+  .section-title {
+    font-size: 16px;
+  }
+  .ant-table {
+    font-size: 14px;
+  }
+  .home-header {
+    gap: 12px;
+  }
+  .photo-wrap img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+
+
+h3{
+    /* background-color: red; */
+    margin-top: 30px !important;
+}

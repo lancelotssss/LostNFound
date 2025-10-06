@@ -1,12 +1,11 @@
-// AdminDisplayData.js
 import React, { useEffect, useState } from "react";
 import { Table, Button, Modal, Descriptions, Image, message } from "antd";
-import { getLostReport, approveLost } from "../api";
+import { getHistory, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
 
 const { Column } = Table;
 
-export const AdminLost = () => {
+export const AdminHistory = () => {
   const [data, setData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -27,39 +26,36 @@ export const AdminLost = () => {
 
   const fetchData = async () => {
     try {
-      const token = sessionStorage.getItem("User");
-      if (!token) {
-        alert("You must be logged in");
-        return;
-      }
-      const res = await getLostReport(token);
+      const token = sessionStorage.getItem("User"); 
+          if (!token) {
+            alert("You must be logged in");
+            return;
+          }
+      const res = await getHistory(token);
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
-          key: item._id ? item._id.toString() : `row-${index}`,
-          _id: item._id ? item._id.toString() : null,
-          ...item,
-          dateReported: item.dateReported
-            ? new Date(item.dateReported).toLocaleString()
-            : "N/A",
-          startDate: item.startDate
-            ? new Date(item.startDate).toLocaleDateString()
-            : "N/A",
-          endDate: item.endDate
-            ? new Date(item.endDate).toLocaleDateString()
-            : "N/A",
-            approvedBy: item.approvedBy ? item.approvedBy : "No actions yet"
-        }));
+        key: item._id ? item._id.toString() : `row-${index}`,
+        _id: item._id ? item._id.toString() : null, 
+        ...item,
+        dateReported: item.dateReported
+          ? new Date(item.dateReported).toLocaleString()
+          : "N/A",
+        dateFound: item.dateFound
+          ? new Date(item.dateFound).toLocaleDateString()
+          : "N/A",
+          approvedBy: item.approvedBy ? item.approvedBy : "No actions yet"
+      }));
+      console.log("Formatted Data: ", formattedData)
         setData(formattedData);
       }
     } catch (err) {
-      console.error("Error fetching lost items:", err);
+      console.error("Error fetching found items:", err);
     }
   };
 
   useEffect(() => {
     fetchData();
   }, []);
-
 
   const handleRowClick = (record) => {
     setSelectedItem(record);
@@ -75,39 +71,39 @@ export const AdminLost = () => {
   const handleDeny = () => setDenyModal(true);
 
   const confirmApprove = async () => {
-    setConfirmLoading(true);
-    const token = sessionStorage.getItem("User");
-    try {
-      await approveLost(selectedItem._id, "Active", user.studentId, token);
-      message.success("Lost item approved successfully!");
-      setApproveModal(false);
-      setIsModalVisible(false);
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to approve lost item.");
-    } finally {
-      setConfirmLoading(false);
-    }
-  };
+  setConfirmLoading(true);
+  const token = sessionStorage.getItem("User");
+  try {
+    await approveFound(selectedItem._id, "Active", user.studentId, token);
+    message.success("Item approved successfully!");
+    setApproveModal(false);
+    setIsModalVisible(false);
+    fetchData();
+  } catch (err) {
+    console.error(err);
+    message.error("Failed to approve item.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
- 
-  const confirmDeny = async () => {
-    setConfirmLoading(true);
-    const token = sessionStorage.getItem("User");
-    try {
-      await approveLost(selectedItem._id, "Denied", user.studentId, token);
-      message.success("Lost item denied successfully!");
-      setDenyModal(false);
-      setIsModalVisible(false);
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to deny lost item.");
-    } finally {
-      setConfirmLoading(false);
-    }
-  };
+const confirmDeny = async () => {
+  setConfirmLoading(true);
+  const token = sessionStorage.getItem("User");
+  try {
+    await approveFound(selectedItem._id, "Denied", user.studentId, token); // ✅ use _id here
+    message.success("Item denied successfully!");
+    setDenyModal(false);
+    setIsModalVisible(false);
+    fetchData();
+  } catch (err) {
+    console.error(err);
+    message.error("Failed to deny item.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
+
 
   return (
     <>
@@ -126,11 +122,10 @@ export const AdminLost = () => {
         <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
         <Column title="Status" dataIndex="status" key="status" />
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
-        <Column title="Start Date" dataIndex="startDate" key="startDate" />
-        <Column title="End Date" dataIndex="endDate" key="endDate" />
+        <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
       </Table>
 
-      
+      {/* Main modal */}
       <Modal
         title={selectedItem ? selectedItem.title : "Lost Item Details"}
         open={isModalVisible}
@@ -148,8 +143,8 @@ export const AdminLost = () => {
             )}
             <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
-              <Descriptions.Item label="Report Type">{selectedItem.reportType}</Descriptions.Item>
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
+              <Descriptions.Item label="Report Type">{selectedItem.reportType}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
               <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
@@ -158,16 +153,13 @@ export const AdminLost = () => {
               <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
               <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
               <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
+              <Descriptions.Item label="Date Found">{selectedItem.dateFound}</Descriptions.Item>
+              <Descriptions.Item label="Start Date">{selectedItem.startDate}</Descriptions.Item>
+              <Descriptions.Item label="End Date">{selectedItem.endDate}</Descriptions.Item>
               <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
             </Descriptions>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button type="primary" onClick={handleApprove}  disabled={selectedItem.status === "Active"}>
-                Approve
-              </Button>
-              <Button danger onClick={handleDeny}  disabled={selectedItem.status === "Denied"}>
-                Deny
-              </Button>
               <Button onClick={handleModalClose}>Cancel</Button>
             </div>
           </>
@@ -175,26 +167,6 @@ export const AdminLost = () => {
       </Modal>
 
       
-      <Modal
-        title="Confirm Approval"
-        open={approveModal}
-        onOk={confirmApprove}
-        confirmLoading={confirmLoading}
-        onCancel={() => setApproveModal(false)}
-      >
-        <p>Are you sure you want to approve this lost report?</p>
-      </Modal>
-
-      
-      <Modal
-        title="Confirm Denial"
-        open={denyModal}
-        onOk={confirmDeny}
-        confirmLoading={confirmLoading}
-        onCancel={() => setDenyModal(false)}
-      >
-        <p>Are you sure you want to deny this lost report?</p>
-      </Modal>
     </>
   );
 };

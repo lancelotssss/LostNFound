@@ -74,8 +74,8 @@ userRoutes.route("/register").post(async (req, res) => {
       availableClaim: 3,
       availableFound: 5,
       availableMissing: 5,
-      createdAt: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
-      updatedAt: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     await db.collection("student_db").insertOne(mongoObject);
@@ -85,7 +85,7 @@ userRoutes.route("/register").post(async (req, res) => {
       action: "REGISTER",
       targetUser: mongoObject.email,
       performedBy: "System",
-      timestamp: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
+      timestamp: new Date(),
       ticketId: "",
       details: `User ${mongoObject.email} registered successfully.`,
     };
@@ -114,7 +114,7 @@ userRoutes.route("/users/logout").post(verifyToken, async (req, res) => {
     action: "LOG_OUT",
     targetUser: user.studentId,
     performedBy: "System",
-    timestamp: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
+    timestamp: new Date(),
     ticketId: "",
     details: `User ${user.studentId} logged out successfully.`,
   };
@@ -123,7 +123,7 @@ userRoutes.route("/users/logout").post(verifyToken, async (req, res) => {
 
   await db.collection("student_db").updateOne(
       { studentId },
-      { $set: { lastLogin:  new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",","")} }
+      { $set: { lastLogin:  new Date()} }
     );
 
   return res.json({ success: true, role: user.role });
@@ -163,7 +163,7 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 action: "LOGIN",
                 targetUser: user.studentId,
                 performedBy: "System",
-                timestamp: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
+                timestamp: new Date(),
                 ticketId: "",
                 details: `User ${user.studentId} logged in successfully.`,
             };
@@ -187,34 +187,75 @@ userRoutes.route("/users/login").post(async (request, response) => {
 //------------------------------------------------------------------------HOME------------------------------------------------------------------------
 userRoutes.get("/home", verifyToken, async (req, res) => {
   try {
-    console.log("Backend /cli/home hit!", req.user); // <-- check if this logs
     const db = database.getDb();
     const studentId = req.user?.studentId;
 
     if (!studentId) {
-      return res.status(401).json({ error: "Unauthorized: No student ID" });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: No student ID",
+      });
     }
 
-    const studentReports = await db
+    const lostReports = await db
       .collection("lost_found_db")
-      .find({ reportedBy: studentId })
-      .toArray();
-    const countFounds = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Found" }).toArray();
-    const countLosts = await db.collection("lost_found_db").find({reportedBy: studentId, reportType: "Lost" }).toArray();
-    console.log("Found reports:", studentReports); 
-
-   /* const claimReports = await db
-      .collection("claims_db")
-      .find({reportedBy: studentId})
+      .find({ reportedBy: studentId, reportType: "Lost" })
       .toArray();
 
-    const countClaim = await db.collection("claims_db").find({reportedBy: studentId, reportType:"Claim"}).toArray();
-    */
+    const foundReports = await db
+      .collection("lost_found_db")
+      .find({ reportedBy: studentId, reportType: "Found" })
+      .toArray();
 
-    res.json({ count: studentReports.length, /* claimReports.length, */ results: studentReports, countFound: countFounds, countLost: countLosts, /*countClaim: countClaim*/});
+    res.json({
+      success: true,    
+      lostReports,              
+      foundReports,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    console.error("Error fetching reports:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+    const reportId = req.params.id;
+
+    // Validate ownership
+    const report = await db.collection("lost_found_db").findOne({
+      _id: new ObjectId(reportId),
+      reportedBy: studentId,
+    });
+
+    if (!report) {
+      return res.status(404).json({ success: false, message: "Report not found or not owned by you" });
+    }
+
+    // Update status to "Disposed"
+    await db.collection("lost_found_db").updateOne(
+      { _id: new ObjectId(reportId) },
+      { $set: { status: "Deleted", updatedAt: new Date() } }
+    );
+
+    // Audit log
+    const audit = {
+      aid: `A-${Date.now()}`,
+      action: "DELETE_REPORT",
+      targetUser: "",
+      performedBy: studentId,
+      timestamp: new Date(),
+      ticketId: report.tid || "",
+      details: `${studentId} marked report '${report.title}' as Deleted.`,
+    };
+    await db.collection("audit_db").insertOne(audit);
+
+    res.json({ success: true, message: "Report Deleted successfully" });
+  } catch (err) {
+    console.error("Error deleted report:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
@@ -225,6 +266,8 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
     const studentId = req.user?.studentId;
     let photoUrl = req.body.photoUrl || "";
 
+    
+    //Preparing the file
     if (req.file) {
       const { originalname, buffer, mimetype } = req.file;
 
@@ -278,7 +321,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
           : "UNKNOWN",
       targetUser: "",
       performedBy: `${studentId}`,
-      timestamp: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
+      timestamp: new Date(),
       ticketId: mongoReport.tid,
       details:
         reportType === "lost"
@@ -316,7 +359,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 
     const result = await db.collection("student_db").updateOne(
       { studentId },
-      { $set: { phone,  updatedAt:  new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",","")}} 
+      { $set: { phone,  updatedAt:  new Date()}} 
     );
    
 
@@ -328,7 +371,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
         action: "UPDATE_USER",
         targetUser: "",
         performedBy: `${studentId}`,
-        timestamp: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
+        timestamp: new Date(),
         ticketId: "",
         details: `${studentId} changed a profile settings.`
     }
@@ -375,7 +418,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 
     const result = await db.collection("student_db").updateOne(
       { studentId },
-      { $set: { password: hashedPassword, updatedAt:  new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",","")} }
+      { $set: { password: hashedPassword, updatedAt:  new Date()} }
     );
 
     if (result.modifiedCount === 0) {
@@ -386,7 +429,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
         action: "UPDATE_USER",
         targetUser: "",
         performedBy: `${studentId}`,
-        timestamp: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
+        timestamp: new Date(),
         ticketId: "",
         details: `${studentId} changed a profile settings.`
     }
@@ -401,7 +444,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 
 //------------------------------------------------------------------------SEARCH------------------------------------------------------------------------
 // userRoutes.js
-userRoutes.post("/search/item", verifyToken, async (req, res) => {
+/*userRoutes.post("/search/item", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
     const { keyItem, category, location, itemBrand, startDate, endDate } = req.body;
@@ -469,76 +512,123 @@ userRoutes.post("/search/item", verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+*/
+
+userRoutes.post("/similar-items", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+
+    const { selectedItemId, category, keyItem, location, startDate, endDate } = req.body;
+
+    if (!selectedItemId || !category) {
+      return res.status(400).json({ success: false, message: "Missing item info" });
+    }
+
+    let start, end;
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      end = new Date(endDate);
+
+      if (isNaN(start) || isNaN(end)) {
+        return res.status(400).json({ success: false, message: "Invalid date format" });
+      }
+
+      start.setUTCHours(0, 0, 0, 0);
+      end.setUTCHours(23, 59, 59, 999);
+    }
+
+    // Build query
+    const query = {
+      reportType: "Found",
+      status: "Active",
+      _id: { $ne: new ObjectId(selectedItemId) },
+      reportedBy: { $ne: studentId },
+      category,
+    };
+
+    if (keyItem) query.keyItem = { $regex: keyItem, $options: "i" };
+    if (location) query.location = { $regex: location, $options: "i" };
+    if (start && end) query.dateFound = { $gte: start, $lte: end };
+
+    const similarFound = await db.collection("lost_found_db").find(query).toArray();
+
+    res.json({ success: true, similarFound });
+  } catch (err) {
+    console.error("Error fetching similar items:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 
 
 //------------------------------------------------------------------------CLAIM------------------------------------------------------------------------
 userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req, res) => {
-    try {
-      const db = database.getDb();
-      const studentId = req.user?.studentId;
-      let photoUrl = req.body.photoUrl || "";
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+    let photoUrl = req.body.photoUrl || "";
+    const { itemId, reason } = req.body;
 
-      if (!req.body.itemId || !req.body.reason) {
-        return res.status(400).json({
-          success: false,
-          message: "Missing required fields",
-        });
-      }
-
-      
-      if (req.file) {
-        const { originalname, buffer, mimetype } = req.file;
-
-        const { data, error } = await supabase.storage
-          .from("user_uploads")
-          .upload(`claim-${Date.now()}-${originalname}`, buffer, {
-            contentType: mimetype,
-            upsert: false,
-          });
-
-        if (error) throw error;
-
-        const { data: publicUrlData } = supabase.storage
-          .from("user_uploads")
-          .getPublicUrl(data.path);
-
-        photoUrl = publicUrlData.publicUrl;
-      }
-
-      
-      const mongoClaim = {
-        cid: `C-${Date.now()}`,
-        itemId: req.body.itemId,
-        claimerId: studentId,
-        reason: req.body.reason,
-        adminDecisionBy: "N/A",
-        claimStatus: "Pending",
-        createdAt: new Date(),
-        photoUrl,
-      };
-
-      
-      await db.collection("claims_db").insertOne(mongoClaim);
-
-     
-      const auditMongo = {
-        aid: `A-${Date.now()}`,
-        action: "SUBMIT_CLAIM",
-        targetUser: "", 
-        performedBy: `${studentId}`,
-        timestamp: new Date().toLocaleString("en-US",{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:"Asia/Manila"}).replace(",",""),
-        ticketId: mongoClaim.cid,
-        details: `${studentId} filed a claim for item ${mongoClaim.itemId}. Claim id: ${mongoClaim.cid}`,
-      };
-
-      await db.collection("audit_db").insertOne(auditMongo);
-
-      res.json({ success: true, claim: mongoClaim, audit: auditMongo });
-    } catch (err) {
-      console.error("❌ Error submitting claim:", err);
-      res.status(500).json({ success: false, error: err.message });
+    if (!itemId || !reason) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
     }
-  });
+
+    // Upload claim photo to Supabase
+    if (req.file) {
+      const { originalname, buffer, mimetype } = req.file;
+      const { data, error } = await supabase.storage
+        .from("user_uploads")
+        .upload(`claim-${Date.now()}-${originalname}`, buffer, { contentType: mimetype, upsert: false });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("user_uploads")
+        .getPublicUrl(data.path);
+
+      photoUrl = publicUrlData.publicUrl;
+    }
+
+    // Create claim record
+    const mongoClaim = {
+      cid: `C-${Date.now()}`,
+      itemId: itemId,
+      claimerId: studentId,
+      reason,
+      adminDecisionBy: "N/A",
+      claimStatus: "Pending",
+      createdAt: new Date(),
+      photoUrl,
+    };
+
+    await db.collection("claims_db").insertOne(mongoClaim);
+
+    
+    await db.collection("lost_found_db").updateOne(
+    { _id: new ObjectId(itemId) }, 
+    { $set: { claimedBy: studentId, status: "Pending Claimed" } } 
+  );
+
+    // Log audit
+    const auditMongo = {
+      aid: `A-${Date.now()}`,
+      action: "SUBMIT_CLAIM",
+      performedBy: `${studentId}`,
+      timestamp: new Date(),
+      ticketId: mongoClaim.cid,
+      details: `${studentId} filed a claim for item ${mongoClaim.itemId}. Claim ID: ${mongoClaim.cid}`,
+    };
+
+    await db.collection("audit_db").insertOne(auditMongo);
+
+    res.json({ success: true, claim: mongoClaim, audit: auditMongo });
+
+  } catch (err) {
+    console.error("❌ Error submitting claim:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 
 module.exports = userRoutes
