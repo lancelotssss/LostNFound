@@ -1,3 +1,4 @@
+// src/Pages/Home.js
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -12,37 +13,66 @@ import {
   Card,
   Statistic,
 } from "antd";
-import { getAllReport, getAllClaim } from "../api";
-import { jwtDecode } from "jwt-decode";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import {
   SearchOutlined,
   FolderOpenOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
+import { getAllReport, getAllClaim, getClaimDetailsClient } from "../api";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "./styles/Home.css";
 
 const { Column } = Table;
 
 export const Home = () => {
+  // DATA
   const [lost, setLost] = useState([]);
   const [found, setFound] = useState([]);
   const [claims, setClaims] = useState([]);
 
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const [selectedClaim, setSelectedClaim] = useState(null);
-  const [isClaimModalVisible, setIsClaimModalVisible] = useState(false);
-
+  // USER / LOADING
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // LOST/FOUND item selection + modals
+  const [selectedLost, setSelectedLost] = useState(null);
+  const [selectedFound, setSelectedFound] = useState(null);
+  const [isLostModalVisible, setIsLostModalVisible] = useState(false);
+  const [isFoundModalVisible, setIsFoundModalVisible] = useState(false);
+
+  // GENERIC selection you were using for navigation/Dispose helpers
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // CLAIM selection + modal + details
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [isClaimModalVisible, setIsClaimModalVisible] = useState(false);
+  const [claimDetails, setClaimDetails] = useState(null);
+
+  // SORT ORDERS (friend’s logic)
+  const foundStatusOrder = [
+    "Listed",
+    "Reviewing",
+    "Returned",
+    "Reviewing Claim",
+    "Denied",
+    "Deleted",
+  ];
+  const lostStatusOrder = [
+    "Listed",
+    "Reviewing",
+    "Returned",
+    "Reviewing Claim",
+    "Denied",
+    "Claim Rejected",
+    "Deleted",
+  ];
 
   const navigate = useNavigate();
   const token = sessionStorage.getItem("User");
 
-  // status → color map
+  // STATUS → COLOR
   const STATUS_COLORS = {
     denied: "volcano",
     deleted: "volcano",
@@ -50,66 +80,83 @@ export const Home = () => {
     "pending claimed": "orange",
     active: "blue",
     claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
   };
   const normalizeStatus = (s) =>
-    String(s || "")
-      .toLowerCase()
-      .replace(/[-_]/g, " ")
-      .trim();
+    String(s || "").toLowerCase().replace(/[-_]/g, " ").trim();
   const StatusTag = ({ status }) => {
     const key = normalizeStatus(status);
     const color = STATUS_COLORS[key] || "default";
     return <Tag color={color}>{String(status || "—").toUpperCase()}</Tag>;
   };
 
-  useEffect(() => {
-    if (token) {
-      const decodedUser = jwtDecode(token);
-      setUser(decodedUser);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      fetchData(token);
-    }
-  }, []); // mount only
-
   const formatDate = (d) => (d ? new Date(d).toLocaleString() : "N/A");
+
+  useEffect(() => {
+    if (!token) return;
+    try {
+      const decoded = jwtDecode(token);
+      setUser(decoded);
+    } catch (_) {
+      // ignore decode failure
+    }
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    fetchData(token);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchData = async (tkn) => {
     try {
       setLoading(true);
 
-      // Fetch lost/found and claims (separately; keeps api.js unchanged)
+      // You wanted to keep your separate calls (reports + claims)
       const [reportRes, claimRes] = await Promise.all([
         getAllReport(tkn),
         getAllClaim(tkn),
       ]);
 
-      // LOST/FOUND
       if (reportRes && reportRes.success) {
-        const lostFormatted = (reportRes.lostReports || []).map(
-          (item, index) => ({
+        // LOST
+        const lostFormatted = (reportRes.lostReports || [])
+          .map((item, index) => ({
             key: item._id || `lost-${index}`,
             ...item,
             dateReported: formatDate(item.dateReported),
             dateFound: formatDate(item.dateFound),
-          })
-        );
+          }))
+          .sort(
+            (a, b) =>
+              lostStatusOrder.indexOf(a.status) -
+              lostStatusOrder.indexOf(b.status)
+          );
 
-        const foundFormatted = (reportRes.foundReports || []).map(
-          (item, index) => ({
+        // FOUND
+        const foundFormatted = (reportRes.foundReports || [])
+          .map((item, index) => ({
             key: item._id || `found-${index}`,
             ...item,
             dateReported: formatDate(item.dateReported),
             dateFound: formatDate(item.dateFound),
-          })
-        );
+          }))
+          .sort(
+            (a, b) =>
+              foundStatusOrder.indexOf(a.status) -
+              foundStatusOrder.indexOf(b.status)
+          );
 
         setLost(lostFormatted);
         setFound(foundFormatted);
       } else {
         message.error("Failed to load lost/found reports.");
+        setLost([]);
+        setFound([]);
       }
 
-      // CLAIMS (be forgiving about server shape)
+      // CLAIMS — be forgiving about server shape (your approach)
       if (
         claimRes &&
         (claimRes.success ||
@@ -120,13 +167,18 @@ export const Home = () => {
         const rawClaims =
           claimRes.claims || claimRes.claimReports || claimRes.results || [];
 
-        const claimsFormatted = rawClaims.map((item, index) => ({
-          key: item._id || `claim-${index}`,
-          ...item,
-          dateReported: formatDate(item.dateReported),
-          dateFound: formatDate(item.dateFound),
-          dateClaimed: formatDate(item.dateClaimed || item.claimDate),
-        }));
+        const claimsFormatted = rawClaims
+          .map((item, index) => ({
+            key: item._id || `claim-${index}`,
+            ...item,
+            dateReported: formatDate(item.dateReported),
+            dateFound: formatDate(item.dateFound),
+            dateClaimed: formatDate(item.dateClaimed || item.claimDate),
+          }))
+          // newest first
+          .sort(
+            (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+          );
 
         setClaims(claimsFormatted);
       } else {
@@ -140,33 +192,46 @@ export const Home = () => {
     }
   };
 
-  // LOST/FOUND modal handlers
-  const handleRowClick = (record) => {
-    setSelectedItem(record);
-    setIsModalVisible(true);
+  // Pagination (keep your UX copy)
+  const paginationConfig = {
+    pageSize: 10,
+    showSizeChanger: true,
+    showTotal: (total, range) =>
+      `Showing ${range[1] - range[0] + 1} of ${total} records`,
   };
-  const handleRowLost = () => {
-    if (selectedItem) {
-      navigate("/cli/search/result", { state: { selectedItem } });
-      handleModalClose();
-    }
+
+  // LOST handlers
+  const handleLostClick = (record) => {
+    setSelectedLost(record);
+    setSelectedItem(record); // keep your selectedItem for shared actions
+    setIsLostModalVisible(true);
   };
-  const handleModalClose = () => {
-    setIsModalVisible(false);
+  const handleLostModalClose = () => {
+    setIsLostModalVisible(false);
+    setSelectedLost(null);
     setSelectedItem(null);
   };
 
-  // CLAIMS modal handlers
-  const handleClaimRowClick = (record) => {
-    setSelectedClaim(record);
-    setIsClaimModalVisible(true);
+  // FOUND handlers
+  const handleFoundClick = (record) => {
+    setSelectedFound(record);
+    setSelectedItem(record);
+    setIsFoundModalVisible(true);
   };
-  const handleClaimModalClose = () => {
-    setIsClaimModalVisible(false);
-    setSelectedClaim(null);
+  const handleFoundModalClose = () => {
+    setIsFoundModalVisible(false);
+    setSelectedFound(null);
+    setSelectedItem(null);
   };
 
-  // Optional custom action you added earlier
+  // Navigate to similar for LOST (preserve your classnames/route)
+  const handleRowLostSeeSimilar = () => {
+    if (!selectedLost) return;
+    navigate("/cli/search/result", { state: { selectedItem: selectedLost } });
+    handleLostModalClose();
+  };
+
+  // Dispose (friend’s “soft delete” update + your endpoint)
   const handleDispose = async (id, type) => {
     const confirm = window.confirm(
       "Are you sure you want to dispose this report?"
@@ -185,12 +250,16 @@ export const Home = () => {
 
         const t = String(type || "").toLowerCase();
         if (t === "lost") {
-          setLost((prev) => prev.filter((r) => r._id !== id));
+          setLost((prev) =>
+            prev.map((r) => (r._id === id ? { ...r, status: "Deleted" } : r))
+          );
+          if (selectedLost?._id === id) handleLostModalClose();
         } else if (t === "found") {
-          setFound((prev) => prev.filter((r) => r._id !== id));
+          setFound((prev) =>
+            prev.map((r) => (r._id === id ? { ...r, status: "Deleted" } : r))
+          );
+          if (selectedFound?._id === id) handleFoundModalClose();
         }
-
-        if (selectedItem?._id === id) handleModalClose();
       } else {
         message.error("Failed to dispose report");
       }
@@ -200,24 +269,47 @@ export const Home = () => {
     }
   };
 
-  // shared pagination config: shows “Showing X of Y records”
-  const paginationConfig = {
-    pageSize: 10,
-    showSizeChanger: true,
-    showTotal: (total, range) =>
-      `Showing ${range[1] - range[0] + 1} of ${total} records`,
+  // CLAIM handlers
+  const handleClaimRowClick = async (record) => {
+    try {
+      setSelectedClaim(record);
+      setIsClaimModalVisible(true);
+      localStorage.setItem("selectedClaimId", record._id);
+
+      const claimData = await getClaimDetailsClient(token, record._id);
+
+      if (claimData && claimData.success) {
+        setClaimDetails({
+          claim: claimData.claim || null,
+          lostItem: claimData.lostItem || null,
+          foundItem: claimData.foundItem || null,
+        });
+      } else {
+        setClaimDetails(null);
+        message.warning("No claim details found for this item.");
+      }
+    } catch (err) {
+      console.error("Error fetching claim details:", err);
+      setClaimDetails(null);
+      message.error("Failed to load claim details.");
+    }
+  };
+  const handleClaimModalClose = () => {
+    setIsClaimModalVisible(false);
+    setSelectedClaim(null);
+    setClaimDetails(null);
   };
 
   return (
     <div className="main-container">
+      {/* HEADER */}
       <div className="home-header">
         <p className="home-header__welcome">
           GOOD DAY, {user ? user.name : "Guest"}!
-          {console.log(user ? user.name : "tanginamo")}
         </p>
       </div>
 
-      {/* OVERVIEW CARDS */}
+      {/* OVERVIEW CARDS (yours) */}
       <div className="overview">
         <h3 className="overview__title">OVERVIEW</h3>
         <Row gutter={[16, 16]}>
@@ -251,7 +343,7 @@ export const Home = () => {
         </Row>
       </div>
 
-      {/* LOST */}
+      {/* LOST TABLE */}
       <h3 className="section-title section-title--mt8">MY LOST REPORTS</h3>
       <div className="table-responsive">
         <Table
@@ -259,7 +351,7 @@ export const Home = () => {
           dataSource={lost}
           rowClassName={() => "clickable-row"}
           onRow={(record) => ({
-            onClick: () => handleRowClick(record),
+            onClick: () => handleLostClick(record),
           })}
           pagination={paginationConfig}
           scroll={{ x: "max-content" }}
@@ -282,7 +374,7 @@ export const Home = () => {
         </Table>
       </div>
 
-      {/* FOUND */}
+      {/* FOUND TABLE */}
       <h3 className="section-title section-title--mt24">MY FOUND REPORTS</h3>
       <div className="table-responsive">
         <Table
@@ -290,7 +382,7 @@ export const Home = () => {
           dataSource={found}
           rowClassName={() => "clickable-row"}
           onRow={(record) => ({
-            onClick: () => handleRowClick(record),
+            onClick: () => handleFoundClick(record),
           })}
           pagination={paginationConfig}
           scroll={{ x: "max-content" }}
@@ -313,7 +405,7 @@ export const Home = () => {
         </Table>
       </div>
 
-      {/* CLAIM TRANSACTIONS */}
+      {/* CLAIM TABLE */}
       <h3 className="section-title section-title--mt24">CLAIM TRANSACTIONS</h3>
       <div className="table-responsive">
         <Table
@@ -349,162 +441,325 @@ export const Home = () => {
         </Table>
       </div>
 
-      {/* LOST/FOUND MODAL */}
+      {/* LOST MODAL */}
       <Modal
-        title={selectedItem ? selectedItem.title : "Item Details"}
-        open={isModalVisible}
-        onCancel={handleModalClose}
+        title={selectedLost ? selectedLost.title : "Lost Item Details"}
+        open={isLostModalVisible}
+        onCancel={handleLostModalClose}
         footer={[
-          <Button key="close" onClick={handleModalClose}>
+          <Button key="close" onClick={handleLostModalClose}>
             Close
           </Button>,
-          selectedItem?.reportType?.toLowerCase() === "lost" && (
-            <Button
-              key="find"
-              onClick={handleRowLost}
-              disabled={selectedItem?.status?.toLowerCase() !== "active"}
-            >
-              See similar items
-            </Button>
-          ),
+          <Button
+            key="find"
+            onClick={handleRowLostSeeSimilar}
+            disabled={normalizeStatus(selectedLost?.status) !== "listed"}
+          >
+            See similar items
+          </Button>,
           <Button
             key="dispose"
             danger
-            onClick={() => {
-              if (!selectedItem?._id) {
-                message.error("Missing item id.");
-                return;
-              }
-              handleDispose(selectedItem._id, selectedItem.reportType);
-            }}
+            onClick={() =>
+              selectedLost?._id && handleDispose(selectedLost._id, "lost")
+            }
+            disabled={
+              !["Listed", "Reviewing"].includes(selectedLost?.status || "")
+            }
           >
-            Dispose
+            Delete
           </Button>,
         ]}
         width={700}
         maskClosable={false}
       >
-        {selectedItem && (
+        {selectedLost && (
           <>
-            {selectedItem.photoUrl && (
+            {selectedLost.photoUrl && (
               <div className="photo-wrap">
-                <Image src={selectedItem.photoUrl} width={250} />
+                <Image src={selectedLost.photoUrl} width={250} />
               </div>
             )}
-
             <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="TID">
-                {selectedItem.tid}
+                {selectedLost.tid}
               </Descriptions.Item>
               <Descriptions.Item label="Title">
-                {selectedItem.title}
+                {selectedLost.title}
               </Descriptions.Item>
               <Descriptions.Item label="Category">
-                {selectedItem.category}
+                {selectedLost.category}
               </Descriptions.Item>
               <Descriptions.Item label="Key Item">
-                {selectedItem.keyItem}
+                {selectedLost.keyItem}
               </Descriptions.Item>
               <Descriptions.Item label="Item Brand">
-                {selectedItem.itemBrand}
+                {selectedLost.itemBrand}
               </Descriptions.Item>
               <Descriptions.Item label="Status">
-                {selectedItem.status}
+                {selectedLost.status}
               </Descriptions.Item>
               <Descriptions.Item label="Reported By">
-                {selectedItem.reportedBy}
+                {selectedLost.reportedBy}
               </Descriptions.Item>
               <Descriptions.Item label="Approved By">
-                {selectedItem.approvedBy}
+                {selectedLost.approvedBy ? selectedLost.approvedBy : "No actions yet."}
               </Descriptions.Item>
               <Descriptions.Item label="Location">
-                {selectedItem.location}
+                {selectedLost.location}
               </Descriptions.Item>
               <Descriptions.Item label="Date Reported">
-                {selectedItem.dateReported}
+                {selectedLost.dateReported}
               </Descriptions.Item>
               <Descriptions.Item label="Report Type">
-                {selectedItem.reportType}
+                {selectedLost.reportType}
               </Descriptions.Item>
               <Descriptions.Item label="Description">
-                {selectedItem.description}
+                {selectedLost.description}
               </Descriptions.Item>
-              <Descriptions.Item label="Date Found">
-                {selectedItem.dateFound}
+              <Descriptions.Item label="Date Range Lost">
+                {selectedLost.startDate && selectedLost.endDate
+                  ? `${new Date(selectedLost.startDate).toLocaleDateString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                    })} - ${new Date(selectedLost.endDate).toLocaleDateString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                    })}`
+                  : "No Information Provided"}
               </Descriptions.Item>
             </Descriptions>
           </>
         )}
       </Modal>
 
-      {/* CLAIM DETAILS MODAL (close-only footer) */}
+      {/* FOUND MODAL */}
       <Modal
-        title={selectedClaim ? selectedClaim.title : "Claim Details"}
-        open={isClaimModalVisible}
-        onCancel={handleClaimModalClose}
+        title={selectedFound ? selectedFound.title : "Found Item Details"}
+        open={isFoundModalVisible}
+        onCancel={handleFoundModalClose}
         footer={[
-          <Button key="close" onClick={handleClaimModalClose}>
+          <Button key="close" onClick={handleFoundModalClose}>
             Close
+          </Button>,
+          <Button
+            key="dispose"
+            danger
+            onClick={() =>
+              selectedFound?._id && handleDispose(selectedFound._id, "found")
+            }
+            disabled={
+              !["Active", "Pending Verification"].includes(
+                selectedFound?.status || ""
+              )
+            }
+          >
+            Delete
           </Button>,
         ]}
         width={700}
         maskClosable={false}
       >
-        {selectedClaim && (
+        {selectedFound && (
           <>
-            {selectedClaim.photoUrl && (
+            {selectedFound.photoUrl && (
               <div className="photo-wrap">
-                <Image src={selectedClaim.photoUrl} width={250} />
+                <Image src={selectedFound.photoUrl} width={250} />
               </div>
             )}
-
             <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="TID">
-                {selectedClaim.tid}
+                {selectedFound.tid}
               </Descriptions.Item>
               <Descriptions.Item label="Title">
-                {selectedClaim.title}
+                {selectedFound.title}
               </Descriptions.Item>
               <Descriptions.Item label="Category">
-                {selectedClaim.category}
+                {selectedFound.category}
               </Descriptions.Item>
               <Descriptions.Item label="Key Item">
-                {selectedClaim.keyItem}
+                {selectedFound.keyItem}
               </Descriptions.Item>
               <Descriptions.Item label="Item Brand">
-                {selectedClaim.itemBrand}
+                {selectedFound.itemBrand}
               </Descriptions.Item>
               <Descriptions.Item label="Status">
-                {selectedClaim.status}
+                {selectedFound.status}
               </Descriptions.Item>
               <Descriptions.Item label="Reported By">
-                {selectedClaim.reportedBy}
+                {selectedFound.reportedBy}
               </Descriptions.Item>
               <Descriptions.Item label="Approved By">
-                {selectedClaim.approvedBy}
+                {selectedFound.approvedBy}
               </Descriptions.Item>
               <Descriptions.Item label="Location">
-                {selectedClaim.location}
+                {selectedFound.location}
               </Descriptions.Item>
               <Descriptions.Item label="Date Reported">
-                {selectedClaim.dateReported}
-              </Descriptions.Item>
-              <Descriptions.Item label="Report Type">
-                {selectedClaim.reportType}
-              </Descriptions.Item>
-              <Descriptions.Item label="Description">
-                {selectedClaim.description}
+                {selectedFound.dateReported}
               </Descriptions.Item>
               <Descriptions.Item label="Date Found">
-                {selectedClaim.dateFound}
+                {selectedFound.dateFound}
               </Descriptions.Item>
-              {selectedClaim.dateClaimed && (
-                <Descriptions.Item label="Date Claimed">
-                  {selectedClaim.dateClaimed}
-                </Descriptions.Item>
-              )}
+              <Descriptions.Item label="Description">
+                {selectedFound.description}
+              </Descriptions.Item>
             </Descriptions>
           </>
+        )}
+      </Modal>
+
+      {/* CLAIM DETAILS MODAL */}
+      <Modal
+        title={selectedClaim ? selectedClaim.title : "Claim Details"}
+        open={isClaimModalVisible}
+        onCancel={handleClaimModalClose}
+        footer={[<Button key="close" onClick={handleClaimModalClose}>Close</Button>]}
+        width={1200}
+        maskClosable={false}
+        bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+      >
+        {claimDetails ? (
+          <div className="claim-details-grid">
+            {/* Found Item */}
+            <div className="claim-col">
+              <h3>Found Item Information</h3>
+              {claimDetails?.foundItem?.photoUrl && (
+                <div className="photo-wrap">
+                  <Image src={claimDetails.foundItem.photoUrl} width={220} />
+                </div>
+              )}
+              {claimDetails?.foundItem ? (
+                <Descriptions bordered column={1} size="middle">
+                  <Descriptions.Item label="TID">
+                    {claimDetails.foundItem.tid}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Title">
+                    {claimDetails.foundItem.title}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Category">
+                    {claimDetails.foundItem.category}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Location">
+                    {claimDetails.foundItem.location}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Date Found">
+                    {claimDetails.foundItem.dateFound
+                      ? new Date(claimDetails.foundItem.dateFound).toLocaleDateString(
+                          "en-US",
+                          { month: "2-digit", day: "2-digit", year: "numeric" }
+                        )
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    {claimDetails.foundItem.status}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Description">
+                    {claimDetails.foundItem.description}
+                  </Descriptions.Item>
+                </Descriptions>
+              ) : (
+                <p className="muted">No found item data.</p>
+              )}
+            </div>
+
+            {/* Lost Item */}
+            <div className="claim-col">
+              <h3>Lost Item Reference</h3>
+              {claimDetails?.lostItem?.photoUrl && (
+                <div className="photo-wrap">
+                  <Image src={claimDetails.lostItem.photoUrl} width={220} />
+                </div>
+              )}
+              {claimDetails?.lostItem ? (
+                <Descriptions bordered column={1} size="middle">
+                  <Descriptions.Item label="TID">
+                    {claimDetails.lostItem.tid}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Title">
+                    {claimDetails.lostItem.title}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Category">
+                    {claimDetails.lostItem.category}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Location">
+                    {claimDetails.lostItem.location}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Start Date">
+                    {claimDetails.lostItem.startDate
+                      ? new Date(claimDetails.lostItem.startDate).toLocaleDateString(
+                          "en-US",
+                          { month: "2-digit", day: "2-digit", year: "numeric" }
+                        )
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="End Date">
+                    {claimDetails.lostItem.endDate
+                      ? new Date(claimDetails.lostItem.endDate).toLocaleDateString(
+                          "en-US",
+                          { month: "2-digit", day: "2-digit", year: "numeric" }
+                        )
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    {claimDetails.lostItem.status}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Description">
+                    {claimDetails.lostItem.description}
+                  </Descriptions.Item>
+                </Descriptions>
+              ) : (
+                <p className="muted">No linked lost item found.</p>
+              )}
+            </div>
+
+            {/* Claim Info */}
+            <div className="claim-col">
+              <h3>Claim Information</h3>
+              {claimDetails?.claim ? (
+                <>
+                  {claimDetails.claim.photoUrl && (
+                    <div className="photo-wrap">
+                      <Image src={claimDetails.claim.photoUrl} width={200} />
+                    </div>
+                  )}
+                  <Descriptions bordered column={1} size="middle">
+                    <Descriptions.Item label="Claim ID">
+                      {claimDetails.claim.cid}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Claimer ID">
+                      {claimDetails.claim.claimerId}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Claim Status">
+                      {claimDetails.claim.claimStatus}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Admin Decision By">
+                      {claimDetails.claim.adminDecisionBy
+                        ? claimDetails.claim.adminDecisionBy
+                        : "No actions yet."}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Created At">
+                      {claimDetails.claim.createdAt
+                        ? new Date(claimDetails.claim.createdAt).toLocaleDateString(
+                            "en-US",
+                            { month: "2-digit", day: "2-digit", year: "numeric" }
+                          )
+                        : "N/A"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Reason">
+                      {claimDetails.claim.reason}
+                    </Descriptions.Item>
+                  </Descriptions>
+                </>
+              ) : (
+                <p className="muted">No claim record found for this item.</p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <p className="muted">No claim details available.</p>
         )}
       </Modal>
     </div>

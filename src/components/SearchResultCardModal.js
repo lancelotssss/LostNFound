@@ -9,7 +9,7 @@ import { createClaim } from "../api";
 const { Meta } = Card;
 const { TextArea } = Input;
 
-export function SearchResultCardModal({ item }) {
+export function SearchResultCardModal({ item, onClaimSuccess }) {
   const [open, setOpen] = useState(false);
   const [claimMode, setClaimMode] = useState(false); // step 2 mode
   const [form] = Form.useForm();
@@ -29,43 +29,57 @@ export function SearchResultCardModal({ item }) {
 
   const showModal = () => setOpen(true);
   const handleCancel = () => {
+    localStorage.removeItem("lostReferenceFound");
     setOpen(false);
     setClaimMode(false);
     form.resetFields();
   };
+  const handleClaim = () => {
 
-  const handleClaim = () => setClaimMode(true);
+    localStorage.setItem("lostReferenceFound", item._id)
 
-  const handleSubmit = async () => {
-  try {
-    const values = await form.validateFields();
-    const token = sessionStorage.getItem("User");
-
-    
-    const formData = new FormData();
-    formData.append("itemId", item._id);
-    formData.append("claimerId", user?.studentId);
-    formData.append("reason", values.reason);
-
-    if (values.image && values.image[0]) {
-      formData.append("photo", values.image[0].originFileObj);
-    }
-
-    console.log("Submitting Claim FormData:", [...formData.entries()]);
-
-    const result = await createClaim(formData, token);
-
-    if (result.success) {
-      message.success("Claim submitted successfully!");
-      handleCancel();
-    } else {
-      message.error(result.error || "Failed to submit claim");
-    }
-  } catch (error) {
-    console.error("Validation Failed:", error);
-    message.error("Please complete the form");
+    setClaimMode(true);
   }
-};
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const token = sessionStorage.getItem("User");
+      const selectedLostId = localStorage.getItem("selectedLostId");
+      const lostReferenceFound = localStorage.getItem("lostReferenceFound");
+
+
+      const formData = new FormData();
+      formData.append("itemId", item._id);
+      formData.append("claimerId", user?.studentId);
+      formData.append("reason", values.reason);
+      if (selectedLostId) formData.append("selectedLostId", selectedLostId);
+      if (lostReferenceFound) formData.append("lostReferenceFound", lostReferenceFound);
+
+
+      if (values.image && values.image[0]) {
+        formData.append("photo", values.image[0].originFileObj);
+      }
+
+      const result = await createClaim(formData, token);
+
+      if (result.success) {
+        localStorage.removeItem("selectedLostId");
+        
+        handleCancel();
+
+        // ✅ Notify parent to remove the card
+        if (onClaimSuccess) {
+          onClaimSuccess(item._id);
+        }
+      } else {
+        message.error(result.error || "Failed to submit claim");
+      }
+    } catch (error) {
+      console.error("Validation Failed:", error);
+      message.error("Please complete the form");
+    }
+  };
+
 
 
   return (

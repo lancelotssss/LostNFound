@@ -9,7 +9,7 @@ import {
 import axios from "axios";
 import RegisterPage from "./Pages/RegisterPage";
 import ReportItem from "./Pages/ReportItem";
-import Home from "./Pages/Home";
+import {Home} from "./Pages/Home";
 import { Layout } from "./components/Layout";
 import { useEffect } from "react";
 import { AdminLost } from "./Pages/AdminLost";
@@ -109,10 +109,26 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/main/found-items" element={<AdminFound />} />
-            <Route path="/main/claim-items" element={<AdminClaims />} />
-            <Route path="/main/claim-items" element={<AdminClaims />} />
-            <Route path="/main/logs" element={<ActivityLog />} />
+            <Route path="/main/found-items" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminFound />
+              </ProtectedRoute>} />
+            <Route path="/main/claim-items" element={<ProtectedRoute allowedRoles={["admin"]}>
+              <AdminClaims /> 
+              </ProtectedRoute> } />
+            <Route path="/main/logs" element={<ProtectedRoute allowedRoles={["admin"]}>
+              <ActivityLog />
+              </ProtectedRoute>} />
+            <Route path="/main/storage" element={<ProtectedRoute allowedRoles={["admin"]}>
+              <AdminStorage />
+            </ProtectedRoute>} />
+              <Route path="/main/history" element = {<ProtectedRoute allowedRoles={["admin"]}>
+              <AdminHistory />
+              </ProtectedRoute>}/>
+              <Route path="/main/settings" element = {<ProtectedRoute allowedRoles={["admin"]}>
+                <AdminSettings/>
+              </ProtectedRoute>} />
+
           </Route>
 
 

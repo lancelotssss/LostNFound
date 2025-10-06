@@ -72,6 +72,13 @@ export async function deleteReport(id, token) {
   }
 }
 
+export async function getClaimDetailsClient(token, itemId) {
+  const response = await axios.get(`${URL}/cli/claim-items/${itemId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+}
+
 export async function getAllClaim(token){
   try {
     const response = await axios.get(`${URL}/cli/claims`, {
@@ -159,12 +166,6 @@ export async function createClaim(formData, token) {
 }
 
 
-
-
-/*export async function getClaimReport() {
-  const response = await axios.get(`${URL}/cli/claim-items`);
-  return response.data;
-}*/
 
 //ADMIN
 
@@ -299,18 +300,60 @@ export async function editPasswordAdmin(data, token) {
 }
 
 
+
 export async function getClaimReport(token) {
   try {
     const response = await axios.get(`${URL}/main/claim-items`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
-    console.log("Axios response:", response);
-    return response.data; // { count, results }
+    return response.data;
   } catch (err) {
-    console.error("Error fetching reports:", err);
+    console.error("Error fetching claim report:", err);
     return { results: [] };
+  }
+}
+
+export async function getClaimDetails(token, claimId) {
+  try {
+    const response = await axios.get(`${URL}/main/claim-items/${claimId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return {
+      claim: response.data.claim,
+      foundItem: response.data.foundItem,
+      lostItem: response.data.lostItem,
+    };
+  } catch (err) {
+    console.error("Error fetching claim details:", err);
+    return { claim: null, foundItem: null, lostItem: null };
+  }
+}
+
+export async function approveClaim(token, claimId, status, approvedBy) {
+  try {
+    const response = await axios.put(
+      `${URL}/main/claim-items/approve`,
+      { claimId, status, approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error approving claim:", err);
+    return { success: false };
+  }
+}
+
+export async function completeTransaction(token, claimId, status, approvedBy) {
+  try {
+    const response = await axios.put(
+      `${URL}/main/claim-items/complete`,
+      { claimId, status, approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error approving claim:", err);
+    return { success: false };
   }
 }
 

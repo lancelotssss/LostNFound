@@ -75,7 +75,7 @@ export const AdminFound = () => {
   setConfirmLoading(true);
   const token = sessionStorage.getItem("User");
   try {
-    await approveFound(selectedItem._id, "Active", user.studentId, token);
+    await approveFound(selectedItem._id, "Listed", user.studentId, token);
     message.success("Item approved successfully!");
     setApproveModal(false);
     setIsModalVisible(false);
@@ -92,7 +92,7 @@ const confirmDeny = async () => {
   setConfirmLoading(true);
   const token = sessionStorage.getItem("User");
   try {
-    await approveFound(selectedItem._id, "Denied", user.studentId, token); // ✅ use _id here
+    await approveFound(selectedItem._id, "Denied", user.studentId, token); 
     message.success("Item denied successfully!");
     setDenyModal(false);
     setIsModalVisible(false);
@@ -159,10 +159,10 @@ const confirmDeny = async () => {
             </Descriptions>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button type="primary" onClick={handleApprove}  disabled={selectedItem.status === "Active"}>
+              <Button type="primary" onClick={handleApprove}   disabled={!(selectedItem.status === "Reviewing" || selectedItem.status === "Denied")}>
                 Approve
               </Button>
-              <Button danger onClick={handleDeny} disabled={selectedItem.status === "Denied"}>
+              <Button danger onClick={handleDeny}  disabled={!(selectedItem.status === "Listed" || selectedItem.status === "Reviewing")}>
                 Deny
               </Button>
               <Button onClick={handleModalClose}>Cancel</Button>
