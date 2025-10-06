@@ -6,6 +6,12 @@ import { Menu } from "antd";
  
  
 const pageDataAdmin = [
+    
+    {
+        name: "Dashboard",
+        path: "/main/dashboard"
+    },
+
     {
         name: "Review Found Items",
         path: "/main/found-items"

@@ -574,6 +574,7 @@ userRoutes.post("/similar-items", verifyToken, async (req, res) => {
     if (keyItem) query.keyItem = { $regex: keyItem, $options: "i" };
     if (location) query.location = { $regex: location, $options: "i" };
     if (start && end) query.dateFound = { $gte: start, $lte: end };
+    //Item Brand (optional)
 
     const similarFound = await db.collection("lost_found_db").find(query).toArray();
 

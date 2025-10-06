@@ -169,6 +169,21 @@ export async function createClaim(formData, token) {
 
 //ADMIN
 
+export async function getAdminDashboard(token) {
+  try {
+    const response = await axios.get(`${URL}/main/dashboard`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; 
+  } catch (err) {
+    console.error("Error fetching admin dashboard:", err);
+    return { statusCounts: null };
+  }
+}
+
+
 export async function getFoundReport(token) {
   try {
     const response = await axios.get(`${URL}/main/found-items`, {

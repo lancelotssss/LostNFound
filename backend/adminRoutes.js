@@ -11,6 +11,53 @@ const SALT_ROUNDS = 6
 
 //---------------------------------------------------------------------------DASHBOARD---------------------------------------------------------------------------
 adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+
+    const [
+      reviewFoundCount,
+      reviewLostCount,
+      listedFoundCount,
+      listedLostCount,
+      reviewClaimsCount,
+      claimReturnedCount
+    ] = await Promise.all([
+      db.collection("lost_found_db").countDocuments({ reportType: "Found", status: "Reviewing" }),
+      db.collection("lost_found_db").countDocuments({ reportType: "Lost", status: "Reviewing" }),
+      db.collection("lost_found_db").countDocuments({ reportType: "Found" }),
+      db.collection("lost_found_db").countDocuments({ reportType: "Lost" }),
+      db.collection("claims_db").countDocuments({ claimStatus: "Reviewing" }),
+      db.collection("claims_db").countDocuments({ claimStatus: "Completed" }),
+    ]);
+
+   
+    res.json({
+      success: true,
+      message: "Dashboard data fetched successfully.",
+      statusCounts: {
+        reviewFoundCount,
+        reviewLostCount,
+        listedFoundCount,
+        listedLostCount,
+        reviewClaimsCount,
+        claimReturnedCount,
+      },
+      totalReports:
+        reviewFoundCount +
+        reviewLostCount +
+        listedFoundCount +
+        listedLostCount +
+        reviewClaimsCount +
+        claimReturnedCount,
+    });
+  } catch (err) {
+    console.error("Error fetching dashboard data:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching dashboard data.",
+      error: err.message,
+    });
+  }
 });
 
 
@@ -24,7 +71,7 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
         { $match: { reportType: "Found" } }, 
         {
           $addFields: {
-            statusOrder: {
+            claimStatus: {
               $switch: {
                 branches: [
                   { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
@@ -39,8 +86,8 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
             }
           }
         },
-        { $sort: { statusOrder: 1, dateFound: 1 } }, 
-        { $project: { statusOrder: 0 } }
+        { $sort: { claimStatus: 1, dateFound: 1 } }, 
+        { $project: { claimStatus: 0 } }
       ])
       .toArray();
 
@@ -197,7 +244,7 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
         { $match: { reportType: "Lost" } },
         {
           $addFields: {
-            statusOrder: {
+            claimStatus: {
               $switch: {
                 branches: [
                   { case: { $eq: ["$status", "Pending"] }, then: 1 },
@@ -210,7 +257,7 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
             }
           }
         },
-        { $sort: { statusOrder: 1, dateLost: 1 } } 
+        { $sort: { claimStatus: 1, dateLost: 1 } } 
       ])
       .toArray();
 

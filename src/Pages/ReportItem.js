@@ -32,6 +32,7 @@ export default function ReportItem() {
       setRegisterData((prev) => ({ ...prev, category: "" }));
     }
   }, [current]);
+  
 
 
   function setField(name, value) {
@@ -39,27 +40,29 @@ export default function ReportItem() {
   }
 
   function handleChange(e) {
-    const { name, value } = e.target;
-    if (name === "reportType") {
-      setRegisterData({
-        reportType: value,
-        category: "",
-        keyItem: "",
-        itemBrand: "",
-        location: "",
-        startDate: "",
-        endDate: "",
-        dateFound: "",
-        description: "",
-        photoUrl: "",
-        title: "",
-        file: null,
-      });
-      setCurrent(1);
-    } else {
-      setField(name, value);
-    }
+  const { name, value } = e.target;
+
+  if (name === "reportType") {
+    setRegisterData({
+      reportType: value,
+      category: "",
+      keyItem: "",
+      itemBrand: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      dateFound: "",
+      description: "",
+      photoUrl: "",
+      title: "",
+      file: null,
+    });
+    setCurrent(1);
+  } 
+  else {
+    setField(name, value);
   }
+}
 
   function handleFileChange(e) {
     setField("file", e.target.files?.[0] ?? null);
@@ -188,47 +191,131 @@ export default function ReportItem() {
   );
 
   const StepTwo = (
-    <div className="step-two">
-      <Title level={4} className="step-title">
-        {registerData.reportType === "Found"
-          ? "WHAT CATEGORY OF AN ITEM DID YOU FIND?"
-          : "WHAT CATEGORY OF AN ITEM DID YOU LOSE?"}
-      </Title>
-      <Select
-        placeholder="SELECT A CATEGORY"
-        value={registerData.category || undefined}
-        onChange={(val) => {
-          setField("category", val);
-          setCurrent(2);
-        }}
-        className="field-wide"
-        options={[
-          { value: "Gadgets", label: "Gadgets" },
-          { value: "Personal Belongings", label: "Personal Belongings" },
-          { value: "School Supplies", label: "School Supplies" },
-          { value: "Wearables", label: "Wearables" },
-          { value: "Student ID", label: "Student ID" },
-          { value: "Others", label: "Others" },
-        ]}
-      />
-    </div>
-  );
+  <div className="step-two">
+    <Title level={4} className="step-title">
+      {registerData.reportType === "Found"
+        ? "WHAT CATEGORY OF AN ITEM DID YOU FIND?"
+        : "WHAT CATEGORY OF AN ITEM DID YOU LOSE?"}
+    </Title>
+
+    <Select
+      placeholder="SELECT A CATEGORY"
+      value={registerData.category || undefined}
+      onChange={(val) => {
+        setRegisterData((prev) => ({
+          ...prev,
+          category: val,
+          keyItem: "", 
+        }));
+        setCurrent(2);
+      }}
+      className="field-wide"
+      options={[
+        { value: "Gadgets", label: "Gadgets" },
+        { value: "Identification Card", label: "Identification Card" },
+        { value: "Personal Belongings", label: "Personal Belongings" },
+        { value: "School Supplies", label: "School Supplies" },
+        { value: "Wearables", label: "Wearables" },
+        { value: "Others", label: "Others" },
+
+      ]}
+    />
+  </div>
+);
+
 
   const StepThree = (
-    <div className="step-three">
-      <Title level={4} className="step-title">
-        {registerData.reportType === "Found"
-          ? "WHAT ITEM DID YOU FIND?"
-          : "WHAT ITEM DID YOU LOSE?"}
-      </Title>
-      <div className="field-col">
+  <div className="step-three">
+    <Title level={4} className="step-title">
+      {registerData.reportType === "Found"
+        ? "WHAT ITEM DID YOU FIND?"
+        : "WHAT ITEM DID YOU LOSE?"}
+    </Title>
+
+    <div className="field-col">
+      {/* Category-based item selection */}
+      {registerData.category === "Others" ? (
         <Input
           name="keyItem"
-          placeholder="ITEM NAME"
+          placeholder="Enter Item"
           value={registerData.keyItem}
           onChange={handleChange}
           className="field-wide"
         />
+      ) : (
+        <Select
+          placeholder="Select an Item"
+          value={registerData.keyItem || undefined}
+          onChange={(val) => setField("keyItem", val)}
+          className="field-wide"
+          disabled={!registerData.category}
+          options={
+            registerData.category === "Gadgets"
+              ? [
+                  { value: "Audio Device", label: "Audio Device" },
+                  { value: "Calculator", label: "Calculator" },
+                  { value: "Charging Utilities", label: "Charging Utilities" },
+                  { value: "CPU", label: "CPU" },
+                  { value: "Laptop", label: "Laptop" },
+                  { value: "Mobile Device", label: "Mobile Device" },
+                  { value: "Power Bank", label: "Power Bank" },
+                  { value: "Watch", label: "Watch" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "Personal Belongings"
+              ? [
+                  { value: "Accessories", label: "Accessories" },
+                  { value: "Bag", label: "Bag" },
+                  { value: "Cosmetic Products", label: "Cosmetic Products" },
+                  { value: "Handkerchief", label: "Handkerchief" },
+                  { value: "Keys", label: "Keys" },
+                  { value: "Tumbler", label: "Tumbler" },
+                  { value: "Umbrella", label: "Umbrella" },
+                  { value: "Wallet", label: "Wallet" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "School Supplies"
+              ? [
+                  { value: "Architecture Materials", label: "Architecture Materials" },
+                  { value: "Books", label: "Books" },
+                  { value: "Medical Materials", label: "Medical Materials" },
+                  { value: "Office Supplies", label: "Office Supplies" },
+                  { value: "Pen", label: "Pen" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "Wearables"
+              ? [
+                  { value: "Cap", label: "Cap" },
+                  { value: "Eyeglass", label: "Eyeglass" },
+                  { value: "Foot Wearables", label: "Foot Wearables" },
+                  { value: "Hat", label: "Hat" },
+                  { value: "Jacket", label: "Jacket" },
+                  { value: "Lab Gown", label: "Lab Gown" },
+                  { value: "T-shirt", label: "T-shirt" },
+                  { value: "Trousers", label: "Trousers" },
+                  { value: "Uniform", label: "Uniform" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "Identification Card"
+              ? [
+                  { value: "Driver’s License", label: "Driver’s License" },
+                  { value: "National ID", label: "National ID" },
+                  { value: "Passport", label: "Passport" },
+                  { value: "School ID", label: "School ID" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : []
+          }
+        />
+      )}
+
+      {/* Hide item brand if category is Identification Card */}
+      {registerData.category !== "Identification Card" && (
         <Input
           name="itemBrand"
           placeholder="ITEM BRAND (optional)"
@@ -236,9 +323,11 @@ export default function ReportItem() {
           onChange={handleChange}
           className="field-wide"
         />
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
+
 
   const StepFour = (
     <div className="step-four">

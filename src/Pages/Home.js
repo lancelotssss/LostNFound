@@ -638,8 +638,8 @@ const fetchData = async (tkn) => {
   {claimDetails ? (
     <div className="claim-details-grid">
       {/* Found Item */}
-      <div className="claim-col claim-section">
         <h3 className="claim-section-h3">Found Item Information</h3>
+      <div className="claim-col claim-section">
 
         {claimDetails?.foundItem?.photoUrl && (
           <div className="fixed-photo-wrapper">
@@ -692,8 +692,8 @@ const fetchData = async (tkn) => {
       </div>
 
       {/* Lost Item */}
-      <div className="claim-col claim-section">
         <h3 className="claim-section-h3">Lost Item Reference</h3>
+      <div className="claim-col claim-section">
 
         {claimDetails?.lostItem?.photoUrl && (
           <div className="fixed-photo-wrapper">
@@ -760,8 +760,8 @@ const fetchData = async (tkn) => {
       </div>
 
       {/* Claim Info */}
-      <div className="claim-col claim-section">
         <h3 className="claim-section-h3">Claim Information</h3>
+      <div className="claim-col claim-section">
 
         {claimDetails?.claim?.photoUrl && (
           <div className="fixed-photo-wrapper">
