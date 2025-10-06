@@ -11,6 +11,53 @@ const SALT_ROUNDS = 6
 
 //---------------------------------------------------------------------------DASHBOARD---------------------------------------------------------------------------
 adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+
+    const [
+      reviewFoundCount,
+      reviewLostCount,
+      listedFoundCount,
+      listedLostCount,
+      reviewClaimsCount,
+      claimReturnedCount
+    ] = await Promise.all([
+      db.collection("lost_found_db").countDocuments({ reportType: "Found", status: "Reviewing" }),
+      db.collection("lost_found_db").countDocuments({ reportType: "Lost", status: "Reviewing" }),
+      db.collection("lost_found_db").countDocuments({ reportType: "Found" }),
+      db.collection("lost_found_db").countDocuments({ reportType: "Lost" }),
+      db.collection("claims_db").countDocuments({ claimStatus: "Reviewing" }),
+      db.collection("claims_db").countDocuments({ claimStatus: "Completed" }),
+    ]);
+
+   
+    res.json({
+      success: true,
+      message: "Dashboard data fetched successfully.",
+      statusCounts: {
+        reviewFoundCount,
+        reviewLostCount,
+        listedFoundCount,
+        listedLostCount,
+        reviewClaimsCount,
+        claimReturnedCount,
+      },
+      totalReports:
+        reviewFoundCount +
+        reviewLostCount +
+        listedFoundCount +
+        listedLostCount +
+        reviewClaimsCount +
+        claimReturnedCount,
+    });
+  } catch (err) {
+    console.error("Error fetching dashboard data:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching dashboard data.",
+      error: err.message,
+    });
+  }
 });
 
 
@@ -24,23 +71,23 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
         { $match: { reportType: "Found" } }, 
         {
           $addFields: {
-            statusOrder: {
+            claimStatus: {
               $switch: {
                 branches: [
-                  { case: { $eq: ["$status", "Pending"] }, then: 1 },
-                  { case: { $eq: ["$status", "Active"] }, then: 2 },
-                  { case: { $eq: ["$status", "Pending Claim"] }, then: 3 },
-                  { case: { $eq: ["$status", "Claimed"] }, then: 4 },
-                  { case: { $eq: ["$status", "Disposed"] }, then: 5 },
-                  { case: { $eq: ["$status", "Denied"] }, then: 6 }
+                  { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
+                  { case: { $eq: ["$status", "Listed"] }, then: 2 },
+                  { case: { $eq: ["$status", "Denied"] }, then: 3 },
+                  { case: { $eq: ["$status", "Returned"] }, then: 4 },
+                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 5 },
+                  { case: { $eq: ["$status", "Deleted"] }, then: 6 }
                 ],
                 default: 99
               }
             }
           }
         },
-        { $sort: { statusOrder: 1, dateFound: 1 } }, 
-        { $project: { statusOrder: 0 } }
+        { $sort: { claimStatus: 1, dateFound: 1 } }, 
+        { $project: { claimStatus: 0 } }
       ])
       .toArray();
 
@@ -55,7 +102,7 @@ adminRoutes.put("/found/approve", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
     const { itemObjectId, status, approvedBy } = req.body;
-
+    
     console.log("Incoming Approve Payload:", req.body);
 
     if (!itemObjectId || !status || !approvedBy) {
@@ -81,6 +128,13 @@ adminRoutes.put("/found/approve", verifyToken, async (req, res) => {
   if (!item) {
   return res.status(404).json({ success: false, message: "Item not found" });
   }
+
+   if (item.claimId && ObjectId.isValid(item.claimId)) {
+      await db.collection("claims_db").updateOne(
+        { _id: new ObjectId(item.claimId) },
+        { $set: { adminDecisionBy: approvedBy, reviewedAt: new Date() } }
+      );
+    }
 
     const auditMongo = {
       aid: `A-${Date.now()}`,
@@ -190,7 +244,7 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
         { $match: { reportType: "Lost" } },
         {
           $addFields: {
-            statusOrder: {
+            claimStatus: {
               $switch: {
                 branches: [
                   { case: { $eq: ["$status", "Pending"] }, then: 1 },
@@ -203,7 +257,7 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
             }
           }
         },
-        { $sort: { statusOrder: 1, dateLost: 1 } } 
+        { $sort: { claimStatus: 1, dateLost: 1 } } 
       ])
       .toArray();
 
@@ -241,7 +295,7 @@ adminRoutes.get("/claim-items", verifyToken, async (req, res) => {
         {
           $match: {
             claimStatus: {
-              $in: ["Pending Approval", "Claim Approved", "Claim Rejected"],
+              $in: ["Reviewing Claim", "Claim Approved", "Completed", "Claim Rejected"],
             },
           },
         },
@@ -294,7 +348,7 @@ adminRoutes.get("/claim-items/:claimId", verifyToken, async (req, res) => {
   }
 });
 
-// 🔹 APPROVE / DENY CLAIM
+
 adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
@@ -309,7 +363,7 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
     if (!claim)
       return res.status(404).json({ success: false, message: "Claim not found" });
 
-    // update claim
+    // Update claim
     await db.collection("claims_db").updateOne(
       { _id: claimObjectId },
       {
@@ -321,17 +375,43 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
       }
     );
 
-    // update linked lost_found_db items
-    if (claim.lostReferenceFound) {
-      await db
-        .collection("lost_found_db")
-        .updateOne(
-          { _id: new ObjectId(claim.lostReferenceFound) },
-          { $set: { status, approvedBy, updatedAt: new Date() } }
-        );
-    }
+    // Update linked lost_found_db items based on decision
+    const updates = [];
 
-    // add audit trail
+if (claim.selectedLostId) {
+  updates.push(
+    db.collection("lost_found_db").updateOne(
+      { _id: new ObjectId(claim.selectedLostId) },
+      {
+        $set: {
+          // Lost item becomes "Claim Rejected" if claim is denied, otherwise use the claim status
+          status: status === "Claim Rejected" ? "Claim Rejected" : status,
+          approvedBy,
+          updatedAt: new Date(),
+        },
+      }
+    )
+  );
+}
+
+if (claim.lostReferenceFound) {
+  updates.push(
+    db.collection("lost_found_db").updateOne(
+      { _id: new ObjectId(claim.lostReferenceFound) },
+      {
+        $set: {
+          // Found item becomes "Listed" if claim is denied, otherwise follow claim status
+          status: status === "Claim Rejected" ? "Listed" : status,
+          approvedBy,
+          updatedAt: new Date(),
+        },
+      }
+    )
+  );
+}
+
+await Promise.all(updates);
+    // Add audit trail
     const audit = {
       aid: `A-${Date.now()}`,
       action: status === "Claim Approved" ? "APPROVE_CLAIM" : "DENY_CLAIM",
@@ -347,6 +427,87 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+
+adminRoutes.put("/claim-items/complete", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { claimId, approvedBy } = req.body;
+
+    if (!ObjectId.isValid(claimId))
+      return res.status(400).json({ success: false, message: "Invalid claimId" });
+
+    const claimObjectId = new ObjectId(claimId);
+
+    const claim = await db.collection("claims_db").findOne({ _id: claimObjectId });
+    if (!claim)
+      return res.status(404).json({ success: false, message: "Claim not found" });
+
+    // Update claim to Completed
+    await db.collection("claims_db").updateOne(
+      { _id: claimObjectId },
+      {
+        $set: {
+          claimStatus: "Completed",
+          adminDecisionBy: approvedBy,
+          reviewedAt: new Date(),
+        },
+      }
+    );
+
+    // Update both linked lost_found_db items to Returned
+    const updates = [];
+
+    if (claim.selectedLostId) {
+      updates.push(
+        db.collection("lost_found_db").updateOne(
+          { _id: new ObjectId(claim.selectedLostId) },
+          {
+            $set: {
+              status: "Returned",
+              approvedBy,
+              updatedAt: new Date(),
+            },
+          }
+        )
+      );
+    }
+
+    if (claim.lostReferenceFound) {
+      updates.push(
+        db.collection("lost_found_db").updateOne(
+          { _id: new ObjectId(claim.lostReferenceFound) },
+          {
+            $set: {
+              status: "Returned",
+              approvedBy,
+              updatedAt: new Date(),
+            },
+          }
+        )
+      );
+    }
+
+    await Promise.all(updates);
+
+    // Add audit trail
+    const audit = {
+      aid: `A-${Date.now()}`,
+      action: "COMPLETE_CLAIM",
+      performedBy: approvedBy,
+      timestamp: new Date(),
+      details: `${approvedBy} completed and returned ${claimId}.`,
+    };
+    await db.collection("audit_db").insertOne(audit);
+
+    res.json({ success: true, message: "Claim Completed", audit });
+  } catch (err) {
+    console.error("Error completing claim:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+
   
   
 

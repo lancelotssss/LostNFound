@@ -3,6 +3,24 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { editClient, editPasswordClient } from "../api";
 
+import {
+  Card,
+  Row,
+  Col,
+  Typography,
+  Descriptions,
+  Tag,
+  Avatar,
+  Space,
+  Input,
+  Button,
+  Divider,
+} from "antd";
+import { UserOutlined, PhoneOutlined, LockOutlined } from "@ant-design/icons";
+import "./styles/UserSettings.css";
+
+const { Title, Text } = Typography;
+
 export function UserSettings() {
   const [user, setUser] = useState({});
   const [formData, setFormData] = useState({
@@ -15,8 +33,8 @@ export function UserSettings() {
     password: "",
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [isPasswordEditing, setIsPasswordEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);               
+  const [isPasswordEditing, setIsPasswordEditing] = useState(false); 
 
   const [passwordForm, setPasswordForm] = useState({
     oldPassword: "",
@@ -27,7 +45,6 @@ export function UserSettings() {
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
-
   function handlePasswordChange(e) {
     setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
   }
@@ -41,29 +58,26 @@ export function UserSettings() {
       const decodedUser = jwtDecode(token);
       setUser(decodedUser);
 
-      // initialize formData
-      setFormData({
-        ...formData,
+      setFormData((prev) => ({
+        ...prev,
         studentId: decodedUser.studentId || "",
         email: decodedUser.email || "",
         name: decodedUser.name || "",
         status: decodedUser.status || "",
         createdAt: decodedUser.createdAt || "",
         phone: decodedUser.phone || "",
-      });
+      }));
     }
     loadUserData();
-    
   }, []);
 
-  async function handleSave(e) {
-    e.preventDefault();
+  
+  async function handleSave() {
     try {
       if (formData.phone === user.phone) {
         alert("No changes detected in phone number.");
         return;
       }
-
       const token = sessionStorage.getItem("User");
       if (!token) return;
 
@@ -82,15 +96,13 @@ export function UserSettings() {
     }
   }
 
-  async function handlePasswordSave(e) {
-    e.preventDefault();
+  async function handlePasswordSave() {
     const { oldPassword, newPassword, confirmPassword } = passwordForm;
 
     if (!oldPassword || !newPassword || !confirmPassword) {
       alert("All password fields are required.");
       return;
     }
-
     if (newPassword !== confirmPassword) {
       alert("New passwords do not match.");
       return;
@@ -115,124 +127,207 @@ export function UserSettings() {
     }
   }
 
+  const joined = user?.createdAt
+    ? new Date(user.createdAt)
+        .toLocaleString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+          timeZone: "Asia/Manila",
+        })
+        .replace(",", "")
+    : "—";
+
+  const statusColor =
+    (user?.status || "").toLowerCase() === "active"
+      ? "green"
+      : (user?.status || "").toLowerCase() === "pending"
+      ? "orange"
+      : "default";
+
   return (
-    <>
-      <form onSubmit={handleSave}>
-        <p>Student ID: </p>
-        <p>{user.studentId}</p>
+    <div className="settings-wrap">
+      <Row gutter={[16, 16]}>
+        {/* LEFT: Account Info */}
+        <Col xs={24} md={12}>
+          <Card className="settings-card" bordered>
+            <Space align="center" size={16} className="settings-header">
+              <Avatar size={64} icon={<UserOutlined />} />
+              <div>
+                <Title level={4} style={{ margin: 0 }}>
+                  {user?.name || "—"}
+                </Title>
+                <Text type="secondary">{user?.email || "—"}</Text>
+                <div>
+                  <Tag color={statusColor} style={{ marginTop: 6 }}>
+                    {user?.status || "—"}
+                  </Tag>
+                </div>
+              </div>
+            </Space>
 
-        <p>Email: </p>
-        <p>{user.email}</p>
+            <Divider />
 
-        <p>Name: </p>
-        <p>{user.name}</p>
+            <Descriptions column={1} size="middle" labelStyle={{ width: 140 }}>
+              <Descriptions.Item label="Student ID">
+                {user?.studentId || "—"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Joined">{joined}</Descriptions.Item>
+            </Descriptions>
 
-        <p>Status: </p>
-        <p>{user.status}</p>
+            <Divider />
 
-        <p>Joined: {new Date(user.createdAt).toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: "Asia/Manila"
-      }).replace(",", "")}</p>
+            {/* Contact (no form submit; explicit Apply button) */}
+            <div className="settings-form">
+              <Title level={5} style={{ marginBottom: 12 }}>
+                Contact
+              </Title>
 
-        <p>Phone: </p>
-        <input
-          type="text"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-          placeholder="Phone Number"
-          readOnly={!isEditing}
-        />
+              <label className="settings-label" htmlFor="phone">
+                Phone
+              </label>
+              <Input
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Phone Number"
+                prefix={<PhoneOutlined />}
+                disabled={!isEditing}              
+                className="settings-input"
+              />
 
-        {isEditing ? (
-          <>
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({ ...formData, phone: user.phone });
-                setIsEditing(false);
-              }}
-              className="bg-gray-400 text-white px-4 py-2 rounded"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
-            Edit Phone
-          </button>
-        )}
-      </form>
+              <div className="settings-actions">
+                {!isEditing ? (
+                  <>
+                    <Button
+                      type="default"
+                      onClick={() => setIsEditing(true)} 
+                    >
+                      Edit
+                    </Button>
+                    <Button type="primary" disabled>
+                      Apply
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="default"
+                      onClick={() => {
+                        
+                        setFormData((prev) => ({ ...prev, phone: user.phone || "" }));
+                        setIsEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="primary"
+                      onClick={handleSave}          
+                    >
+                      Apply
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </Card>
+        </Col>
 
-      <div className="mt-6">
-        {isPasswordEditing ? (
-          <form onSubmit={handlePasswordSave}>
-            <p>Change Password:</p>
-            <input
-              type="password"
-              name="oldPassword"
-              value={passwordForm.oldPassword}
-              onChange={handlePasswordChange}
-              placeholder="Old Password"
-              className="border p-2 w-full"
-            />
-            <input
-              type="password"
-              name="newPassword"
-              value={passwordForm.newPassword}
-              onChange={handlePasswordChange}
-              placeholder="New Password"
-              className="border p-2 w-full"
-            />
-            <input
-              type="password"
-              name="confirmPassword"
-              value={passwordForm.confirmPassword}
-              onChange={handlePasswordChange}
-              placeholder="Confirm New Password"
-              className="border p-2 w-full"
-            />
+        {/* RIGHT: Security / Password */}
+        <Col xs={24} md={12}>
+          <Card className="settings-card" bordered>
+            <Space align="center" size={12} className="settings-header">
+              <LockOutlined style={{ fontSize: 22 }} />
+              <Title level={4} style={{ margin: 0 }}>
+                Security
+              </Title>
+            </Space>
 
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
-            >
-              Save Password
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsPasswordEditing(false)}
-              className="bg-gray-400 text-white px-4 py-2 rounded mt-2"
-            >
-              Cancel
-            </button>
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsPasswordEditing(true)}
-            className="bg-yellow-500 text-white px-4 py-2 rounded"
-          >
-            Change Password
-          </button>
-        )}
-      </div>
-    </>
+            <Divider />
+
+            {/* Always visible, disabled until Edit; explicit Apply button */}
+            <div className="settings-form">
+              <label className="settings-label" htmlFor="oldPassword">
+                Old Password
+              </label>
+              <Input.Password
+                id="oldPassword"
+                name="oldPassword"
+                value={passwordForm.oldPassword}
+                onChange={handlePasswordChange}
+                placeholder="Old Password"
+                disabled={!isPasswordEditing}
+                className="settings-input"
+              />
+
+              <label className="settings-label" htmlFor="newPassword">
+                New Password
+              </label>
+              <Input.Password
+                id="newPassword"
+                name="newPassword"
+                value={passwordForm.newPassword}
+                onChange={handlePasswordChange}
+                placeholder="New Password"
+                disabled={!isPasswordEditing}
+                className="settings-input"
+              />
+
+              <label className="settings-label" htmlFor="confirmPassword">
+                Confirm New Password
+              </label>
+              <Input.Password
+                id="confirmPassword"
+                name="confirmPassword"
+                value={passwordForm.confirmPassword}
+                onChange={handlePasswordChange}
+                placeholder="Confirm New Password"
+                disabled={!isPasswordEditing}
+                className="settings-input"
+              />
+
+              <div className="settings-actions">
+                {!isPasswordEditing ? (
+                  <>
+                    <Button
+                      type="default"
+                      onClick={() => setIsPasswordEditing(true)} 
+                    >
+                      Edit
+                    </Button>
+                    <Button type="primary" disabled>
+                      Apply
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="default"
+                      onClick={() => {
+                        setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+                        setIsPasswordEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="primary"
+                      onClick={handlePasswordSave}  
+                    >
+                      Apply
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 }

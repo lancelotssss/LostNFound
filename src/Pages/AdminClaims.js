@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Table, Button, Modal, Descriptions, Image, message } from "antd";
 import { jwtDecode } from "jwt-decode";
-import { getClaimReport, getClaimDetails, approveClaim } from "../api";
+import { getClaimReport, getClaimDetails, approveClaim, completeTransaction } from "../api";
 
 const { Column } = Table;
 
@@ -14,14 +14,15 @@ export const AdminClaims = () => {
   const [denyModal, setDenyModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [completeLoading, setCompleteLoading] = useState(false);
 
-  // Decode JWT
+  
   useEffect(() => {
     const token = sessionStorage.getItem("User");
     if (token) setUser(jwtDecode(token));
   }, []);
 
-  // Fetch all claimable items
+  
   const fetchData = async () => {
     const token = sessionStorage.getItem("User");
     if (!token) return message.error("Not authorized");
@@ -44,7 +45,7 @@ export const AdminClaims = () => {
     fetchData();
   }, []);
 
-  // On row click
+  
   const handleRowClick = async (record) => {
     setSelectedItem(record);
     setIsModalVisible(true);
@@ -69,7 +70,7 @@ export const AdminClaims = () => {
     const success = await approveClaim(
       token,
       selectedItem._id,
-      "Claimed",
+      "Claim Approved",
       user?.studentId
     );
 
@@ -90,7 +91,7 @@ export const AdminClaims = () => {
     const success = await approveClaim(
       token,
       selectedItem._id,
-      "Claim Denied",
+      "Claim Rejected",
       user?.studentId
     );
 
@@ -105,6 +106,23 @@ export const AdminClaims = () => {
     setConfirmLoading(false);
   };
 
+  const handleComplete = async () => {
+  setCompleteLoading(true);
+  const token = sessionStorage.getItem("User");
+  
+  try {
+    await completeTransaction(token, selectedItem._id, "Completed" ,user?.studentId);
+    message.success("Transaction completed successfully!");
+    setIsModalVisible(false);
+    fetchData();
+  } catch (err) {
+    console.error("Error completing transaction:", err);
+    message.error("Failed to complete transaction.");
+  }
+  
+  setCompleteLoading(false);
+};
+
   return (
     <>
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
@@ -118,6 +136,7 @@ export const AdminClaims = () => {
           style: { cursor: "pointer" },
         })}
       >
+        <Column title="Claim ID" dataIndex="cid" key="cid" />
         <Column title="Claimer ID" dataIndex="claimerId" key="claimerId" />
         <Column title="Claim Status" dataIndex="claimStatus" key="claimStatus" />
         <Column title="Created At" dataIndex="createdAt" key="createdAt" />
@@ -203,13 +222,36 @@ export const AdminClaims = () => {
         )}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
-          <Button type="primary" onClick={handleApprove} disabled={selectedItem?.status === "Claimed"}>
-            Approve
-          </Button>
-          <Button danger onClick={handleDeny} disabled={selectedItem?.status === "Claim Denied"}>
-            Deny
-          </Button>
-          <Button onClick={handleModalClose}>Close</Button>
+   <Button
+  type="default"
+  onClick={handleComplete}
+  disabled={selectedItem?.claimStatus !== "Claim Approved"}
+  loading={completeLoading}
+>
+  Complete
+</Button>
+
+<Button
+  type="primary"
+  onClick={handleApprove}
+  disabled={
+    !(selectedItem?.claimStatus === "Reviewing Claim" || selectedItem?.claimStatus === "Claim Rejected")
+  }
+>
+  Approve
+</Button>
+
+<Button
+  danger
+  onClick={handleDeny}
+  disabled={
+    !(selectedItem?.claimStatus === "Reviewing Claim" || selectedItem?.claimStatus === "Claim Approved")
+  }
+>
+  Deny
+</Button>
+
+<Button onClick={handleModalClose}>Close</Button>
         </div>
       </Modal>
 

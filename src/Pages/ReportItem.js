@@ -1,6 +1,11 @@
-import React, { useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Steps, Button, Card, Typography, Input, Select, DatePicker, message } from "antd";
+import { DownloadOutlined, SearchOutlined } from '@ant-design/icons';
+import dayjs from "dayjs";
+import "./styles/ReportItem.css";
 import { createReport } from "../api";
 
+const { Title } = Typography;
 
 export default function ReportItem() {
   const [registerData, setRegisterData] = useState({
@@ -15,34 +20,52 @@ export default function ReportItem() {
     description: "",
     photoUrl: "",
     title: "",
-    file: null, // include file for upload
+    file: null,
+    file: null, 
   });
 
-  function handleChange(e) {
-    const { name, value } = e.target;
+  const [current, setCurrent] = useState(0);
 
-    if (name === "reportType") {
-      setRegisterData({
-        reportType: value,
-        category: "",
-        keyItem: "",
-        itemBrand: "",
-        location: "",
-        startDate: "",
-        endDate: "",
-        dateFound: "",
-        description: "",
-        photoUrl: "",
-        title: "",
-        file: null,
-      });
-    } else {
-      setRegisterData({ ...registerData, [name]: value });
+
+  /*useEffect(() => {
+    if (current === 1) {
+      setRegisterData((prev) => ({ ...prev, category: "" }));
     }
+  }, [current]);
+  */
+
+
+  function setField(name, value) {
+    setRegisterData((prev) => ({ ...prev, [name]: value }));
   }
 
+  function handleChange(e) {
+  const { name, value } = e.target;
+
+  if (name === "reportType") {
+    setRegisterData({
+      reportType: value,
+      category: "",
+      keyItem: "",
+      itemBrand: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      dateFound: "",
+      description: "",
+      photoUrl: "",
+      title: "",
+      file: null,
+    });
+    setCurrent(1);
+  } 
+  else {
+    setField(name, value);
+  }
+}
+
   function handleFileChange(e) {
-    setRegisterData({ ...registerData, file: e.target.files[0] });
+    setField("file", e.target.files?.[0] ?? null);
   }
 
   async function handleSubmit(e) {
@@ -55,12 +78,12 @@ export default function ReportItem() {
         return;
       }
 
-      // Generate dynamic title
+      
       const { reportType, category, keyItem, itemBrand } = registerData;
       const brandPart = itemBrand ? `, ${itemBrand}` : "";
       const generatedTitle = `${reportType} Item: ${category}: ${keyItem}${brandPart}`;
 
-      // Prepare FormData to include file if present
+      
       const formData = new FormData();
       for (const key in registerData) {
         if (key === "file" && registerData.file) {
@@ -79,17 +102,346 @@ export default function ReportItem() {
 
       const data = await response.json();
       if (data.success) {
-        alert("Report submitted successfully!");
+        message.success("Report submitted successfully!");
+        setRegisterData({
+          reportType: "",
+          category: "",
+          keyItem: "",
+          itemBrand: "",
+          location: "",
+          startDate: "",
+          endDate: "",
+          dateFound: "",
+          description: "",
+          photoUrl: "",
+          title: "",
+          file: null,
+        });
+        setCurrent(0);
       } else {
-        console.log(data);
-        alert("Report submission failed");
+        message.error("Report submission failed");
       }
     } catch (err) {
       console.error("Error submitting report:", err);
-      alert("Error submitting report");
+      message.error("Error submitting report");
     }
   }
 
+  const steps = [
+    { title: "Choose Type of Report", description: "Select Lost or Found" },
+    { title: "Select Category", description: "Pick the closest category" },
+    { title: "Item Details", description: "Name the item + brand" },
+    { title: "When & Where", description: "Location and dates" },
+    { title: "Describe & Upload", description: "Extra info and photo" },
+  ];
+
+  const handleStepChange = (value) => {
+    if (value <= current) setCurrent(value); 
+  };
+
+  const canGoNextFrom3 = registerData.keyItem?.trim();
+  const canGoNextFrom4 = (() => {
+    if (!registerData.location?.trim()) return false;
+    if (registerData.reportType === "Lost")
+      return Boolean(registerData.startDate && registerData.endDate);
+    if (registerData.reportType === "Found")
+      return Boolean(registerData.dateFound);
+    return false;
+  })();
+
+
+  const disableFuture = (cur) => cur && cur > dayjs().endOf("day");
+
+  // -------------------- Step content  --------------------
+  const StepOne = (
+    <div className="step-one">
+      <Title level={4} className="step-title">WHAT DO YOU WANT TO REPORT</Title>
+      <div className="step-one-container">
+
+        <Button
+          size="large"
+          className="step-one-button"
+          onClick={() => { setField("reportType", "Lost"); setCurrent(1); }}
+        >
+          <div className="step-one-button-inner">
+            <SearchOutlined className="step-one-button-icon" />
+            <span className="step-one-button-title">REPORT MISSING ITEM</span>
+            <span className="step-one-button-desc">
+              Submit details about an item you lost or found so it can be recorded and matched in the system.
+            </span>
+          </div>
+        </Button>
+
+        <Button
+          size="large"
+          className="step-one-button"
+          onClick={() => { setField("reportType", "Found"); setCurrent(1); }}
+        >
+          <div className="step-one-button-inner">
+            <DownloadOutlined className="step-one-button-icon" />
+            <span className="step-one-button-title">REPORT FOUND ITEM</span>
+            <span className="step-one-button-desc">
+              Share where and when you found it so owners can identify and claim their items.
+            </span>
+          </div>
+        </Button>
+
+      </div>
+    </div>
+  );
+
+  const StepTwo = (
+  <div className="step-two">
+    <Title level={4} className="step-title">
+      {registerData.reportType === "Found"
+        ? "WHAT CATEGORY OF AN ITEM DID YOU FIND?"
+        : "WHAT CATEGORY OF AN ITEM DID YOU LOSE?"}
+    </Title>
+
+    <Select
+      placeholder="SELECT A CATEGORY"
+      value={registerData.category || undefined}
+      onChange={(val) => {
+        setRegisterData((prev) => ({
+          ...prev,
+          category: val,
+          keyItem: "", 
+        }));
+        setCurrent(2);
+      }}
+      className="field-wide"
+      options={[
+        { value: "Gadgets", label: "Gadgets" },
+        { value: "Identification Card", label: "Identification Card" },
+        { value: "Personal Belongings", label: "Personal Belongings" },
+        { value: "School Supplies", label: "School Supplies" },
+        { value: "Wearables", label: "Wearables" },
+        { value: "Others", label: "Others" },
+
+      ]}
+    />
+  </div>
+);
+
+
+  const StepThree = (
+  <div className="step-three">
+    <Title level={4} className="step-title">
+      {registerData.reportType === "Found"
+        ? "WHAT ITEM DID YOU FIND?"
+        : "WHAT ITEM DID YOU LOSE?"}
+    </Title>
+
+    <div className="field-col">
+      {/* Category-based item selection */}
+      {registerData.category === "Others" ? (
+        <Input
+          name="keyItem"
+          placeholder="Enter Item"
+          value={registerData.keyItem}
+          onChange={handleChange}
+          className="field-wide"
+        />
+      ) : (
+        <Select
+          placeholder="Select an Item"
+          value={registerData.keyItem || undefined}
+          onChange={(val) => setField("keyItem", val)}
+          className="field-wide"
+          disabled={!registerData.category}
+          options={
+            registerData.category === "Gadgets"
+              ? [
+                  { value: "Audio Device", label: "Audio Device" },
+                  { value: "Calculator", label: "Calculator" },
+                  { value: "Charging Utilities", label: "Charging Utilities" },
+                  { value: "CPU", label: "CPU" },
+                  { value: "Laptop", label: "Laptop" },
+                  { value: "Mobile Device", label: "Mobile Device" },
+                  { value: "Power Bank", label: "Power Bank" },
+                  { value: "Watch", label: "Watch" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "Personal Belongings"
+              ? [
+                  { value: "Accessories", label: "Accessories" },
+                  { value: "Bag", label: "Bag" },
+                  { value: "Cosmetic Products", label: "Cosmetic Products" },
+                  { value: "Handkerchief", label: "Handkerchief" },
+                  { value: "Keys", label: "Keys" },
+                  { value: "Tumbler", label: "Tumbler" },
+                  { value: "Umbrella", label: "Umbrella" },
+                  { value: "Wallet", label: "Wallet" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "School Supplies"
+              ? [
+                  { value: "Architecture Materials", label: "Architecture Materials" },
+                  { value: "Books", label: "Books" },
+                  { value: "Medical Materials", label: "Medical Materials" },
+                  { value: "Office Supplies", label: "Office Supplies" },
+                  { value: "Pen", label: "Pen" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "Wearables"
+              ? [
+                  { value: "Cap", label: "Cap" },
+                  { value: "Eyeglass", label: "Eyeglass" },
+                  { value: "Foot Wearables", label: "Foot Wearables" },
+                  { value: "Hat", label: "Hat" },
+                  { value: "Jacket", label: "Jacket" },
+                  { value: "Lab Gown", label: "Lab Gown" },
+                  { value: "T-shirt", label: "T-shirt" },
+                  { value: "Trousers", label: "Trousers" },
+                  { value: "Uniform", label: "Uniform" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "Identification Card"
+              ? [
+                  { value: "Driver’s License", label: "Driver’s License" },
+                  { value: "National ID", label: "National ID" },
+                  { value: "Passport", label: "Passport" },
+                  { value: "School ID", label: "School ID" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : []
+          }
+        />
+      )}
+
+      {/* Hide item brand if category is Identification Card */}
+      {registerData.category !== "Identification Card" && (
+        <Input
+          name="itemBrand"
+          placeholder="ITEM BRAND (optional)"
+          value={registerData.itemBrand}
+          onChange={handleChange}
+          className="field-wide"
+        />
+      )}
+    </div>
+  </div>
+);
+
+
+  const StepFour = (
+    <div className="step-four">
+      <Title level={4} className="step-title">
+        {registerData.reportType === "Found"
+          ? "WHEN AND WHERE DID YOU FIND THE ITEM?"
+          : "WHEN AND WHERE DID YOU LOSE THE ITEM?"}
+      </Title>
+      <div className="field-col">
+        <Input
+          name="location"
+          placeholder="LOCATION"
+          value={registerData.location}
+          onChange={handleChange}
+          className="field-wide"
+        />
+
+        {registerData.reportType === "Lost" ? (
+          <div className="date-row">
+            <DatePicker
+              className="field-half"
+              placeholder="START DATE"
+              value={registerData.startDate ? dayjs(registerData.startDate) : null}
+              onChange={(_, dateStr) => setField("startDate", dateStr)}
+              disabledDate={disableFuture}
+            />
+            <DatePicker
+              className="field-half"
+              placeholder="END DATE"
+              value={registerData.endDate ? dayjs(registerData.endDate) : null}
+              onChange={(_, dateStr) => setField("endDate", dateStr)}
+              disabledDate={disableFuture}
+            />
+          </div>
+        ) : (
+          <DatePicker
+            className="field-wide"
+            placeholder="DATE FOUND"
+            value={registerData.dateFound ? dayjs(registerData.dateFound) : null}
+            onChange={(_, dateStr) => setField("dateFound", dateStr)}
+            disabledDate={disableFuture}
+          />
+        )}
+      </div>
+    </div>
+  );
+
+  const StepFive = (
+    <div className="step-five">
+      <Title level={4} className="step-title">
+        {registerData.reportType === "Found"
+          ? "PLEASE DESCRIBE THE ITEM. A PHOTO WOULD HELP."
+          : "PLEASE DESCRIBE YOUR MISSING ITEM. A PHOTO WOULD HELP."}
+      </Title>
+      <div className="field-col">
+        <Input.TextArea
+          name="description"
+          rows={4}
+          placeholder="DESCRIPTION"
+          value={registerData.description}
+          onChange={handleChange}
+          className="field-wide"
+        />
+        <input type="file" name="file" onChange={handleFileChange} />
+      </div>
+    </div>
+  );
+
+  const content = useMemo(() => {
+    switch (current) {
+      case 0: return StepOne;
+      case 1: return StepTwo;
+      case 2: return StepThree;
+      case 3: return StepFour;
+      case 4: return StepFive;
+      default: return StepOne;
+    }
+  }, [current, registerData]);
+
+  return (
+    <form onSubmit={handleSubmit} className="report-wrap">
+      <Card className="report-card">
+        <Steps
+        size="small"
+          current={current}
+          onChange={handleStepChange}
+          items={steps.map(s => ({ title: s.title, description: s.description }))}
+        />
+
+        <div className="step-content">{content}</div>
+
+        <div className="footer-actions">
+          <Button className="footer-buttons" disabled={current === 0} onClick={() => setCurrent(p => Math.max(p - 1, 0))}>
+            Back
+          </Button>
+          {current === 2 && (
+            <Button className="footer-buttons" type="primary" disabled={!canGoNextFrom3} onClick={() => setCurrent(3)}>
+              Next
+            </Button>
+          )}
+          {current === 3 && (
+            <Button className="footer-buttons" type="primary" disabled={!canGoNextFrom4} onClick={() => setCurrent(4)}>
+              Next
+            </Button>
+          )}
+          {current === 4 && (
+            <Button className="footer-buttons" type="primary" htmlType="submit">
+              Confirm
+            </Button>
+          )}
+        </div>
+      </Card>
+    </form>
+  );
   return (
   <form onSubmit={handleSubmit}>
     <h1>Lost and Found Report</h1>

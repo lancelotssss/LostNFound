@@ -69,7 +69,7 @@ userRoutes.route("/register").post(async (req, res) => {
       password: hash,
       studentId: req.body.studentId || "",
       phone: req.body.phone || "",
-      status: "active",
+      status: "Active",
       lastLogin: "Not logged in.",
       availableClaim: 3,
       availableFound: 5,
@@ -87,7 +87,7 @@ userRoutes.route("/register").post(async (req, res) => {
       performedBy: "System",
       timestamp: new Date(),
       ticketId: "",
-      details: `User ${mongoObject.email} registered successfully.`,
+      details: `User ${mongoObject.studentId} registered successfully.`,
     };
 
     await db.collection("audit_db").insertOne(mongoAuditObject);
@@ -111,7 +111,7 @@ userRoutes.route("/users/logout").post(verifyToken, async (req, res) => {
 
   const mongoAuditObject = {
     aid: `A-${Date.now()}`,
-    action: "LOG_OUT",
+    action: "LOGOUT",
     targetUser: user.studentId,
     performedBy: "System",
     timestamp: new Date(),
@@ -197,7 +197,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       });
     }
 
-    // 🔹 Fetch Lost and Found reports
+    
     const lostReports = await db
       .collection("lost_found_db")
       .find({ reportedBy: studentId, reportType: "Lost" })
@@ -208,19 +208,21 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       .find({ reportedBy: studentId, reportType: "Found" })
       .toArray();
 
-    // 🔹 Fetch Claim reports with JOIN from lost_found_db
+   
     const claimReports = await db.collection("claims_db")
+    //.find ({claimerId: studentId})
+    
       .aggregate([
         {
           $match: {
             claimerId: studentId,
             claimStatus: {
-              $in: ["Pending", "Pending Approval", "Claim Approved", "Claimed", "Claim Rejected"]
+              $in: ["Reviewing Claim", "Claim Approved", "Completed", "Claim Rejected"]
             }
           }
         },
         {
-          // JOIN lost_found_db on selectedLostId
+          
           $lookup: {
             from: "lost_found_db",
             localField: "selectedLostId",
@@ -241,7 +243,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
             dateReported: "$lostItemDetails.dateReported",
             dateFound: "$lostItemDetails.dateFound",
             description: "$lostItemDetails.description",
-            photoUrl: "$lostItemDetails.photoUrl", // ✅ add the lost/found image
+            photoUrl: "$lostItemDetails.photoUrl", 
             tid: "$lostItemDetails.tid",
             reportedBy: "$lostItemDetails.reportedBy",
             approvedBy: "$lostItemDetails.approvedBy",
@@ -253,6 +255,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
           }
         }
       ])
+        
       .toArray();
 
     res.json({
@@ -275,7 +278,7 @@ userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
     const studentId = req.user?.studentId;
     const reportId = req.params.id;
 
-    // Validate ownership
+    
     const report = await db.collection("lost_found_db").findOne({
       _id: new ObjectId(reportId),
       reportedBy: studentId,
@@ -291,7 +294,7 @@ userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
       { $set: { status: "Deleted", updatedAt: new Date() } }
     );
 
-    // Audit log
+    
     const audit = {
       aid: `A-${Date.now()}`,
       action: "DELETE_REPORT",
@@ -299,7 +302,7 @@ userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
       performedBy: studentId,
       timestamp: new Date(),
       ticketId: report.tid || "",
-      details: `${studentId} marked report '${report.title}' as Deleted.`,
+      details: `${studentId} deleted a report ${report.tid}.`,
     };
     await db.collection("audit_db").insertOne(audit);
 
@@ -315,7 +318,7 @@ userRoutes.get("/claim-items/:id", verifyToken, async (req, res) => {
     const db = database.getDb();
     const claimId = req.params.id;
 
-    // 1️⃣ Find claim record first
+    
     const claim = await db.collection("claims_db").findOne({ _id: new ObjectId(claimId) });
 
     if (!claim) {
@@ -325,7 +328,7 @@ userRoutes.get("/claim-items/:id", verifyToken, async (req, res) => {
       });
     }
 
-    // 2️⃣ Find related lost and found items using IDs from claim
+    
     const lostItem = claim.selectedLostId
       ? await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.selectedLostId) })
       : null;
@@ -386,7 +389,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
       category: req.body.category || "No category",
       itemBrand: req.body.itemBrand || "No brand provided",
       description: req.body.description || "No description provided",
-      status: "Pending",
+      status: "Reviewing",
       reportType: req.body.reportType,
       reportedBy: studentId,
       approvedBy: "",
@@ -407,7 +410,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
       aid: `A-${Date.now()}`,
       action:
         reportType === "lost"
-          ? "SUBMIT_MISSING"
+          ? "SUBMIT_LOST"
           : reportType === "found"
           ? "SUBMIT_FOUND"
           : "UNKNOWN",
@@ -417,7 +420,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
       ticketId: mongoReport.tid,
       details:
         reportType === "lost"
-          ? `${studentId} filed a missing item ${mongoReport.tid}.`
+          ? `${studentId} filed a lost item ${mongoReport.tid}.`
           : reportType === "found"
           ? `${studentId} filed a found item ${mongoReport.tid}.`
           : `${studentId} filed a report ${mongoReport.tid}.`,
@@ -534,77 +537,6 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
 });
 
 
-//------------------------------------------------------------------------SEARCH------------------------------------------------------------------------
-// userRoutes.js
-/*userRoutes.post("/search/item", verifyToken, async (req, res) => {
-  try {
-    const db = database.getDb();
-    const { keyItem, category, location, itemBrand, startDate, endDate } = req.body;
-
-    let query = {
-      reportType: "Found",
-      status: "Active",    
-    };
-
-    if (!category) {
-      return res.status(400).json({
-        success: false,
-        message: "Category is required for search",
-      });
-    }
-    query.category = category;
-
-  
-    if (!startDate || !endDate) {
-      return res.status(400).json({
-        success: false,
-        message: "Start and End dates are required",
-      });
-    }
-
-    let start = new Date(startDate);
-    let end = new Date(endDate);
-
-    if (isNaN(start) || isNaN(end)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid date format",
-      });
-    }
-
-    start.setUTCHours(0, 0, 0, 0);
-    end.setUTCHours(23, 59, 59, 999);
-
-    query.dateFound = { $gte: start, $lte: end };
-    if (keyItem) {
-      query.keyItem = { $regex: keyItem, $options: "i" };
-    }
-    if (location) {
-      query.location = { $regex: location, $options: "i" };
-    }
-    if (itemBrand) {
-      query.itemBrand = { $regex: itemBrand, $options: "i" };
-    }
-
-    const results = await db.collection("lost_found_db").find(query).toArray();
-    console.log(results);
-
-    if (!results || results.length === 0) {
-      return res.status(200).json({
-        success: false,
-        results: [],
-        message: "No items matched the strict filters",
-      });
-    }
-
-    res.status(200).json({ success: true, results });
-
-  } catch (err) {
-    console.error("Error in search:", err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-*/
 
 userRoutes.post("/similar-items", verifyToken, async (req, res) => {
   try {
@@ -633,7 +565,7 @@ userRoutes.post("/similar-items", verifyToken, async (req, res) => {
     // Build query
     const query = {
       reportType: "Found",
-      status: "Active",
+      status: "Listed",
       _id: { $ne: new ObjectId(selectedItemId) },
       reportedBy: { $ne: studentId },
       category,
@@ -691,7 +623,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
       claimerId: studentId,
       reason,
       adminDecisionBy: "No actions yet",
-      claimStatus: "Pending Approval",
+      claimStatus: "Reviewing Claim",
       createdAt: new Date(),
       photoUrl,
       selectedLostId: selectedLostId || null,
@@ -700,11 +632,33 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
 
     await db.collection("claims_db").insertOne(mongoClaim);
 
-    
+    // Update the original item status
     await db.collection("lost_found_db").updateOne(
-    { _id: new ObjectId(itemId) }, 
-    { $set: { claimedBy: studentId, status: "Pending Claim" } } 
-  );
+      { _id: new ObjectId(itemId) },
+      { $set: { claimedBy: studentId, status: "Pending Claim" } }
+    );
+
+    // Update selectedLostId and lostReferenceFound status to "Reviewing Claim"
+    const updates = [];
+    if (selectedLostId) {
+      updates.push(
+        db.collection("lost_found_db").updateOne(
+          { _id: new ObjectId(selectedLostId) },
+          { $set: { status: "Reviewing Claim" } }
+        )
+      );
+    }
+
+    if (lostReferenceFound) {
+      updates.push(
+        db.collection("lost_found_db").updateOne(
+          { _id: new ObjectId(lostReferenceFound) },
+          { $set: { status: "Reviewing Claim" } }
+        )
+      );
+    }
+
+    await Promise.all(updates);
 
     // Log audit
     const auditMongo = {
@@ -725,6 +679,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 
 module.exports = userRoutes
