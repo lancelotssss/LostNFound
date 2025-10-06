@@ -113,7 +113,7 @@ export const Home  = () => {
   };
  
   const handleDispose = async (id, type) => {
-    const confirm = window.confirm("Are you sure you want to dispose this report?");
+    const confirm = window.confirm("Are you sure you want to delete this report?");
     if (!confirm) return;
  
     try {
@@ -134,10 +134,10 @@ export const Home  = () => {
           handleModalClose();
         }
       } else {
-        message.error("Failed to dispose report");
+        message.error("Failed to delete report");
       }
     } catch (err) {
-      console.error("Dispose error:", err);
+      console.error("Delete error:", err);
       message.error("An error occurred while disposing the report.");
     }
   };
@@ -197,7 +197,7 @@ const handleClaimRowClick = async (record) => {
         <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
         <Column title="Status" dataIndex="status" key="status" />
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
-        <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+        
       </Table>
  
       <h1>MY FOUND TABLE</h1>
@@ -240,7 +240,7 @@ const handleClaimRowClick = async (record) => {
             danger
             onClick={() => handleDispose(selectedItem._id, selectedItem.reportType)}
           >
-            Dispose
+            Delete
           </Button>,
         ]}
         width={700}
