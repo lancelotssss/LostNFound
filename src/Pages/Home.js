@@ -24,6 +24,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./styles/Home.css";
 
+    import { Typography } from 'antd';
+    const { Text, Paragraph } = Typography;
 const { Column } = Table;
 
 export const Home = () => {
@@ -321,12 +323,6 @@ const fetchData = async (tkn) => {
 
   return (
     <div className="main-container">
-      {/* HEADER */}
-      <div className="home-header">
-        <p className="home-header__welcome">
-          GOOD DAY, {user ? user.name : "Guest"}!
-        </p>
-      </div>
 
       {/* OVERVIEW CARDS (yours) */}
       <div className="overview">
@@ -637,6 +633,10 @@ const fetchData = async (tkn) => {
 >
   {claimDetails ? (
     <div className="claim-details-grid">
+      <div className="h1h2container">
+        <h1 className="claim-details-grid-h1">CLAIM TRANSACTION NO.</h1>
+        <h2 className="claim-details-grid-h2"><Text className="claim-details-grid-h2-Text" copyable>{claimDetails.claim.cid}</Text></h2>
+      </div>
       {/* Found Item */}
         <h3 className="claim-section-h3">Found Item Information</h3>
       <div className="claim-col claim-section">

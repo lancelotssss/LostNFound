@@ -19,6 +19,24 @@ import {
 import { UserOutlined, PhoneOutlined, LockOutlined } from "@ant-design/icons";
 import "./styles/UserSettings.css";
 
+
+
+
+
+// Helper: get initials from a full name
+const getInitials = (name = "") =>
+  name
+    .trim()
+    .split(/\s+/)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+
+
+
+
 const { Title, Text } = Typography;
 
 export function UserSettings() {
@@ -155,7 +173,13 @@ export function UserSettings() {
         <Col xs={24} md={12}>
           <Card className="settings-card" bordered>
             <Space align="center" size={16} className="settings-header">
+            {user?.name ? (
+              <Avatar size={64} style={{ backgroundColor: '#014F86' }}>
+                {getInitials(user.name)}
+              </Avatar>
+            ) : (
               <Avatar size={64} icon={<UserOutlined />} />
+            )}
               <div>
                 <Title level={4} style={{ margin: 0 }}>
                   {user?.name || "—"}
