@@ -40,6 +40,8 @@ const getInitials = (name = "") =>
 const { Title, Text } = Typography;
 
 export function UserSettings() {
+
+
   const [user, setUser] = useState({});
   const [formData, setFormData] = useState({
     studentId: "",
@@ -106,7 +108,9 @@ export function UserSettings() {
       } else {
         alert("Phone number updated successfully!");
         setUser({ ...user, phone: formData.phone });
+        setFormData((prev) => ({ ...prev, phone: formData.phone }));
         setIsEditing(false);
+        
       }
     } catch (err) {
       console.error("Error updating phone:", err);

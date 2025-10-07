@@ -21,11 +21,10 @@ export default function ReportItem() {
     photoUrl: "",
     title: "",
     file: null,
-    file: null, 
   });
 
   const [current, setCurrent] = useState(0);
-
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (current === 1) {
@@ -71,6 +70,8 @@ export default function ReportItem() {
   async function handleSubmit(e) {
     e.preventDefault();
 
+    if (submitting) return;
+    setSubmitting(true);
     try {
       const token = sessionStorage.getItem("User");
       if (!token) {
@@ -124,6 +125,8 @@ export default function ReportItem() {
     } catch (err) {
       console.error("Error submitting report:", err);
       message.error("Error submitting report");
+    } finally{
+      setSubmitting(false)
     }
   }
 
@@ -434,10 +437,16 @@ export default function ReportItem() {
             </Button>
           )}
           {current === 4 && (
-            <Button className="footer-buttons" type="primary" htmlType="submit">
-              Confirm
-            </Button>
-          )}
+          <Button
+            className="footer-buttons"
+            type="primary"
+            htmlType="submit"
+            loading={submitting} // shows spinner
+            disabled={submitting} // blocks extra clicks
+          >
+            {submitting ? "Submitting..." : "Confirm"}
+          </Button>
+        )}
         </div>
       </Card>
     </form>

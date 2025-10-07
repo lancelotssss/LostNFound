@@ -8,8 +8,8 @@ import {
   SettingOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { Menu } from "antd";
 import { logOutUser } from "../api";
+import { Menu, Modal } from "antd";
 
 export const pageDataClient = [
   { key: "home", name: "Home", path: "/cli/home", icon: <HomeOutlined /> },
@@ -25,6 +25,7 @@ export function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [openKeys, setOpenKeys] = useState([]);
+  const { confirm } = Modal; 
 
   async function handleLogout() {
     const token = sessionStorage.getItem("User");
@@ -49,7 +50,7 @@ export function NavBar() {
   );
 
   const onClick = ({ key }) => {
-    if (key === "logout") handleLogout();
+    if (key === "logout") showLogoutConfirm();
   };
 
   // Highlight the active item based on current URL
@@ -59,6 +60,16 @@ export function NavBar() {
     );
     return [match?.key ?? pageDataClient[0].key];
   }, [location.pathname]);
+
+  function showLogoutConfirm() {
+  confirm({
+    title: "Are you sure you want to log out?",
+    okText: "Log out",
+    cancelText: "Cancel",
+    centered: true,
+    onOk: handleLogout,  
+  });
+}
 
   return (
     <Menu

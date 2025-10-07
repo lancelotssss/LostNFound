@@ -1,8 +1,7 @@
 import { Card, Input, Checkbox, Button } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./styles/LoginForm.css";
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { verifyUser } from "../api";
 import axios from "axios";
 
@@ -13,41 +12,59 @@ function LoginForm() {
     password: "",
   });
 
+  const [errors, setErrors] = useState({}); // NEW: for inline validation errors
   const navigate = useNavigate();
 
   function handleChange(e) {
     const { name, value } = e.target;
     setLoginData({ ...loginData, [name]: value });
+    setErrors((prev) => ({ ...prev, [name]: "" })); // clear specific error as user types
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (!loginData.email.trim() || !loginData.password.trim()) {
-    alert("Email and password fields cannot be empty.");
-    return; 
+    const { email, password } = loginData;
+    const newErrors = {};
+
+    // 🔍 Frontend validation
+    if (!email.trim()) newErrors.email = "Email is required.";
+    if (!password.trim()) newErrors.password = "Password is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
     }
 
-    //do not touch
-    let response = await verifyUser(loginData);
+    try {
+      // do not touch backend logic
+      let response = await verifyUser(loginData);
 
-    if (response && response.token) {
-      sessionStorage.setItem("User", response.token);
-      axios.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${response.token}`;
+      if (response && response.token) {
+        sessionStorage.setItem("User", response.token);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${response.token}`;
 
-      if (response.role === "student") {
-        navigate("/cli/home");
-      } else if (response.role === "admin") {
-        navigate("/main/found-items");
+        if (response.role === "student") {
+          navigate("/cli/home");
+        } else if (response.role === "admin") {
+          navigate("/main/found-items");
+        } else {
+          setErrors({ general: "Unknown user role." });
+        }
       } else {
-        alert("Unknown user");
+        // Login failed (no token returned)
+        setErrors({ general: "Incorrect email or password." });
+        setLoginData({ ...loginData, password: "" }); // clear password
       }
-    } else {
-      alert("Login failed");
+    } catch (err) {
+      // Handle backend or network errors
+      if (err.response?.status === 401) {
+        setErrors({ general: "Invalid email or password." });
+      } else {
+        setErrors({ general: "Login failed. Please try again." });
+      }
+      setLoginData({ ...loginData, password: "" }); // clear password
     }
-    //safe
   }
   // ---------- ERICK CODE ----------
 
@@ -55,10 +72,10 @@ function LoginForm() {
     <>
       <Card className="container-card">
         <div className="login-container">
-          {/* TITLE <----- */}
+          {/* TITLE */}
           <p className="login-title">SIGN IN YOUR ACCOUNT</p>
 
-          {/* LOGIN INPUTS <----- */}
+          {/* LOGIN INPUTS */}
           <form className="login-form" onSubmit={handleSubmit}>
             <p className="label-email">E-MAIL</p>
             <Input
@@ -70,6 +87,9 @@ function LoginForm() {
               value={loginData.email}
               onChange={handleChange}
             />
+            {errors.email && (
+              <div style={{ color: "red", marginTop: 4 }}>{errors.email}</div>
+            )}
 
             <p className="label-password">PASSWORD</p>
             <Input.Password
@@ -81,8 +101,12 @@ function LoginForm() {
               value={loginData.password}
               onChange={handleChange}
             />
+            {errors.password && (
+              <div style={{ color: "red", marginTop: 4 }}>{errors.password}</div>
+            )}
           </form>
-
+            
+          {/* REMEMBER ME + FORGOT PASSWORD */}
           <div className="login-chk-forgot">
             <Checkbox id="login-remember">
               <p id="chkbox-p">REMEMBER ME</p>
@@ -92,17 +116,33 @@ function LoginForm() {
             </p>
           </div>
 
+          {/* SUBMIT BUTTON */}
           <Button
             id="login-btn"
             size="large"
             className="login-btn"
             type="primary"
-            htmlType="submit" // <-- this is the key
-            onClick={handleSubmit} // <-- this is the key
+            htmlType="submit"
+            onClick={handleSubmit}
           >
             LOGIN
           </Button>
 
+          {/* GENERAL ERROR MESSAGE */}
+          {errors.general && (
+            <div
+              style={{
+                color: "red",
+                textAlign: "center",
+                marginTop: 12,
+                fontWeight: 500,
+              }}
+            >
+              {errors.general}
+            </div>
+          )}
+
+          {/* SIGN UP LINK */}
           <p className="login-to-register">
             Don't have an account? <Link to="/register">SIGN UP HERE</Link>
           </p>

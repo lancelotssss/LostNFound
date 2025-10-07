@@ -1,9 +1,6 @@
 // src/Pages/Home.js
 import React, { useEffect, useState } from "react";
-import {
-  Table,
-  Button,
-  Modal,
+import {Table, Button, Modal,
   Descriptions,
   Image,
   message,
@@ -363,7 +360,9 @@ const fetchData = async (tkn) => {
       <div className="table-responsive">
         <Table
           loading={loading}
-          dataSource={lost}
+          dataSource={lost.filter((item) =>
+      ["Reviewing", "Listed", "Denied"].includes(item.status)
+    )}
           rowClassName={() => "clickable-row"}
           onRow={(record) => ({
             onClick: () => handleLostClick(record),
@@ -385,7 +384,24 @@ const fetchData = async (tkn) => {
             dataIndex="dateReported"
             key="dateReported"
           />
-          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+          <Column
+          title="Date Lost Range"
+          key="dateRange"
+          render={(record) => {
+            const formatDate = (date) => {
+              if (!date) return "N/A";
+              const d = new Date(date);
+              return d.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              });
+            };
+
+        return `${formatDate(record.startDate)} - ${formatDate(record.endDate)}`;
+      }}
+    />
+          
         </Table>
       </div>
 
@@ -394,7 +410,9 @@ const fetchData = async (tkn) => {
       <div className="table-responsive">
         <Table
           loading={loading}
-          dataSource={found}
+          dataSource={found.filter((item) =>
+      ["Reviewing", "Listed", "Denied"].includes(item.status)
+    )}
           rowClassName={() => "clickable-row"}
           onRow={(record) => ({
             onClick: () => handleFoundClick(record),
@@ -416,7 +434,20 @@ const fetchData = async (tkn) => {
             dataIndex="dateReported"
             key="dateReported"
           />
-          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+          <Column
+            title="Date Found"
+            dataIndex="dateFound"
+            key="dateFound"
+            render={(date) => {
+              if (!date) return "N/A";
+              const d = new Date(date);
+              return d.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              }); // => 10/06/2025
+            }}
+          />
         </Table>
       </div>
 
@@ -558,7 +589,7 @@ const fetchData = async (tkn) => {
               selectedFound?._id && handleDispose(selectedFound._id, "found")
             }
             disabled={
-              !["Active", "Pending Verification"].includes(
+              !["Listed", "Reviewing"].includes(
                 selectedFound?.status || ""
               )
             }
@@ -599,7 +630,9 @@ const fetchData = async (tkn) => {
                 {selectedFound.reportedBy}
               </Descriptions.Item>
               <Descriptions.Item label="Approved By">
-                {selectedFound.approvedBy}
+                {selectedFound?.approvedBy && selectedFound.approvedBy !== ""
+                  ? selectedFound.approvedBy
+                  : "No actions yet."}
               </Descriptions.Item>
               <Descriptions.Item label="Location">
                 {selectedFound.location}
@@ -608,7 +641,13 @@ const fetchData = async (tkn) => {
                 {selectedFound.dateReported}
               </Descriptions.Item>
               <Descriptions.Item label="Date Found">
-                {selectedFound.dateFound}
+                {selectedFound?.dateFound
+                  ? new Date(selectedFound.dateFound).toLocaleDateString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                    })
+                  : "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Description">
                 {selectedFound.description}
