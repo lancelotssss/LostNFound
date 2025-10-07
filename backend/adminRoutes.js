@@ -517,7 +517,7 @@ adminRoutes.route("/storage").get(verifyToken, async (req, res) => {
     let db = database.getDb();
 
     const foundReports = await db.collection("lost_found_db")
-      .find({ reportType: "Found", status: "Active" }) 
+      .find({ reportType: "Found", status: "Listed" }) 
       .sort({ dateFound: -1 }) 
       .toArray();
 
