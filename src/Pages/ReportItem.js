@@ -27,13 +27,12 @@ export default function ReportItem() {
   const [current, setCurrent] = useState(0);
 
 
-  /*useEffect(() => {
+  useEffect(() => {
     if (current === 1) {
       setRegisterData((prev) => ({ ...prev, category: "" }));
     }
   }, [current]);
-  */
-
+  
 
   function setField(name, value) {
     setRegisterData((prev) => ({ ...prev, [name]: value }));
