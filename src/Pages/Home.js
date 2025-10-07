@@ -57,6 +57,7 @@ export const Home = () => {
     "Reviewing Claim",
     "Denied",
     "Deleted",
+    "Disposed"
   ];
   const lostStatusOrder = [
     "Listed",
@@ -239,17 +240,17 @@ const fetchData = async (tkn) => {
     setSelectedItem(null);
   };
 
-  // Navigate to similar for LOST (preserve your classnames/route)
+
   const handleRowLostSeeSimilar = () => {
     if (!selectedLost?._id) return;
-    // store the Mongo _id in localStorage
+
     localStorage.setItem("selectedLostId", selectedLost._id);
 
-    // keep your existing navigation payload
+
     navigate("/cli/search/result", { state: { selectedItem: selectedLost } });
     handleLostModalClose();
   };
-  // Dispose (friend’s “soft delete” update + your endpoint)
+
   const handleDispose = async (id, type) => {
     const confirm = window.confirm(
       "Are you sure you want to dispose this report?"
@@ -329,7 +330,9 @@ const fetchData = async (tkn) => {
             <Card className="overview__card">
               <Statistic
                 title="TOTAL LOST ITEM REPORTED"
-                value={lost.length}
+                value={lost.filter(
+                  (item) => item.status === "Listed" || item.status === "Reviewing"
+                ).length}
                 prefix={<SearchOutlined />}
               />
             </Card>
@@ -338,7 +341,9 @@ const fetchData = async (tkn) => {
             <Card className="overview__card">
               <Statistic
                 title="TOTAL FOUND ITEM REPORTED"
-                value={found.length}
+                value={found.filter(
+                  (item) => item.status === "Listed" || item.status === "Reviewing" || item.status === "Reviewing Claim" || item.status === "Claim Approved" || item.status === "Completed"
+                ).length}
                 prefix={<FolderOpenOutlined />}
               />
             </Card>
@@ -347,7 +352,9 @@ const fetchData = async (tkn) => {
             <Card className="overview__card">
               <Statistic
                 title="TOTAL ITEMS CLAIMED"
-                value={claims.length}
+                value={claims.filter(
+                  (item) => item.status === "Reviewing Claim" || item.status === "Claim Approved" || item.status === "Completed" || item.status === "Claim Rejected"
+                ).length}
                 prefix={<CheckCircleOutlined />}
               />
             </Card>
@@ -411,7 +418,7 @@ const fetchData = async (tkn) => {
         <Table
           loading={loading}
           dataSource={found.filter((item) =>
-      ["Reviewing", "Listed", "Denied"].includes(item.status)
+      ["Reviewing", "Listed", "Denied", "Reviewing Claim", "Claim Approved", "Returned", "Disposed"].includes(item.status)
     )}
           rowClassName={() => "clickable-row"}
           onRow={(record) => ({
@@ -494,7 +501,7 @@ const fetchData = async (tkn) => {
               selectedLost?._id && handleDispose(selectedLost._id, "lost")
             }
             disabled={
-              !["Listed", "Reviewing"].includes(selectedLost?.status || "")
+              !["Listed", "Reviewing", "Denied"].includes(selectedLost?.status || "")
             }
           >
             Delete
@@ -589,7 +596,7 @@ const fetchData = async (tkn) => {
               selectedFound?._id && handleDispose(selectedFound._id, "found")
             }
             disabled={
-              !["Listed", "Reviewing"].includes(
+              !["Reviewing", "Denied"].includes(
                 selectedFound?.status || ""
               )
             }
@@ -668,7 +675,7 @@ const fetchData = async (tkn) => {
   maskClosable={false}
   className="modal-claim"
   closable={false}
-  styles={{ body: { padding: 16 } }}  // AntD v5; safe to remove if not needed
+  styles={{ body: { padding: 16 } }}  
 >
   {claimDetails ? (
     <div className="claim-details-grid">

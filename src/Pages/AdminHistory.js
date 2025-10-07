@@ -120,6 +120,7 @@ const confirmDeny = async () => {
         <Column title="Title" dataIndex="title" key="title" />
         <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
         <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
+        <Column title="Report Type" dataIndex="reportType" key="reportType" />
         <Column title="Status" dataIndex="status" key="status" />
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
       </Table>

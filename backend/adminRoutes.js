@@ -284,10 +284,12 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
             claimStatus: {
               $switch: {
                 branches: [
-                  { case: { $eq: ["$status", "Pending"] }, then: 1 },
-                  { case: { $eq: ["$status", "Active"] }, then: 2 },
-                  { case: { $eq: ["$status", "Claimed"] }, then: 3 },
-                  { case: { $eq: ["$status", "Denied"] }, then: 4 },
+                  { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
+                  { case: { $eq: ["$status", "Listed"] }, then: 2 },
+                  { case: { $eq: ["$status", "Denied"] }, then: 3 },
+                  { case: { $eq: ["$status", "Returned"] }, then: 4 },
+                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 5 },
+                  { case: { $eq: ["$status", "Deleted"] }, then: 6 },
                 ],
                 default: 99,
               },
@@ -312,8 +314,27 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
 
     const allReports = await db
       .collection("lost_found_db")
-      .find({})
-      .sort({ dateReported: -1 })
+      .aggregate([
+        { $match: {} },
+        {
+          $addFields: {
+            claimStatus: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
+                  { case: { $eq: ["$status", "Listed"] }, then: 2 },
+                  { case: { $eq: ["$status", "Denied"] }, then: 3 },
+                  { case: { $eq: ["$status", "Returned"] }, then: 4 },
+                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 5 },
+                  { case: { $eq: ["$status", "Deleted"] }, then: 6 },
+                ],
+                default: 99,
+              },
+            },
+          },
+        },
+        { $sort: { claimStatus: 1, dateLost: 1 } },
+      ])
       .toArray();
 
     res.json({ count: allReports.length, results: allReports });
@@ -467,7 +488,7 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
       action: status === "Claim Approved" ? "APPROVE_CLAIM" : "DENY_CLAIM",
       performedBy: approvedBy,
       timestamp: new Date(),
-      details: `${approvedBy} set claim ${claimId} to ${status}.`,
+      details: `${approvedBy} set claim ${claimId.tid} to ${status}.`,
     };
     await db.collection("audit_db").insertOne(audit);
 

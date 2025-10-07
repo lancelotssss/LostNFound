@@ -79,8 +79,8 @@ export function NavBar() {
       openKeys={openKeys}
       onOpenChange={setOpenKeys}
       onClick={onClick}
-      style={{ borderRight: 0 }}   // remove fixed width; Sider controls width
-      theme="dark"                 // dark menu to fit the blue sider
+      style={{ borderRight: 0 }}   
+      theme="dark"                
     />
   );
 }
