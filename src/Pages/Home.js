@@ -1,8 +1,13 @@
+// src/Pages/Home.js
 import React, { useEffect, useState } from "react";
+<<<<<<< HEAD
 import {
   Table,
   Button,
   Modal,
+=======
+import {Table, Button, Modal,
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
   Descriptions,
   Image,
   message,
@@ -23,6 +28,11 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./styles/Home.css";
 
+<<<<<<< HEAD
+=======
+    import { Typography } from 'antd';
+    const { Text, Paragraph } = Typography;
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
 const { Column } = Table;
 
 export const Home = () => {
@@ -57,6 +67,10 @@ export const Home = () => {
     "Reviewing Claim",
     "Denied",
     "Deleted",
+<<<<<<< HEAD
+=======
+    "Disposed"
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
   ];
   const lostStatusOrder = [
     "Listed",
@@ -239,6 +253,7 @@ const fetchData = async (tkn) => {
     setSelectedItem(null);
   };
 
+<<<<<<< HEAD
   // Navigate to similar for LOST (preserve your classnames/route)
   const handleRowLostSeeSimilar = () => {
     if (!selectedLost?._id) return;
@@ -250,6 +265,19 @@ const fetchData = async (tkn) => {
     handleLostModalClose();
   };
   // Dispose (friend’s “soft delete” update + your endpoint)
+=======
+
+  const handleRowLostSeeSimilar = () => {
+    if (!selectedLost?._id) return;
+
+    localStorage.setItem("selectedLostId", selectedLost._id);
+
+
+    navigate("/cli/search/result", { state: { selectedItem: selectedLost } });
+    handleLostModalClose();
+  };
+
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
   const handleDispose = async (id, type) => {
     const confirm = window.confirm(
       "Are you sure you want to dispose this report?"
@@ -320,6 +348,7 @@ const fetchData = async (tkn) => {
 
   return (
     <div className="main-container">
+<<<<<<< HEAD
       {/* HEADER */}
       <div className="home-header">
         <p className="home-header__welcome">
@@ -361,12 +390,61 @@ const fetchData = async (tkn) => {
         </Row>
       </div>
 
+=======
+
+      {/* OVERVIEW CARDS (yours) */}
+      <div className="overview">
+        <h3 className="overview__title">OVERVIEW</h3>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8}>
+            <Card className="overview__card">
+              <Statistic
+                title="TOTAL LOST ITEM REPORTED"
+                value={lost.filter(
+                  (item) => item.status === "Listed" || item.status === "Reviewing"
+                ).length}
+                prefix={<SearchOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card className="overview__card">
+              <Statistic
+                title="TOTAL FOUND ITEM REPORTED"
+                value={found.filter(
+                  (item) => item.status === "Listed" || item.status === "Reviewing" || item.status === "Reviewing Claim" || item.status === "Claim Approved" || item.status === "Completed"
+                ).length}
+                prefix={<FolderOpenOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card className="overview__card">
+              <Statistic
+                title="TOTAL ITEMS CLAIMED"
+                value={claims.filter(
+                  (item) => item.status === "Reviewing Claim" || item.status === "Claim Approved" || item.status === "Completed" || item.status === "Claim Rejected"
+                ).length}
+                prefix={<CheckCircleOutlined />}
+              />
+            </Card>
+          </Col>
+        </Row>
+      </div>
+
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
       {/* LOST TABLE */}
       <h3 className="section-title section-title--mt8">MY LOST REPORTS</h3>
       <div className="table-responsive">
         <Table
           loading={loading}
+<<<<<<< HEAD
           dataSource={lost}
+=======
+          dataSource={lost.filter((item) =>
+      ["Reviewing", "Listed", "Denied"].includes(item.status)
+    )}
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
           rowClassName={() => "clickable-row"}
           onRow={(record) => ({
             onClick: () => handleLostClick(record),
@@ -388,7 +466,28 @@ const fetchData = async (tkn) => {
             dataIndex="dateReported"
             key="dateReported"
           />
+<<<<<<< HEAD
           <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+=======
+          <Column
+          title="Date Lost Range"
+          key="dateRange"
+          render={(record) => {
+            const formatDate = (date) => {
+              if (!date) return "N/A";
+              const d = new Date(date);
+              return d.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              });
+            };
+
+        return `${formatDate(record.startDate)} - ${formatDate(record.endDate)}`;
+      }}
+    />
+          
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
         </Table>
       </div>
 
@@ -397,7 +496,13 @@ const fetchData = async (tkn) => {
       <div className="table-responsive">
         <Table
           loading={loading}
+<<<<<<< HEAD
           dataSource={found}
+=======
+          dataSource={found.filter((item) =>
+      ["Reviewing", "Listed", "Denied", "Reviewing Claim", "Claim Approved", "Returned", "Disposed"].includes(item.status)
+    )}
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
           rowClassName={() => "clickable-row"}
           onRow={(record) => ({
             onClick: () => handleFoundClick(record),
@@ -419,7 +524,24 @@ const fetchData = async (tkn) => {
             dataIndex="dateReported"
             key="dateReported"
           />
+<<<<<<< HEAD
           <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+=======
+          <Column
+            title="Date Found"
+            dataIndex="dateFound"
+            key="dateFound"
+            render={(date) => {
+              if (!date) return "N/A";
+              const d = new Date(date);
+              return d.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              }); // => 10/06/2025
+            }}
+          />
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
         </Table>
       </div>
 
@@ -466,7 +588,11 @@ const fetchData = async (tkn) => {
               selectedLost?._id && handleDispose(selectedLost._id, "lost")
             }
             disabled={
+<<<<<<< HEAD
               !["Listed", "Reviewing"].includes(selectedLost?.status || "")
+=======
+              !["Listed", "Reviewing", "Denied"].includes(selectedLost?.status || "")
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
             }
           >
             Delete
@@ -561,7 +687,11 @@ const fetchData = async (tkn) => {
               selectedFound?._id && handleDispose(selectedFound._id, "found")
             }
             disabled={
+<<<<<<< HEAD
               !["Active", "Pending Verification"].includes(
+=======
+              !["Reviewing", "Denied"].includes(
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
                 selectedFound?.status || ""
               )
             }
@@ -602,7 +732,13 @@ const fetchData = async (tkn) => {
                 {selectedFound.reportedBy}
               </Descriptions.Item>
               <Descriptions.Item label="Approved By">
+<<<<<<< HEAD
                 {selectedFound.approvedBy}
+=======
+                {selectedFound?.approvedBy && selectedFound.approvedBy !== ""
+                  ? selectedFound.approvedBy
+                  : "No actions yet."}
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
               </Descriptions.Item>
               <Descriptions.Item label="Location">
                 {selectedFound.location}
@@ -611,7 +747,20 @@ const fetchData = async (tkn) => {
                 {selectedFound.dateReported}
               </Descriptions.Item>
               <Descriptions.Item label="Date Found">
+<<<<<<< HEAD
                 {selectedFound.dateFound}
+              </Descriptions.Item>
+              <Descriptions.Item label="Description">
+                {selectedFound.description}
+=======
+                {selectedFound?.dateFound
+                  ? new Date(selectedFound.dateFound).toLocaleDateString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                    })
+                  : "N/A"}
+>>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
               </Descriptions.Item>
               <Descriptions.Item label="Description">
                 {selectedFound.description}
@@ -632,10 +781,14 @@ const fetchData = async (tkn) => {
   maskClosable={false}
   className="modal-claim"
   closable={false}
-  styles={{ body: { padding: 16 } }}  // AntD v5; safe to remove if not needed
+  styles={{ body: { padding: 16 } }}  
 >
   {claimDetails ? (
     <div className="claim-details-grid">
+      <div className="h1h2container">
+        <h1 className="claim-details-grid-h1">CLAIM TRANSACTION NO.</h1>
+        <h2 className="claim-details-grid-h2"><Text className="claim-details-grid-h2-Text" copyable>{claimDetails.claim.cid}</Text></h2>
+      </div>
       {/* Found Item */}
         <h3 className="claim-section-h3">Found Item Information</h3>
       <div className="claim-col claim-section">

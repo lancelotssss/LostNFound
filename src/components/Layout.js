@@ -1,59 +1,105 @@
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Layout as AntLayout, Avatar, Space, Typography, Image } from "antd";
 import { UserOutlined } from "@ant-design/icons";
+import { jwtDecode } from "jwt-decode";
 import { NavBar } from "./NavBar";
-// import "./Layout.css"; // ⬅️ add this import
-import "../../src/Pages/styles/Layout.css"
+import "../../src/Pages/styles/Layout.css";
+import {  Button  } from "antd";
+import {
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  UploadOutlined,
+  VideoCameraOutlined,
+} from '@ant-design/icons';
+
+
 
 const { Header, Sider, Content } = AntLayout;
 const { Title } = Typography;
 
+
+
+
+
 export function Layout() {
+
+
+const [collapsed, setCollapsed] = useState(false);
+
+
+    // PANG KUHA NG USER NAME =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    const [user, setUser] = useState(null);
+    useEffect(() => {
+      const token = sessionStorage.getItem("User");
+      if (!token) return;
+      try {
+        const decoded = jwtDecode(token);
+        setUser(decoded);
+      } catch {
+        setUser(null);
+      }
+    }, []);
+
+    const initials = (name) =>
+      (name || "")
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
   return (
-    <AntLayout className="app-layout">
+    <AntLayout className="app-layout" trigger={null}>
 
 
-      {/* Full-width header at the very top */}
+
       <Header className="app-header">
-
-
         <div className="sider-logo">
-          {/* -----> DESKTOP LOGO */}
           <Image
-          src="/assets/foundhub1.png"
-          alt="FoundHub"
-          preview={false}
-          className="register-header__icon logo-desktop"
+            src="/assets/foundhub1.png"
+            alt="FoundHub"
+            preview={false}
+            className="register-header__icon logo-desktop"
           />
-
-          {/* -----> MOBILE LOGO */} 
           <Image
-          src="/assets/kit.png"
-          alt="FoundHub Small"
-          preview={false}
-          className="register-header__icon logo-mobile"
+            src="/assets/kit.png"
+            alt="FoundHub Small"
+            preview={false}
+            className="register-header__icon logo-mobile"
           />
         </div>
 
 
-        <Space>
-          <Title level={5} style={{ margin: 0 }}>Dashboard</Title>
-          <Avatar size="large" icon={<UserOutlined />} />
+
+
+        <Space size="middle" align="center" >
+          <Title className="goodday" level={5} style={{ margin: 0, textTransform: "uppercase" }}>
+            GOOD DAY, {user?.name || "Guest"}!
+          </Title>
+
+          {user?.name ? (
+            <Avatar size="large" style={{ backgroundColor: '#014F86' }}>{initials(user.name)}</Avatar>
+          ) : (
+            <Avatar size="large"  icon={<UserOutlined />}  />
+          )}
         </Space>
-
-
       </Header>
 
-      {/* Body: Sider + Content below the header */}
+
+
       <AntLayout className="app-body">
+
         <Sider
           className="app-sider"
           breakpoint="lg"
           collapsedWidth={64}
           width={220}
         >
-
           <div className="sider-scroll">
             <NavBar />
           </div>
@@ -62,7 +108,11 @@ export function Layout() {
         <Content className="app-content">
           <Outlet />
         </Content>
+
       </AntLayout>
+
+
+
     </AntLayout>
   );
 }

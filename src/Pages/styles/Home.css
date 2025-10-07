@@ -1,23 +1,6 @@
 
 
 
-/* HEADER TO CHONG ---------------------------------- */ 
-/* 1. CONTAINER NYA */
-/* 2. GOOD DAY MR wkwkwk 😴*/
-.home-header {
-  margin-bottom: 16px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  /* background-color: red; */
-}
-.home-header__welcome {
-  margin: 0;
-  /* background-color: blue; */
-}
-
 
 
 .main-container{
@@ -26,6 +9,7 @@
     align-items: flex-start;
     flex-direction: column;
     width: 100% !important;
+
     /* background-color: red; */
     /* border: 1px solid red; */
     
@@ -67,6 +51,7 @@
   box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
   font-family: 'Poppins', sans-serif;
   font-weight: bold;
+  border-top: 8px solid #ffff0079 !important;
   /* background-color: yellow; */
 }
 
@@ -79,7 +64,9 @@
 /* 1. MY LOST REPORT <- mga title ng bawat table*/
 .section-title {
   margin: 0;
+  
   margin-bottom: 20px;
+  margin-top: 50px;
   color: #525252ff;
   /* background-color: red; */
 }
@@ -140,9 +127,6 @@
   .ant-table {
     font-size: 14px;
   }
-  .home-header {
-    gap: 12px;
-  }
   .photo-wrap img {
     max-width: 100%;
     height: auto;
@@ -151,7 +135,174 @@
 
 
 
-h3{
-    /* background-color: red; */
-    margin-top: 30px !important;
+
+
+
+/*  CLAIM TABLE ----------------------------------- */
+/* Scope to this modal only */
+.modal-claim .ant-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  
 }
+
+/* Stack sections vertically and center them */
+.claim-details-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px !important;
+  align-items: center;  /* center the ~90% wide sections */
+  /* background-color: pink; */
+  
+}
+
+.h1h2container{
+  border: 2px dotted rgba(0, 0, 0, 0.37);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  flex-direction: column;
+  background-color: #F4F4F4;
+}
+
+.claim-details-grid-h1{
+  /* background-color: blue; */
+  width: 100%;
+  text-align: center;
+  color: rgb(36, 36, 36);
+  user-select: none;
+}
+.claim-details-grid-h2, .claim-details-grid-h2-Text{
+  /* background-color: red; */
+  width: 100%;
+  text-align: center;
+  color: #525252ff;
+  user-select: none;
+  font-size: 1.5rem;
+}
+.claim-section-h3{
+    /* background-color: red; */
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 85%;
+    color: #525252ff;
+    /* background-color: aquamarine; */
+    
+}
+/* Each section is ~90% width, neatly stacked */
+.claim-section {
+  width: 100% !important;
+  /* background-color: red !important; */
+  max-width: 980px;     /* cap width for very wide screens */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 90px;
+  padding-bottom: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  /* border: 2px solid green !important; */
+  padding: 40px;
+}
+
+/* Keep compatibility with your existing .claim-col */
+.claim-col {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Descriptions should grow to full width of the section */
+.claim-descriptions,
+.claim-section .ant-descriptions {
+  width: 100%;;
+}
+
+/* Fixed-size image container so photos are consistent */
+.fixed-photo-wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    /* background-color: green; */
+    
+    width: 100%;
+}
+.fixed-photo {
+  width: 100%;
+  max-width: 220px;
+  height: 260px;
+  margin: 0 auto;
+  border-radius: 10px;
+  background: #f6f6f6;
+  /* background-color: red !important; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
+  width: 100% !important;
+}
+
+/* Your existing helper still fine */
+.photo-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.claim-section{
+    border-top: 8px solid #ffff0079 !important;
+    background-color: #bbbbbb2a;
+    /* padding-top: 30px; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100% ;
+    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
+    border: none;
+    /* border-inline-end: red; */
+}
+.ant-descriptions-item-label{
+    /* background-color: blue !important; */
+}
+.ant-descriptions-view{
+    /* background-color: pink !important; */
+    /* border-radius: 0px 0px 30px 30px; */
+    background-color: white !important;
+    /* border: 2px solid brown; */
+    
+
+}
+
+
+
+/* Headings spacing */
+.claim-section > h3 {
+
+  margin: 0 0 6px 0;
+}
+.claim-section h3 {
+    /* margin-top: 50px; */
+    width: 100%;
+    margin-top: 20px;
+    margin-left: 30px;
+}
+/* Mobile: keep stacked but relax sizes */
+@media (max-width: 768px) {
+  .claim-section {
+    width: 100%;
+    max-width: none;
+  }
+  .fixed-photo {
+    max-width: 100%;
+    height: 220px;
+  }
+}
+
+
+

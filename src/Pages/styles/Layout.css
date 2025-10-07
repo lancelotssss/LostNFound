@@ -9,7 +9,10 @@
 
 
 
-
+.colapz{
+  
+  background-color: red;
+}
 
 /* ---------------------------------- START NG LAYOUT PAREEEEEEEEEEE ----------------------------------*/
 .app-layout {
@@ -192,6 +195,9 @@
     align-items: center;
     height: 100%;
     /* background-color: violet; */
+  }
+  .goodday{
+    display: none;
   }
 }
 

@@ -667,7 +667,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
       performedBy: `${studentId}`,
       timestamp: new Date(),
       ticketId: mongoClaim.cid,
-      details: `${studentId} filed a claim for item ${mongoClaim.itemId}. Claim ID: ${mongoClaim.cid}`,
+      details: `${studentId} filed a claim for item ${mongoClaim.itemId.tid}. Claim ID: ${mongoClaim.cid}`,
     };
 
     await db.collection("audit_db").insertOne(auditMongo);

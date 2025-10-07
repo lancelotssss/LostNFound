@@ -21,11 +21,10 @@ export default function ReportItem() {
     photoUrl: "",
     title: "",
     file: null,
-    file: null, 
   });
 
   const [current, setCurrent] = useState(0);
-
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (current === 1) {
@@ -70,6 +69,8 @@ export default function ReportItem() {
   async function handleSubmit(e) {
     e.preventDefault();
 
+    if (submitting) return;
+    setSubmitting(true);
     try {
       const token = sessionStorage.getItem("User");
       if (!token) {
@@ -123,6 +124,8 @@ export default function ReportItem() {
     } catch (err) {
       console.error("Error submitting report:", err);
       message.error("Error submitting report");
+    } finally{
+      setSubmitting(false)
     }
   }
 
@@ -329,50 +332,64 @@ export default function ReportItem() {
 
 
   const StepFour = (
-    <div className="step-four">
-      <Title level={4} className="step-title">
-        {registerData.reportType === "Found"
-          ? "WHEN AND WHERE DID YOU FIND THE ITEM?"
-          : "WHEN AND WHERE DID YOU LOSE THE ITEM?"}
-      </Title>
-      <div className="field-col">
-        <Input
-          name="location"
-          placeholder="LOCATION"
-          value={registerData.location}
-          onChange={handleChange}
-          className="field-wide"
-        />
+  <div className="step-four">
+    <Title level={4} className="step-title">
+      {registerData.reportType === "Found"
+        ? "WHEN AND WHERE DID YOU FIND THE ITEM?"
+        : "WHEN AND WHERE DID YOU LOSE THE ITEM?"}
+    </Title>
 
-        {registerData.reportType === "Lost" ? (
-          <div className="date-row">
-            <DatePicker
-              className="field-half"
-              placeholder="START DATE"
-              value={registerData.startDate ? dayjs(registerData.startDate) : null}
-              onChange={(_, dateStr) => setField("startDate", dateStr)}
-              disabledDate={disableFuture}
-            />
-            <DatePicker
-              className="field-half"
-              placeholder="END DATE"
-              value={registerData.endDate ? dayjs(registerData.endDate) : null}
-              onChange={(_, dateStr) => setField("endDate", dateStr)}
-              disabledDate={disableFuture}
-            />
-          </div>
-        ) : (
+    <div className="field-col">
+      <Input
+        name="location"
+        placeholder="LOCATION"
+        value={registerData.location}
+        onChange={handleChange}
+        className="field-wide"
+      />
+
+      {registerData.reportType === "Lost" ? (
+        <div className="date-row">
           <DatePicker
-            className="field-wide"
-            placeholder="DATE FOUND"
-            value={registerData.dateFound ? dayjs(registerData.dateFound) : null}
-            onChange={(_, dateStr) => setField("dateFound", dateStr)}
+            className="field-half"
+            placeholder="START DATE"
+            value={registerData.startDate ? dayjs(registerData.startDate) : null}
+            onChange={(_, dateStr) => {
+              setField("startDate", dateStr);
+              
+              setField("endDate", "");
+            }}
             disabledDate={disableFuture}
           />
-        )}
-      </div>
+
+          <DatePicker
+            className="field-half"
+            placeholder="END DATE"
+            value={registerData.endDate ? dayjs(registerData.endDate) : null}
+            onChange={(_, dateStr) => setField("endDate", dateStr)}
+            disabled={!registerData.startDate} 
+            disabledDate={(cur) => {
+              
+              if (!registerData.startDate) return true;
+              const start = dayjs(registerData.startDate);
+              const maxEnd = start.add(5, "day");
+              return cur < start || cur > maxEnd || cur > dayjs().endOf("day");
+            }}
+          />
+        </div>
+      ) : (
+        <DatePicker
+          className="field-wide"
+          placeholder="DATE FOUND"
+          value={registerData.dateFound ? dayjs(registerData.dateFound) : null}
+          onChange={(_, dateStr) => setField("dateFound", dateStr)}
+          disabledDate={disableFuture}
+        />
+      )}
     </div>
-  );
+  </div>
+);
+
 
   const StepFive = (
     <div className="step-five">
@@ -433,10 +450,16 @@ export default function ReportItem() {
             </Button>
           )}
           {current === 4 && (
-            <Button className="footer-buttons" type="primary" htmlType="submit">
-              Confirm
-            </Button>
-          )}
+          <Button
+            className="footer-buttons"
+            type="primary"
+            htmlType="submit"
+            loading={submitting} // shows spinner
+            disabled={submitting} // blocks extra clicks
+          >
+            {submitting ? "Submitting..." : "Confirm"}
+          </Button>
+        )}
         </div>
       </Card>
     </form>
@@ -455,7 +478,7 @@ export default function ReportItem() {
           value="Lost"
           checked={registerData.reportType === "Lost"}
           onChange={handleChange}
-        />{" "}
+        />{"  "}
         Lost
       </label>
       <label>

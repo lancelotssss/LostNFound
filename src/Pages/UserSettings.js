@@ -19,9 +19,28 @@ import {
 import { UserOutlined, PhoneOutlined, LockOutlined } from "@ant-design/icons";
 import "./styles/UserSettings.css";
 
+
+
+
+
+// Helper: get initials from a full name
+const getInitials = (name = "") => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return "";
+  const first = parts[0][0] || "";
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return (first + last).toUpperCase();
+};
+
+
+
+
+
 const { Title, Text } = Typography;
 
 export function UserSettings() {
+
+
   const [user, setUser] = useState({});
   const [formData, setFormData] = useState({
     studentId: "",
@@ -88,7 +107,9 @@ export function UserSettings() {
       } else {
         alert("Phone number updated successfully!");
         setUser({ ...user, phone: formData.phone });
+        setFormData((prev) => ({ ...prev, phone: formData.phone }));
         setIsEditing(false);
+        
       }
     } catch (err) {
       console.error("Error updating phone:", err);
@@ -155,7 +176,13 @@ export function UserSettings() {
         <Col xs={24} md={12}>
           <Card className="settings-card" bordered>
             <Space align="center" size={16} className="settings-header">
+            {user?.name ? (
+              <Avatar size={64} style={{ backgroundColor: '#014F86' }}>
+                {getInitials(user.name)}
+              </Avatar>
+            ) : (
               <Avatar size={64} icon={<UserOutlined />} />
+            )}
               <div>
                 <Title level={4} style={{ margin: 0 }}>
                   {user?.name || "—"}
