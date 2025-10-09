@@ -13,6 +13,8 @@ import {
   UploadOutlined,
   VideoCameraOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from "react-router-dom";
+
 
 
 
@@ -25,6 +27,7 @@ const { Title } = Typography;
 
 export function Layout() {
 
+const navigate = useNavigate(); // add this near top of component
 
 const [collapsed, setCollapsed] = useState(false);
 
@@ -58,37 +61,51 @@ const [collapsed, setCollapsed] = useState(false);
 
 
 
-      <Header className="app-header">
-        <div className="sider-logo">
-          <Image
-            src="/assets/foundhub1.png"
-            alt="FoundHub"
-            preview={false}
-            className="register-header__icon logo-desktop"
-          />
-          <Image
-            src="/assets/kit.png"
-            alt="FoundHub Small"
-            preview={false}
-            className="register-header__icon logo-mobile"
-          />
-        </div>
+<Header className="app-header">
+  <div className="sider-logo">
+    <Image
+      src="/assets/foundhub1.png"
+      alt="FoundHub"
+      preview={false}
+      className="register-header__icon logo-desktop"
+    />
+    <Image
+      src="/assets/kit.png"
+      alt="FoundHub Small"
+      preview={false}
+      className="register-header__icon logo-mobile"
+    />
+  </div>
 
+  <Space size="middle" align="center">
+    <Title
+      className="goodday"
+      level={5}
+      style={{ margin: 0, textTransform: "uppercase" }}
+    >
+      GOOD DAY, {user?.name || "Guest"}!
+    </Title>
 
-
-
-        <Space size="middle" align="center" >
-          <Title className="goodday" level={5} style={{ margin: 0, textTransform: "uppercase" }}>
-            GOOD DAY, {user?.name || "Guest"}!
-          </Title>
-
-          {user?.name ? (
-            <Avatar size="large" style={{ backgroundColor: '#014F86' }}>{initials(user.name)}</Avatar>
-          ) : (
-            <Avatar size="large"  icon={<UserOutlined />}  />
-          )}
-        </Space>
-      </Header>
+    {user?.name ? (
+      <Avatar
+        size="large"
+        style={{ backgroundColor: "#014F86", cursor: "pointer" }}
+        onClick={() => navigate("/cli/settings")}
+        title="Go to Settings"
+      >
+        {initials(user.name)}
+      </Avatar>
+    ) : (
+      <Avatar
+        size="large"
+        icon={<UserOutlined />}
+        style={{ cursor: "pointer" }}
+        onClick={() => navigate("/cli/settings")}
+        title="Go to Settings"
+      />
+    )}
+  </Space>
+</Header>
 
 
 

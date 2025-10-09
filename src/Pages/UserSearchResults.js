@@ -1,12 +1,55 @@
-import { useLocation } from "react-router-dom";
+// src/Pages/UserSearchResults.js
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Row, Col, Empty, Spin, message } from "antd";
-import { SearchResultCardModal } from '../components/SearchResultCardModal';
+import {
+  Row,
+  Col,
+  Empty,
+  Spin,
+  message,
+  Button,
+  Typography,
+  Grid,
+} from "antd";
+import { ArrowLeftOutlined } from "@ant-design/icons";
+import { SearchResultCardModal } from "../components/SearchResultCardModal";
+import "./styles/UserSearchResults.css";
+
+const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
+
+
+// Helper: parse title format like "Found Item: Gadgets: Mobile Device, iPhone 15"
+function parseTitle(title) {
+  if (!title) return { category: "N/A", type: "N/A", name: "N/A" };
+
+  // Remove "Found Item:" or "Lost Item:" prefix if present
+  const cleaned = title.replace(/^Found Item:\s*|^Lost Item:\s*/i, "").trim();
+
+  // Split by ":" and ","
+  const parts = cleaned.split(":").map(p => p.trim());
+  let category = parts[0] || "";
+  let type = "";
+  let name = "";
+
+  if (parts[1]) {
+    const subParts = parts[1].split(",").map(p => p.trim());
+    type = subParts[0] || "";
+    name = subParts[1] || "";
+  }
+
+  return { category, type, name };
+}
 
 export function UserSearchResults() {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
+  const navigate = useNavigate();
   const location = useLocation();
   const selectedItem = location.state?.selectedItem;
+
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -59,10 +102,10 @@ export function UserSearchResults() {
     fetchRecommendations();
   }, [selectedItem]);
 
-  // Callback to remove a claimed item
+  // After a successful claim, remove the item from the grid
   const handleClaimSuccess = (claimedId) => {
-    setRecommendations(prev => prev.filter(item => item._id !== claimedId));
-    message.success("Item claimed successfully!");
+    setRecommendations((prev) => prev.filter((item) => item._id !== claimedId));
+    // message.success("Item claimed successfully!");
   };
 
   if (!selectedItem) {
@@ -70,24 +113,61 @@ export function UserSearchResults() {
   }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Recommended Items</h1>
+    <div className="usr-container">
+
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate(-1)}
+          className="usr-back-btn"
+        >
+          Back to Home
+        </Button>
+      <div className="usr-header">
+
+        <div className="usr-header-texts">
+          <Title level={3} className="usr-title">
+            Recommended Items
+          </Title>
+        {(() => {
+          const { category, type, name } = parseTitle(selectedItem?.title);
+          return (
+            <Text type="secondary" className="usr-subtitle">
+              Based on your lost report:{" "}
+              <strong>
+                {category} › {type} › {name}
+              </strong>
+            </Text>
+          );
+        })()}
+
+        </div>
+      </div>
+
       {loading ? (
-        <Spin size="large" />
+        <div className="usr-center">
+          <Spin size="large" />
+        </div>
       ) : recommendations.length === 0 ? (
-        <Empty description="No similar items found" />
+        <div className="usr-center">
+          <Empty description="No similar items found" />
+        </div>
       ) : (
         <Row gutter={[16, 16]}>
           {recommendations.map((item) => (
             <Col key={item._id} xs={24} sm={12} md={8} lg={6}>
-              <SearchResultCardModal 
-                item={item} 
-                onClaimSuccess={handleClaimSuccess} // <-- pass callback here
+              <SearchResultCardModal
+                item={item}
+                lostId={selectedItem._id}          // pass the lost report id
+                onClaimSuccess={handleClaimSuccess} // remove from list on success
               />
             </Col>
           ))}
         </Row>
       )}
     </div>
+
+    
   );
 }
+
+export default UserSearchResults;

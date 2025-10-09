@@ -1,172 +1,134 @@
+/* _________________________ SETTINGS _________________________ */
+html, body, #root {
+  height: auto;
+  min-height: 100%;
+  margin: 0;
+}
+*, *::before, *::after { box-sizing: border-box; }
 
-html, body, #root { height: 100%; }
-body { margin: 0; }
 
 
-*,
-*::before,
-*::after { box-sizing: border-box; }
-
-/* ------------------------------------------------- WHOLE PAGE CONTAINER -------------------------------------------------  */
+/* _________________________ CONTAINER AT CARD _________________________ */
 .register-container{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-
-  height: 100vh;                 
   width: 100%;
-  padding: 0 0;             
+  display: block;                 
+  padding: clamp(64px, 8vh, 96px) 16px 40px;  /* PANG top gap */
+  margin: 0 auto;
 
   background: url("../../../public/assets/background-register.png") center / cover no-repeat;
   background-color: #f3f4f6;
 }
-
-/* ------------------------------------------------- CARD NA NASA CONTAINER -------------------------------------------------  */
+@media (max-width: 992px){
+  .register-container{ background: none; }
+}
 .register-card{
-  max-width: 1000px;
-  width: 100%;
-  height: 95%;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-
-  border-radius: 14px;
-  overflow: visible;
+  width: min(1000px, 96vw);
+  margin: 0 auto 48px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  overflow: hidden;
 }
 .register-card .ant-card-body{
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: visible;
-  padding: 18px 20px 22px;        
+  padding: clamp(14px, 2.5vw, 24px) clamp(14px, 2.5vw, 24px) clamp(18px, 3vw, 28px);
 }
 
 
 
 
 
-/* ------------------------------------------------- CARD HEADER -------------------------------------------------  */
+
+
+
+/* _________________________ HEADER _________________________ */
 .register-header{
   display: flex;
-  align-items: center;
-  justify-content: center;
   flex-direction: column;
-  gap: 6px;                       
-  padding-top: 6px;               
+  align-items: center;
+  text-align: center;
+  gap: 8px;
 }
-.register-header__title{ 
-    font-weight: 800; margin: 0; }
-.register-header__icon{ 
-    width: 44px !important; height: auto; }  
+.register-header__icon{ width: clamp(40px, 6vw, 55px) !important; height: auto; }
+.register-header__title{ margin: 0; font-weight: 800; font-size: clamp(16px, 2.2vw, 20px); }
 .register-header__desc{
-  text-align: center;
-  line-height: 1.35;
   color: #4b5563;
-  margin: 2px 0 8px;              
-  font-size: clamp(12px, 2.3vw, 13.5px);
-  max-width: 80ch;
-  padding: 0 6px;
+  font-size: clamp(12px, 1.8vw, 14px);
+  line-height: 1.45;
+  max-width: 72ch;
+  margin-bottom: 20px;
 }
 
+/* /* _________________________ ALERT _________________________ */ */
+.general-alert{ border-radius: 10px; margin: 8px 0 4px; }
 
+/* _________________________ LAYOUT NG FORM _________________________ */
+.reg-form{ display: flex; flex-direction: column; }
+.reg-form-headers{
+  margin: clamp(12px, 2vh, 18px) 0 clamp(8px, 1.5vh, 12px);
+  font-size: clamp(16px, 2.2vw, 20px);
+}
+#firstHeader{ margin-top: 0; }
+.form-grid{ display: grid; gap: clamp(12px, 2vw, 18px); }
+.form-grid.two{ grid-template-columns: 1fr 1fr; }
 
-/* ------------------------------------------------- REGISTER FORM XD -------------------------------------------------  */
-.reg-form{ 
-    display: flex; 
-    flex-direction: 
-    column; 
-    gap: 0; }
-.reg-form-headers{ 
-    margin: 14px 0 12px; }  
-#firstHeader{ 
-    margin-top: 0; }
-.reg-form > div[style*="display: grid"]{
-  gap: 18px !important;           
+.field{ display: flex; flex-direction: column; gap: 6px; }
+.field > label{
+  font-size: clamp(11px, 1.7vw, 12px);
+  font-weight: 600; color: #5b6b7b; letter-spacing: 0.02em;
+}
+.field .field-error{
+  min-height: 16px;
+  font-size: 12px; color: #ff4d4f; line-height: 16px;
 }
 
+/* _________________________ VALIDATION NG MGA ERRORZZZZ_________________________ */
+.has-error{ border-color: #ff4d4f !important; box-shadow: 0 0 0 2px rgba(255,77,79,0.1) !important; }
+.has-error-select .ant-select-selector{ border-color: #ff4d4f !important; box-shadow: 0 0 0 2px rgba(255,77,79,0.1) !important; }
 
-#registerBtn{ 
-    margin-top: 20px !important; }  
+/* /* _________________________ BUTTON _________________________ */ */
+.register-btn{
+  width: 100%; height: 44px;
+  margin-top: clamp(16px, 2vh, 24px);
+  border-radius: 10px !important; font-weight: 600; letter-spacing: 0.04em;
+}
 
-
-.register-footer{ 
-    margin-top: 12px; }         
-.register-legal{
-  margin: 0;
-  text-align: center;
-  font-size: 11.5px;             
-  line-height: 1.4;
-  color: #6b7280;
-  padding: 0 4px;
-}
-.register-legal a{ 
-    color: #1d4ed8; font-weight: 600; text-decoration: none; 
-}
-.register-legal a:hover{ 
-    text-decoration: underline; 
-}
-.register-auth{
-  margin: 8px 0 0 0;             
-  text-align: center;
-  font-size: 13.5px;              
-  color: #111827;
-}
-.register-auth a{ 
-    font-weight: 700; color: #1d4ed8; text-decoration: none; 
-}
-.register-auth a:hover{ 
-    text-decoration: underline; 
-}
+/* _________________________ FOOOOOOOOOOOOOTER _________________________ */
+.register-footer{ margin-top: 12px; text-align: center; }
+.register-legal{ font-size: clamp(11px, 1.7vw, 12px); color: #6b7280; margin: 0; line-height: 1.4; }
+.register-legal a{ color: #1d4ed8; font-weight: 600; text-decoration: none; }
+.register-legal a:hover{ text-decoration: underline; }
+.register-auth{ margin-top: 8px; font-size: clamp(12px, 1.9vw, 13.5px); color: #111827; }
+.register-auth a{ color: #1d4ed8; font-weight: 700; text-decoration: none; }
+.register-auth a:hover{ text-decoration: underline; }
 
 
 
-/* ------------------------------------------------- MEDIA QUERIES TO MENNNNNNNNN -------------------------------------------------  */
+
+
+
+/* _________________________ RESPONSIVESZXCZXCZXCZXC _________________________ */
 @media (max-width: 992px){
-    .register-container{ 
-    padding: 12px 16px; }
-    .register-card .ant-card-body{ 
-    padding: 16px 16px 18px; }
-    .register-header__icon{ 
-    width: 50px; }
-    .register-auth{
-    margin-top: 20px;
-    margin-bottom: 20px;
-    
-  }
   .register-container{
-    background: none;
+    /* background-color: red; */
+    padding: 0 !important;
   }
-}
-@media (max-width: 768px){
-  .register-container{ padding: 10px 12px; 
-}
-
-  
-  .reg-form > div[style*="display: grid"]{
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
+  .register-card{
+    margin-top: 50px;
   }
-
-  .register-header{ 
-    padding-top: 6px; gap: 6px; 
+  .form-grid.two{ grid-template-columns: 1fr; }
 }
-  .register-header__icon{ 
-    width: 46px; }
-  .register-header__desc{ 
-    font-size: 13px; color: #374151; 
+.loading-container{
+  min-height: 100vh;
+  display: grid; place-items: center;
 }
-
+@keyframes successPulse {
+  0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.55); }
+  100% { box-shadow: 0 0 0 20px rgba(34,197,94,0); }
 }
-
-
-
-@media (max-height: 600px){
-  .register-container{
-    height: auto;
-    min-height: 100dvh;
-    padding-top: 12px;
-    padding-bottom: 12px;
-  }
-  .register-card{ 
-    height: auto; max-height: none; }
+.register-btn.success-pulse{
+  animation: successPulse 0.5s ease-out forwards;
+  background-color: #16a34a !important; border-color: #16a34a !important;
 }
+/* .register-card.card-success-pulse{
+  animation: successPulse 0.5s ease-out forwards; border-color: rgba(34,197,94,0.35);
+} */

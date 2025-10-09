@@ -238,6 +238,8 @@
   max-width: 220px;
   height: 260px;
   margin: 0 auto;
+  margin-bottom: 40px;
+  margin-top: 40px;
   border-radius: 10px;
   background: #f6f6f6;
   /* background-color: red !important; */
@@ -306,3 +308,300 @@
 
 
 
+
+/* HERO wrapper */
+.hero {
+  width: 100%;
+  margin: 8px 0 18px;
+  border-radius: 50px;
+  background: transparent;         /* was pink */
+}
+
+
+.hero-slide {
+  height: 220px;
+  border-radius: 12px;
+  padding: 22px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+/* subtle dark overlay for text readability */
+.hero-slide::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.55)); */
+}
+.hero-slide > * { 
+  position: relative; z-index: 1; 
+}
+.hero-slide h3.ant-typography { 
+  color: #fff; 
+}
+.hero-slide p { 
+  margin: 4px 0 12px; opacity: 0.95; 
+}
+.hero-slide { 
+  height: 300px;             /* was 220px */
+  background-size: cover;
+  background-position: 50% 35%;  /* x% y% — lift focus upward a bit */
+}
+
+/* CTA group */
+.hero-cta { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Banner (alternative to carousel) */
+.hero-banner {
+  width: 100%;
+  padding: 22px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #014F86 0%, #2A6F97 50%, #61A5C2 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  gap: 12px;
+}
+.hero-banner-text { opacity: 0.95; margin: 6px 0 0; }
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .hero-slide { height: 180px; padding: 16px; }
+  .hero-banner { flex-direction: column; align-items: flex-start; }
+}
+
+
+
+/* No box bg around each slide */
+.hero { 
+  background: transparent;         /* was pink */
+}
+
+.hero-carousel .slick-slide {
+  background: transparent !important;
+  padding: 0 6px;          /* ← tiny horizontal gap */
+  box-sizing: border-box;
+}
+
+/* keep the corner rounding on the *inner* slide content */
+.hero-carousel .slick-slide > div {
+  border-radius: 16px;
+  overflow: hidden;
+  
+}
+
+/* your slide */
+.hero-slide{
+  height: 300px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+
+
+
+
+
+.hero-img-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;     /* ✅ fills screen like a modern website */
+  object-position: center;
+}
+@media (max-width: 768px) {
+  .hero-slide { height: 300px; }
+}
+
+
+/* HERO WRAPPER */
+.hero {
+  width: 100%;
+  margin: 8px 0 18px;
+  border-radius: 50px;
+  background: transparent;
+}
+
+/* MAIN SLIDE STYLE */
+.hero-slide {
+  height: 300px;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+/* Small gap between slides */
+.hero-carousel .slick-slide {
+  padding: 0 6px;
+  box-sizing: border-box;
+  background: transparent !important;
+}
+.hero-carousel .slick-list {
+  margin: 0 -6px;
+}
+
+/* CTA button inside slide */
+.hero-cta {
+  position: absolute;
+  bottom: 20px;
+  left: 25px;
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+}
+
+/* Visibility rules */
+.carousel-desktop { display: block; }
+.carousel-mobile { display: none; }
+
+@media (max-width: 768px) {
+  .hero-slide {
+    height: 200px; /* smaller on phones */
+  }
+  .carousel-desktop { display: none; }
+  .carousel-mobile { display: block; }
+}
+
+
+
+/* =========================================================
+   MODAL RESPONSIVENESS (Lost, Found, Claim Details)
+   ========================================================= */
+
+@media (max-width: 768px) {
+  /* Generic modal content */
+  .ant-modal {
+    width: 95% !important;
+    max-width: none !important;
+  }
+
+  .ant-modal-body {
+    padding: 12px !important;
+    overflow-x: hidden;
+  }
+
+  /* Ensure images scale correctly */
+  .photo-wrap img,
+  .fixed-photo img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Descriptions layout improvements */
+  .ant-descriptions {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .ant-descriptions-item-label {
+    width: 40% !important;
+    white-space: normal !important;
+    word-wrap: break-word;
+    text-align: left !important;
+    font-weight: 600;
+  }
+
+  .ant-descriptions-item-content {
+    width: 60% !important;
+    white-space: normal !important;
+    word-wrap: break-word;
+    text-align: left !important;
+  }
+
+  /* Smaller font sizes for compact display */
+  .ant-descriptions-item-label,
+  .ant-descriptions-item-content {
+    font-size: 13px !important;
+    line-height: 1.4;
+  }
+
+  /* Fix grid spacing inside Claim modal */
+  .claim-details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .claim-section-h3 {
+    margin-top: 10px;
+    font-size: 15px !important;
+  }
+
+  .claim-col {
+    width: 100%;
+  }
+
+  /* Photos inside claim sections */
+  .fixed-photo-wrapper,
+  .photo-wrap.fixed-photo {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  /* Center claim header (CLAIM TRANSACTION NO.) */
+  .h1h2container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .claim-details-grid-h1 {
+    font-size: 16px !important;
+  }
+
+  .claim-details-grid-h2 {
+    font-size: 14px !important;
+    word-break: break-all;
+  }
+
+  /* Slightly smaller modal title */
+  .ant-modal-title {
+    font-size: 16px !important;
+    text-align: center;
+  }
+
+  /* Scrollbars hidden for neatness */
+  .ant-descriptions {
+    -ms-overflow-style: none; /* hide scroll in IE and Edge */
+    scrollbar-width: none; /* hide scroll in Firefox */
+  }
+  .ant-descriptions::-webkit-scrollbar {
+    display: none; /* hide scroll in Chrome, Safari */
+  }
+}
+
+
+/* --- Image Placeholder --- */
+.fixed-photo {
+  width: 250px;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.no-image-placeholder {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  font-size: 14px;
+}
