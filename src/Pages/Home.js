@@ -1,13 +1,6 @@
 // src/Pages/Home.js
 import React, { useEffect, useState } from "react";
-<<<<<<< HEAD
-import {
-  Table,
-  Button,
-  Modal,
-=======
 import {Table, Button, Modal,
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
   Descriptions,
   Image,
   message,
@@ -28,11 +21,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./styles/Home.css";
 
-<<<<<<< HEAD
-=======
     import { Typography } from 'antd';
     const { Text, Paragraph } = Typography;
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
 const { Column } = Table;
 
 export const Home = () => {
@@ -67,10 +57,7 @@ export const Home = () => {
     "Reviewing Claim",
     "Denied",
     "Deleted",
-<<<<<<< HEAD
-=======
     "Disposed"
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
   ];
   const lostStatusOrder = [
     "Listed",
@@ -253,19 +240,6 @@ const fetchData = async (tkn) => {
     setSelectedItem(null);
   };
 
-<<<<<<< HEAD
-  // Navigate to similar for LOST (preserve your classnames/route)
-  const handleRowLostSeeSimilar = () => {
-    if (!selectedLost?._id) return;
-    // store the Mongo _id in localStorage
-    localStorage.setItem("selectedLostId", selectedLost._id);
-
-    // keep your existing navigation payload
-    navigate("/cli/search/result", { state: { selectedItem: selectedLost } });
-    handleLostModalClose();
-  };
-  // Dispose (friend’s “soft delete” update + your endpoint)
-=======
 
   const handleRowLostSeeSimilar = () => {
     if (!selectedLost?._id) return;
@@ -277,7 +251,6 @@ const fetchData = async (tkn) => {
     handleLostModalClose();
   };
 
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
   const handleDispose = async (id, type) => {
     const confirm = window.confirm(
       "Are you sure you want to dispose this report?"
@@ -348,49 +321,6 @@ const fetchData = async (tkn) => {
 
   return (
     <div className="main-container">
-<<<<<<< HEAD
-      {/* HEADER */}
-      <div className="home-header">
-        <p className="home-header__welcome">
-          GOOD DAY, {user ? user.name : "Guest"}!
-        </p>
-      </div>
-
-      {/* OVERVIEW CARDS (yours) */}
-      <div className="overview">
-        <h3 className="overview__title">OVERVIEW</h3>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
-            <Card className="overview__card">
-              <Statistic
-                title="TOTAL LOST ITEM REPORTED"
-                value={lost.length}
-                prefix={<SearchOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Card className="overview__card">
-              <Statistic
-                title="TOTAL FOUND ITEM REPORTED"
-                value={found.length}
-                prefix={<FolderOpenOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Card className="overview__card">
-              <Statistic
-                title="TOTAL ITEMS CLAIMED"
-                value={claims.length}
-                prefix={<CheckCircleOutlined />}
-              />
-            </Card>
-          </Col>
-        </Row>
-      </div>
-
-=======
 
       {/* OVERVIEW CARDS (yours) */}
       <div className="overview">
@@ -432,19 +362,14 @@ const fetchData = async (tkn) => {
         </Row>
       </div>
 
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
       {/* LOST TABLE */}
       <h3 className="section-title section-title--mt8">MY LOST REPORTS</h3>
       <div className="table-responsive">
         <Table
           loading={loading}
-<<<<<<< HEAD
-          dataSource={lost}
-=======
           dataSource={lost.filter((item) =>
       ["Reviewing", "Listed", "Denied"].includes(item.status)
     )}
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
           rowClassName={() => "clickable-row"}
           onRow={(record) => ({
             onClick: () => handleLostClick(record),
@@ -466,9 +391,6 @@ const fetchData = async (tkn) => {
             dataIndex="dateReported"
             key="dateReported"
           />
-<<<<<<< HEAD
-          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
-=======
           <Column
           title="Date Lost Range"
           key="dateRange"
@@ -487,7 +409,6 @@ const fetchData = async (tkn) => {
       }}
     />
           
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
         </Table>
       </div>
 
@@ -496,13 +417,9 @@ const fetchData = async (tkn) => {
       <div className="table-responsive">
         <Table
           loading={loading}
-<<<<<<< HEAD
-          dataSource={found}
-=======
           dataSource={found.filter((item) =>
       ["Reviewing", "Listed", "Denied", "Reviewing Claim", "Claim Approved", "Returned", "Disposed"].includes(item.status)
     )}
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
           rowClassName={() => "clickable-row"}
           onRow={(record) => ({
             onClick: () => handleFoundClick(record),
@@ -524,9 +441,6 @@ const fetchData = async (tkn) => {
             dataIndex="dateReported"
             key="dateReported"
           />
-<<<<<<< HEAD
-          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
-=======
           <Column
             title="Date Found"
             dataIndex="dateFound"
@@ -541,7 +455,6 @@ const fetchData = async (tkn) => {
               }); // => 10/06/2025
             }}
           />
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
         </Table>
       </div>
 
@@ -588,11 +501,7 @@ const fetchData = async (tkn) => {
               selectedLost?._id && handleDispose(selectedLost._id, "lost")
             }
             disabled={
-<<<<<<< HEAD
-              !["Listed", "Reviewing"].includes(selectedLost?.status || "")
-=======
               !["Listed", "Reviewing", "Denied"].includes(selectedLost?.status || "")
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
             }
           >
             Delete
@@ -687,11 +596,7 @@ const fetchData = async (tkn) => {
               selectedFound?._id && handleDispose(selectedFound._id, "found")
             }
             disabled={
-<<<<<<< HEAD
-              !["Active", "Pending Verification"].includes(
-=======
               !["Reviewing", "Denied"].includes(
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
                 selectedFound?.status || ""
               )
             }
@@ -732,13 +637,9 @@ const fetchData = async (tkn) => {
                 {selectedFound.reportedBy}
               </Descriptions.Item>
               <Descriptions.Item label="Approved By">
-<<<<<<< HEAD
-                {selectedFound.approvedBy}
-=======
                 {selectedFound?.approvedBy && selectedFound.approvedBy !== ""
                   ? selectedFound.approvedBy
                   : "No actions yet."}
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
               </Descriptions.Item>
               <Descriptions.Item label="Location">
                 {selectedFound.location}
@@ -747,12 +648,6 @@ const fetchData = async (tkn) => {
                 {selectedFound.dateReported}
               </Descriptions.Item>
               <Descriptions.Item label="Date Found">
-<<<<<<< HEAD
-                {selectedFound.dateFound}
-              </Descriptions.Item>
-              <Descriptions.Item label="Description">
-                {selectedFound.description}
-=======
                 {selectedFound?.dateFound
                   ? new Date(selectedFound.dateFound).toLocaleDateString("en-US", {
                       month: "2-digit",
@@ -760,7 +655,6 @@ const fetchData = async (tkn) => {
                       year: "numeric",
                     })
                   : "N/A"}
->>>>>>> fb616f1d0dc4071210653d881fc293dec03f0fd3
               </Descriptions.Item>
               <Descriptions.Item label="Description">
                 {selectedFound.description}

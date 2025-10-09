@@ -222,6 +222,17 @@ export default function ReportItem() {
 
       ]}
     />
+    
+    <div className="footer-actions" style={{ marginTop: "20px" }}>
+      <Button
+        className="footer-buttons"
+        type="primary"
+        disabled={!registerData.category}
+        onClick={() => setCurrent(2)}
+      >
+        Next
+      </Button>
+    </div>
   </div>
 );
 
@@ -314,6 +325,9 @@ export default function ReportItem() {
               : []
           }
         />
+        
+          
+
       )}
 
       {/* Hide item brand if category is Identification Card */}
@@ -340,12 +354,21 @@ export default function ReportItem() {
     </Title>
 
     <div className="field-col">
-      <Input
-        name="location"
-        placeholder="LOCATION"
-        value={registerData.location}
-        onChange={handleChange}
-        className="field-wide"
+      <Select
+      placeholder="LOCATION"
+      value={registerData.location || undefined}
+      onChange={(val) => setField("location", val)}
+      className="field-wide"
+      options={[
+        { value: "Ground Floor", label: "Ground Floor" },
+        { value: "7th Floor", label: "7th Floor" },
+        { value: "8th Floor", label: "8th Floor" },
+        { value: "9th Floor", label: "9th Floor" },
+        { value: "10th Floor", label: "10th Floor" },
+        { value: "11th Floor", label: "11th Floor" },
+        { value: "12th Floor", label: "12th Floor" },
+        { value: "Outside of Campus", label: "Outside of Campus" },
+        ]}
       />
 
       {registerData.reportType === "Lost" ? (
