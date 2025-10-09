@@ -6,6 +6,9 @@ import { getClaimReport, getClaimDetails, approveClaim, completeTransaction } fr
 const { Column } = Table;
 
 export const AdminClaims = () => {
+
+    //-----------------------------------DO NOT DELETE-------------------------------
+
   const [data, setData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [details, setDetails] = useState({ claim: null, foundItem: null, lostItem: null });
@@ -45,7 +48,8 @@ export const AdminClaims = () => {
     fetchData();
   }, []);
 
-  
+    //-----------------------------------DO NOT DELETE-------------------------------
+
   const handleRowClick = async (record) => {
     setSelectedItem(record);
     setIsModalVisible(true);
@@ -63,6 +67,7 @@ export const AdminClaims = () => {
 
   const handleApprove = () => setApproveModal(true);
   const handleDeny = () => setDenyModal(true);
+  //-----------------------------------DO NOT DELETE-------------------------------
 
   const confirmApprove = async () => {
     setConfirmLoading(true);
@@ -105,6 +110,7 @@ export const AdminClaims = () => {
     }
     setConfirmLoading(false);
   };
+  //-----------------------------------DO NOT DELETE-------------------------------
 
   const handleComplete = async () => {
   setCompleteLoading(true);
@@ -122,6 +128,7 @@ export const AdminClaims = () => {
   
   setCompleteLoading(false);
 };
+  //-----------------------------------DO NOT DELETE-------------------------------
 
   return (
     <>

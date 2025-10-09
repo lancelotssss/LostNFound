@@ -182,6 +182,9 @@ export const Home = () => {
             dateReported: formatDate(item.dateReported),
             dateFound: formatDate(item.dateFound),
           }))
+          .filter (item =>
+            ["Listed", "Reviewing", "Denied"].includes(item.status)
+          )
           .sort(
             (a, b) =>
               lostStatusOrder.indexOf(a.status) -
@@ -264,37 +267,31 @@ export const Home = () => {
 
   // Dispose (friend’s “soft delete” update + your endpoint)
   const handleDispose = async (id, type) => {
-    try {
-      const response = await axios.put(
-        `http://localhost:3110/home/${id}/dispose`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  try {
+    const response = await axios.put(
+      `http://localhost:3110/home/${id}/dispose`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      if (response?.data?.success) {
-        message.success(response.data.message);
+    if (response?.data?.success) {
+      message.success(response.data.message);
 
-        const t = String(type || "").toLowerCase();
-        if (t === "lost") {
-          setLost((prev) =>
-            prev.map((r) => (r._id === id ? { ...r, status: "Deleted" } : r))
-          );
-          if (selectedLost?._id === id) handleLostModalClose();
-        } else if (t === "found") {
-          setFound((prev) =>
-            prev.map((r) => (r._id === id ? { ...r, status: "Deleted" } : r))
-          );
-          if (selectedFound?._id === id) handleFoundModalClose();
-        }
-      } else {
-        message.error("Failed to dispose report");
-      }
-    } catch (err) {
-      console.error("Dispose error:", err);
-      message.error("An error occurred while disposing the report.");
+      // ✅ re-fetch to update tables (lost/found)
+      await fetchData(token);
+
+      // close modals if currently open
+      if (type === "lost" && selectedLost?._id === id) handleLostModalClose();
+      if (type === "found" && selectedFound?._id === id) handleFoundModalClose();
+    } else {
+      message.error("Failed to dispose report");
     }
-  };
-
+  } catch (err) {
+    console.error("Dispose error:", err);
+    message.error("An error occurred while disposing the report.");
+  }
+};
+  
   // CLAIM handlers
   const handleClaimRowClick = async (record) => {
     try {
@@ -488,7 +485,17 @@ export const Home = () => {
             dataIndex="dateReported"
             key="dateReported"
           />
-          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+          <Column title="Date Range Lost" dataIndex="dateFound" key="dateRange" 
+          render={(_, record) => {
+    const start = record.startDate
+      ? new Date(record.startDate).toLocaleDateString("en-US")
+      : "N/A";
+    const end = record.endDate
+      ? new Date(record.endDate).toLocaleDateString("en-US")
+      : "N/A";
+    return `${start} - ${end}`;
+  }}
+  />
         </Table>
       </div>
 
@@ -519,7 +526,14 @@ export const Home = () => {
             dataIndex="dateReported"
             key="dateReported"
           />
-          <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+          <Column
+            title="Date Found"
+            dataIndex="dateFound"
+            key="dateFound"
+            render={(date) =>
+              date ? new Date(date).toLocaleDateString("en-US") : "N/A"
+            }
+          />
         </Table>
       </div>
 
@@ -586,7 +600,7 @@ export const Home = () => {
               key="dispose"
               danger
               disabled={
-                !["Listed", "Reviewing"].includes(selectedLost?.status || "")
+                !["Listed", "Reviewing", "Denied"].includes(selectedLost?.status || "")
               }
             >
               Delete
@@ -736,7 +750,7 @@ export const Home = () => {
                 {selectedFound.reportedBy}
               </Descriptions.Item>
               <Descriptions.Item label="Approved By">
-                {selectedFound.approvedBy}
+                {selectedFound.approvedBy ? selectedFound.approvedBy : "No actions yet."}
               </Descriptions.Item>
               <Descriptions.Item label="Location">
                 {selectedFound.location}
@@ -745,7 +759,9 @@ export const Home = () => {
                 {selectedFound.dateReported}
               </Descriptions.Item>
               <Descriptions.Item label="Date Found">
-                {selectedFound.dateFound}
+                {selectedFound?.dateFound
+                  ? new Date(selectedFound.dateFound).toLocaleDateString("en-US")
+                  : "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Description">
                 {selectedFound.description}

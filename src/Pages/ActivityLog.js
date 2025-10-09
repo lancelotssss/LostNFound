@@ -7,6 +7,8 @@ const { Column } = Table;
 export const ActivityLog = () => {
   const [data, setData] = useState([]);
 
+
+  //-----------------------------------DO NOT DELETE-------------------------------
   const fetchData = async () => {
     try {
           const token = sessionStorage.getItem("User"); 
@@ -43,6 +45,7 @@ export const ActivityLog = () => {
     fetchData();
   }, []);
 
+  //-----------------------------------DO NOT DELETE-------------------------------
   return (
     <>
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>

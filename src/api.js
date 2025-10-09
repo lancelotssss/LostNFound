@@ -87,7 +87,7 @@ export async function getAllClaim(token){
       },
     });
     console.log("Axios response:", response);
-    return response.data; // { count, results }
+    return response.data;
   } catch (err) {
     console.error("Error fetching reports:", err);
     return { results: [] };
