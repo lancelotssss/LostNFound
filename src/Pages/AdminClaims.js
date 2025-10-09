@@ -151,7 +151,7 @@ export const AdminClaims = () => {
         footer={null}
         width={1300}
         maskClosable={false}
-        bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+        styles={{ maxHeight: "70vh", overflowY: "auto" }}
       >
         {selectedItem && (
           <div style={{ display: "flex", gap: 24 }}>

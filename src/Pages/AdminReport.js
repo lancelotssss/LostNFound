@@ -3,11 +3,11 @@ import { Steps, Button, Card, Typography, Input, Select, DatePicker, message } f
 import { DownloadOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from "dayjs";
 import "./styles/ReportItem.css";
-import { createReport } from "../api";
+
 
 const { Title } = Typography;
 
-export default function ReportItem() {
+export const AdminReport = () =>  {
   const [registerData, setRegisterData] = useState({
     reportType: "",
     category: "",
@@ -94,7 +94,7 @@ export default function ReportItem() {
       }
       formData.append("title", generatedTitle);
 
-      const response = await fetch("http://localhost:3110/cli/report", {
+      const response = await fetch("http://localhost:3110/main/report", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

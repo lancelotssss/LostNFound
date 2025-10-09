@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message } from "antd";
-import { getStorage, approveFound } from "../api";
+import { Table, Button, Modal, Descriptions, Image, message, Input } from "antd";
+import { getStorage, approveFound, approveStorage  } from "../api";
 import { jwtDecode } from "jwt-decode";
+import {Form, Upload} from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 
+
+const { TextArea } = Input;
 const { Column } = Table;
 
 export const AdminStorage = () => {
@@ -13,6 +17,9 @@ export const AdminStorage = () => {
   const [denyModal, setDenyModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [claimMode, setClaimMode] = useState(false);
+  const [form] = Form.useForm();
+  
 
   
   useEffect(() => {
@@ -67,21 +74,51 @@ export const AdminStorage = () => {
     setSelectedItem(null);
   };
 
+  const handleClaim = () => {
+
+    setClaimMode(true);
+
+  }
+
   const handleApprove = () => setApproveModal(true);
   const handleDeny = () => setDenyModal(true);
 
   const confirmApprove = async () => {
-  setConfirmLoading(true);
-  const token = sessionStorage.getItem("User");
   try {
-    await approveFound(selectedItem._id, "Claimed", user.studentId, token);
-    message.success("Item claimed successfully!");
-    setApproveModal(false);
-    setIsModalVisible(false);
-    fetchData();
+    setConfirmLoading(true);
+    const token = sessionStorage.getItem("User");
+
+    // Ant Design validation
+    const values = await form.validateFields();
+
+    // Prepare payload
+    const claimPayload = {
+      itemId: selectedItem._id,
+      claimerId: values.id,
+      reason: values.reason,
+      adminDecisionBy: user.studentId,
+      photoUrl: values.image[0]?.originFileObj
+        ? URL.createObjectURL(values.image[0].originFileObj)
+        : "",
+      selectedLostId: selectedItem._id,
+      lostReferenceFound: selectedItem._id,
+    };
+
+    const res = await approveStorage(claimPayload, token);
+
+    if (res.success) {
+      message.success("Claim report submitted successfully!");
+      setClaimMode(false);
+      setApproveModal(false);
+      setIsModalVisible(false);
+      form.resetFields();
+      fetchData();
+    } else {
+      message.error(res.message || "Failed to submit claim report");
+    }
   } catch (err) {
     console.error(err);
-    message.error("Failed to approve item.");
+    message.error("Please fill all required fields correctly.");
   } finally {
     setConfirmLoading(false);
   }
@@ -158,9 +195,71 @@ const confirmDeny = async () => {
             </Descriptions>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button type="primary" onClick={handleApprove}  disabled={selectedItem.status === "Claimed"}>
+              {!claimMode && (
+              <Button type="primary" onClick={handleClaim}  disabled={selectedItem.status === "Claimed"}>
                 Claim
               </Button>
+
+              )}
+
+               {/* Right Side: Claim Form (Slides In) */}
+              <div
+                className={`w-1/2 pl-6 border-l transition-all duration-500 ${
+                  claimMode ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full"
+                }`}
+              >
+                  {claimMode && (
+    <Form
+      form={form}
+      layout="vertical"
+      initialValues={{
+        id: "",
+        reason: "",
+        image: [],
+      }}
+    >
+      <Form.Item
+        label="Identification Card"
+        name="id"
+        rules={[
+          { required: true, message: "Please enter your Identification Card" },
+        ]}
+      >
+        <Input placeholder="Enter your Identification Card" />
+      </Form.Item>
+
+      <Form.Item
+        label="Reason for Claim"
+        name="reason"
+        rules={[{ required: true, message: "Please enter a reason" }]}
+      >
+        <TextArea rows={4} placeholder="Enter your reason" />
+      </Form.Item>
+
+      <Form.Item
+        label="Upload Proof Image"
+        name="image"
+        valuePropName="fileList"
+        getValueFromEvent={(e) => e?.fileList || []}
+        rules={[{ required: true, message: "Please upload an image" }]}
+        initialValue={[]}
+      >
+        <Upload beforeUpload={() => false} listType="picture">
+          <Button icon={<UploadOutlined />}>Click to Upload</Button>
+        </Upload>
+      </Form.Item>
+
+      <div className="flex justify-end gap-2">
+        <Button onClick={handleModalClose}>Cancel</Button>
+        <Button type="primary" onClick={handleApprove}>
+          Submit
+        </Button>
+      </div>
+    </Form>
+  )}
+</div>
+
+
               <Button danger onClick={handleDeny} disabled={selectedItem.status === "Dispose"}>
                 Dispose
               </Button>

@@ -4,6 +4,10 @@ const ObjectId = require("mongodb").ObjectId;
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config({ path: "./config.env" });
+const multer = require("multer");
+const supabase = require("./supabaseClient");
+const userRoutes = require("./userRoute");
+const upload = multer({ storage: multer.memoryStorage() });
 
 let adminRoutes = express.Router();
 const SALT_ROUNDS = 6;
@@ -78,10 +82,12 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
                 branches: [
                   { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
                   { case: { $eq: ["$status", "Listed"] }, then: 2 },
-                  { case: { $eq: ["$status", "Denied"] }, then: 3 },
-                  { case: { $eq: ["$status", "Returned"] }, then: 4 },
-                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 5 },
-                  { case: { $eq: ["$status", "Deleted"] }, then: 6 },
+                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 3 },
+                  { case: { $eq: ["$status", "Claim Approved"] }, then: 4 },
+                  { case: { $eq: ["$status", "Returned"] }, then: 5 },
+                  { case: { $eq: ["$status", "Claim Rejected"] }, then: 6 },
+                  { case: { $eq: ["$status", "Denied"] }, then: 7 },
+                  { case: { $eq: ["$status", "Deleted"] }, then: 8 },
                 ],
                 default: 99,
               },
@@ -286,10 +292,12 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
                 branches: [
                   { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
                   { case: { $eq: ["$status", "Listed"] }, then: 2 },
-                  { case: { $eq: ["$status", "Denied"] }, then: 3 },
-                  { case: { $eq: ["$status", "Returned"] }, then: 4 },
-                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 5 },
-                  { case: { $eq: ["$status", "Deleted"] }, then: 6 },
+                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 3 },
+                  { case: { $eq: ["$status", "Claim Approved"] }, then: 4 },
+                  { case: { $eq: ["$status", "Returned"] }, then: 5 },
+                  { case: { $eq: ["$status", "Claim Rejected"] }, then: 6 },
+                  { case: { $eq: ["$status", "Denied"] }, then: 7 },
+                  { case: { $eq: ["$status", "Deleted"] }, then: 8 },
                 ],
                 default: 99,
               },
@@ -348,35 +356,60 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
 adminRoutes.get("/claim-items", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
-    const claims = await db
-      .collection("claims_db")
-      .aggregate([
-        {
-          $match: {
-            claimStatus: {
-              $in: [
-                "Reviewing Claim",
-                "Claim Approved",
-                "Completed",
-                "Claim Rejected",
+
+try {
+  const claims = await db
+    .collection("claims_db")
+    .aggregate([
+
+      {
+        $addFields: {
+          claimOrder: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$claimStatus", "Reviewing Claim"] }, then: 1 },
+                { case: { $eq: ["$claimStatus", "Claim Approved"] }, then: 2 },
+                { case: { $eq: ["$claimStatus", "Completed"] }, then: 3 },
+                { case: { $eq: ["$claimStatus", "Claim Rejected"] }, then: 4 },
+                { case: { $eq: ["$claimStatus", "Claim Deleted"] }, then: 5 },
               ],
+              default: 999,
             },
           },
         },
-        {
-          $sort: { createdAt: -1 },
-        },
-      ])
-      .toArray();
+      },
 
-    res.json({ success: true, results: claims });
+      {
+        $addFields: {
+          createdAtDate: {
+            $cond: {
+              if: { $eq: [{ $type: "$createdAt" }, "string"] },
+              then: { $toDate: "$createdAt" },
+              else: "$createdAt",
+            },
+          },
+        },
+      },
+
+      
+      {
+        $sort: { claimOrder: 1, createdAtDate: -1 },
+      },
+    ])
+    .toArray();
+
+  res.json({ success: true, results: claims });
+} catch (err) {
+  console.error("Error fetching claims:", err);
+  res.status(500).json({ success: false, error: err.message, results: [] });
+}
   } catch (err) {
     console.error("Error fetching claims:", err);
     res.status(500).json({ success: false, error: err.message, results: [] });
   }
 });
 
-// 🔹 GET CLAIM DETAILS
+
 adminRoutes.get("/claim-items/:claimId", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
@@ -600,64 +633,72 @@ adminRoutes.route("/storage").get(verifyToken, async (req, res) => {
   }
 });
 
-adminRoutes.put("/storage/approve", verifyToken, async (req, res) => {
+adminRoutes.post("/storage/approve", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
-    const { itemObjectId, status, approvedBy } = req.body;
+    const { itemId, claimerId, reason, adminDecisionBy, photoUrl, lostReferenceFound } = req.body;
+    
 
-    console.log("Incoming Approve Payload:", req.body);
+    console.log("Incoming Claim Payload:", req.body);
 
-    if (!itemObjectId || !status || !approvedBy) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing required fields" });
+    if (!itemId || !claimerId || !adminDecisionBy || !reason) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing required fields (itemId, claimerId, adminDecisionBy, reason)" 
+      });
     }
 
-    if (!ObjectId.isValid(itemObjectId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid itemId" });
+    if (!ObjectId.isValid(itemId)) {
+      return res.status(400).json({ success: false, message: "Invalid itemId" });
     }
 
-    const objectId = new ObjectId(itemObjectId);
+    const objectId = new ObjectId(itemId);
 
-    const updateResult = await db
-      .collection("lost_found_db")
-      .updateOne(
-        { _id: objectId },
-        { $set: { status, approvedBy, updatedAt: new Date() } }
-      );
+    // Update lost_found_db status to "Claimed"
+    const updateResult = await db.collection("lost_found_db").updateOne(
+      { _id: objectId },
+      { $set: { status: "Returned", updatedAt: new Date() } }
+    );
 
     if (updateResult.modifiedCount === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Item not found" });
+      return res.status(404).json({ success: false, message: "Item not found or already claimed" });
     }
 
-    const item = await db
-      .collection("lost_found_db")
-      .findOne({ _id: objectId });
-    if (!item) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Item not found" });
-    }
+    const item = await db.collection("lost_found_db").findOne({ _id: objectId });
 
+    // Insert claim into claims_db
+    const claimMongo = {
+      cid: `C-${Date.now()}`,
+      itemId,
+      claimerId,
+      reason,
+      adminDecisionBy,
+      claimStatus: "Completed",
+      createdAt: new Date(),
+      photoUrl: photoUrl || "",
+      selectedLostId: null,
+      lostReferenceFound: lostReferenceFound || null,
+      reviewedAt: new Date(),
+    };
+
+    await db.collection("claims_db").insertOne(claimMongo);
+
+    // Create audit log
     const auditMongo = {
       aid: `A-${Date.now()}`,
-      action: status === "Disposed" ? "DISPOSED_ITEM" : "CLAIMED_ITEM",
-      targetUser: "",
-      performedBy: approvedBy,
+      action: "CLAIMED_ITEM",
+      targetUser: claimerId,
+      performedBy: adminDecisionBy,
       timestamp: new Date(),
       ticketId: item.tid,
-      details: `${approvedBy} set item ${item.tid} status to ${status}.`,
+      details: `${adminDecisionBy} approved claim by ${claimerId} for item ${item.tid}.`
     };
 
     await db.collection("audit_db").insertOne(auditMongo);
 
-    res.json({ success: true, message: `Item ${status}`, audit: auditMongo });
+    res.json({ success: true, message: "Claim report created successfully", claim: claimMongo, audit: auditMongo });
   } catch (err) {
-    console.error("Error approving/denying item:", err);
+    console.error("Error creating claim report:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -726,6 +767,88 @@ adminRoutes.route("/settings/edit").put(verifyToken, async (req, res) => {
   }
 });
 
+//------------------------------------------------------------------------REPORT ITEM------------------------------------------------------------------------------
+
+adminRoutes.route("/report").post(verifyToken, upload.single("file"), async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+    let photoUrl = req.body.photoUrl || "";
+
+    
+    //Preparing the file
+    if (req.file) {
+      const { originalname, buffer, mimetype } = req.file;
+
+      const { data, error } = await supabase.storage
+        .from("user_uploads")
+        .upload(`report-${Date.now()}-${originalname}`, buffer, {
+          contentType: mimetype,
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("user_uploads")
+        .getPublicUrl(data.path);
+
+      photoUrl = publicUrlData.publicUrl;
+    }
+
+    const mongoReport = {
+      tid: `T-${Date.now()}`,
+      title: req.body.title || "No title",
+      keyItem: req.body.keyItem || "No item",
+      category: req.body.category || "No category",
+      itemBrand: req.body.itemBrand || "No brand provided",
+      description: req.body.description || "No description provided",
+      status: "Listed",
+      reportType: req.body.reportType,
+      reportedBy: studentId,
+      approvedBy: "",
+      location: req.body.location || "No location provided",
+      dateReported: new Date,
+      dateFound: req.body.dateFound ? new Date(req.body.dateFound) : null,
+      startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+      endDate: req.body.endDate ? new Date(req.body.endDate) : null,
+      photoUrl,
+      updatedAt: new Date(),
+      claimedBy: ""
+    };
+
+    await db.collection("lost_found_db").insertOne(mongoReport);
+
+    const reportType = req.body.reportType?.toLowerCase();
+    const reportAuditMongo = {
+      aid: `A-${Date.now()}`,
+      action:
+        reportType === "lost"
+          ? "SUBMIT_LOST"
+          : reportType === "found"
+          ? "SUBMIT_FOUND"
+          : "UNKNOWN",
+      targetUser: "",
+      performedBy: `${studentId}`,
+      timestamp: new Date(),
+      ticketId: mongoReport.tid,
+      details:
+        reportType === "lost"
+          ? `${studentId} filed a lost item ${mongoReport.tid}.`
+          : reportType === "found"
+          ? `${studentId} filed a found item ${mongoReport.tid}.`
+          : `${studentId} filed a report ${mongoReport.tid}.`,
+    };
+
+    await db.collection("audit_db").insertOne(reportAuditMongo);
+
+    res.json({ success: true, report: mongoReport, audit: reportAuditMongo });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 //------------------------------------------------------------------------SETTINGS-PASSWORD------------------------------------------------------------------------
 adminRoutes.route("/settings/pass").put(verifyToken, async (req, res) => {
   try {
@@ -791,6 +914,25 @@ adminRoutes.route("/settings/pass").put(verifyToken, async (req, res) => {
   }
 });
 
+
+//-------------------------------------------------------------------------------------USERS--------------------------------------------------------------------
+
+adminRoutes.route("/users").get(verifyToken, async (req, res) => {
+
+try {
+    let db = database.getDb();
+
+    const users = await db
+      .collection("student_db").find({role:"student"}).toArray();
+
+    res.json({ count: users.length, results: users });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+})
+
+
+
 function verifyToken(request, response, next) {
   console.log("verifyToken middleware triggered");
   const authHeaders = request.headers["authorization"];
@@ -814,5 +956,8 @@ function verifyToken(request, response, next) {
             mapupunta siya sa next() which is itutuloy niya ung function  */
   });
 }
+
+
+
 
 module.exports = adminRoutes;

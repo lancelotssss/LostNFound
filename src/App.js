@@ -24,6 +24,8 @@ import { AdminStorage } from "./Pages/AdminStorage"
 import { AdminSettings } from "./Pages/AdminSettings"
 import { AdminHistory } from "./Pages/AdminHistory"
 import { AdminDashboard } from "./Pages/AdminDashboard";
+import { AdminReport } from "./Pages/AdminReport";
+import { AdminUsers } from "./Pages/AdminUsers";
 
 function App() {
   useEffect(() => {
@@ -134,6 +136,12 @@ function App() {
               </ProtectedRoute>}/>
               <Route path="/main/settings" element = {<ProtectedRoute allowedRoles={["admin"]}>
                 <AdminSettings/>
+              </ProtectedRoute>} />
+              <Route path="/main/report" element = {<ProtectedRoute allowedRoles={["admin"]}>
+                <AdminReport/>
+              </ProtectedRoute>} />
+              <Route path="/main/users" element = {<ProtectedRoute allowedRoles={["admin"]}>
+                <AdminUsers/>
               </ProtectedRoute>} />
 
           </Route>

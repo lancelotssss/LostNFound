@@ -121,7 +121,7 @@ export const Home = () => {
     }
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     fetchData(token);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   const fetchData = async (tkn) => {
