@@ -184,7 +184,16 @@ function LoginForm() {
         handleFailedAttempt();
       }
     } catch (err) {
-      handleFailedAttempt(err?.response?.status === 401 ? "auth" : "network");
+      if (err.response?.status === 403) {
+      showBanner(
+        "Account Suspended",
+        "Your account has been suspended. Please contact the administrator for assistance."
+      );
+    } else if (err.response?.status === 401) {
+      handleFailedAttempt("auth");
+    } else {
+    handleFailedAttempt("network");
+  }
     } finally {
       // if we’re pulsing, keep password for a beat; otherwise clear as before
       if (!successPulse) {

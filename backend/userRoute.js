@@ -63,7 +63,7 @@ userRoutes.route("/register").post(async (req, res) => {
 
     const mongoObject = {
       sid: `A-${Date.now()}`,
-      role: "student",
+      role: "Student",
       name: req.body.name || "Unknown",
       email: req.body.email || "unknown@example.com",
       password: hash,
@@ -140,6 +140,14 @@ userRoutes.route("/users/login").post(async (request, response) => {
     if (user){
         console.log("User found:", user.studentId);
 
+
+        if (user.status && user.status.toLowerCase() === "suspended") {
+          return response.status(403).json({
+            success: false,
+            message: "Your account has been suspended. Please contact the administrator for assistance."
+          });
+        }
+        
         let confirmation = await bcrypt.compare(request.body.password, user.password)
         if (confirmation) {
             console.log("Password correct, issuing token...");

@@ -932,6 +932,68 @@ try {
 })
 
 
+adminRoutes.put("/users/update", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { itemObjectId, status, approvedBy } = req.body;
+
+    console.log("Incoming Approve Payload:", req.body);
+
+    if (!itemObjectId || !status || !approvedBy) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
+    if (!ObjectId.isValid(itemObjectId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid itemObjectId" });
+    }
+
+    const objectId = new ObjectId(itemObjectId);
+
+ 
+    const user = await db.collection("student_db").findOne({ _id: objectId });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+  
+    const updateResult = await db.collection("student_db").updateOne(
+      { _id: objectId },
+      { $set: { status, updatedAt: new Date() } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Failed to update user status" });
+    }
+
+
+    const auditMongo = {
+      aid: `A-${Date.now()}`,
+      action: status === "Active" ? "ACTIVATE_USER" : "SUSPEND_USER",
+      targetUser: user.studentId,
+      performedBy: approvedBy,
+      timestamp: new Date(),
+      details: `${approvedBy} has set the student ${user.studentId} status to ${status}.`,
+    };
+
+    await db.collection("audit_db").insertOne(auditMongo);
+
+    res.json({
+      success: true,
+      message: `User ${status} successfully.`,
+      audit: auditMongo,
+    });
+  } catch (err) {
+    console.error("Error approving/denying user:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 function verifyToken(request, response, next) {
   console.log("verifyToken middleware triggered");

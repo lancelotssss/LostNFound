@@ -405,3 +405,16 @@ export async function getUsers(token){
   }
 }
 
+export async function updateUser(itemObjectId, status, approvedBy, token) {
+  try {
+    const response = await axios.put(`${URL}/main/users/update`,
+      { itemObjectId, status, approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error updating found item:", err);
+    throw err;
+  }
+}
+
