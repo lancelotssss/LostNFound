@@ -15,14 +15,14 @@ export async function verifyUser(user) {
     console.log("Raw response:", response);
     console.log("Response data:", response.data);
 
-    if (response.data.success) {
-      return response.data; // token + success
-    } else {
-      throw new Error(response.data.message || "Login failed");
-    }
+    // Always return the response object
+    return response.data; 
   } catch (err) {
     console.error("verifyUser error:", err);
-    throw err;
+
+    // Return structured error if possible
+    if (err.response?.data) return err.response.data;
+    return { success: false, message: err.message || "Network error" };
   }
 }
 
