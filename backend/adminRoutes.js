@@ -78,10 +78,12 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
                 branches: [
                   { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
                   { case: { $eq: ["$status", "Listed"] }, then: 2 },
-                  { case: { $eq: ["$status", "Denied"] }, then: 3 },
-                  { case: { $eq: ["$status", "Returned"] }, then: 4 },
-                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 5 },
-                  { case: { $eq: ["$status", "Deleted"] }, then: 6 },
+                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 3 },
+                  { case: { $eq: ["$status", "Claim Approved"] }, then: 4 },
+                  { case: { $eq: ["$status", "Returned"] }, then: 5 },
+                  { case: { $eq: ["$status", "Claim Rejected"] }, then: 6 },
+                  { case: { $eq: ["$status", "Denied"] }, then: 7 },
+                  { case: { $eq: ["$status", "Deleted"] }, then: 8 },
                 ],
                 default: 99,
               },
@@ -286,10 +288,12 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
                 branches: [
                   { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
                   { case: { $eq: ["$status", "Listed"] }, then: 2 },
-                  { case: { $eq: ["$status", "Denied"] }, then: 3 },
-                  { case: { $eq: ["$status", "Returned"] }, then: 4 },
-                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 5 },
-                  { case: { $eq: ["$status", "Deleted"] }, then: 6 },
+                  { case: { $eq: ["$status", "Reviewing Claim"] }, then: 3 },
+                  { case: { $eq: ["$status", "Claim Approved"] }, then: 4 },
+                  { case: { $eq: ["$status", "Returned"] }, then: 5 },
+                  { case: { $eq: ["$status", "Claim Rejected"] }, then: 6 },
+                  { case: { $eq: ["$status", "Denied"] }, then: 7 },
+                  { case: { $eq: ["$status", "Deleted"] }, then: 8 },
                 ],
                 default: 99,
               },
@@ -348,35 +352,60 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
 adminRoutes.get("/claim-items", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
-    const claims = await db
-      .collection("claims_db")
-      .aggregate([
-        {
-          $match: {
-            claimStatus: {
-              $in: [
-                "Reviewing Claim",
-                "Claim Approved",
-                "Completed",
-                "Claim Rejected",
+
+try {
+  const claims = await db
+    .collection("claims_db")
+    .aggregate([
+
+      {
+        $addFields: {
+          claimOrder: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$claimStatus", "Reviewing Claim"] }, then: 1 },
+                { case: { $eq: ["$claimStatus", "Claim Approved"] }, then: 2 },
+                { case: { $eq: ["$claimStatus", "Completed"] }, then: 3 },
+                { case: { $eq: ["$claimStatus", "Claim Rejected"] }, then: 4 },
+                { case: { $eq: ["$claimStatus", "Claim Deleted"] }, then: 5 },
               ],
+              default: 999,
             },
           },
         },
-        {
-          $sort: { createdAt: -1 },
-        },
-      ])
-      .toArray();
+      },
 
-    res.json({ success: true, results: claims });
+      {
+        $addFields: {
+          createdAtDate: {
+            $cond: {
+              if: { $eq: [{ $type: "$createdAt" }, "string"] },
+              then: { $toDate: "$createdAt" },
+              else: "$createdAt",
+            },
+          },
+        },
+      },
+
+      
+      {
+        $sort: { claimOrder: 1, createdAtDate: -1 },
+      },
+    ])
+    .toArray();
+
+  res.json({ success: true, results: claims });
+} catch (err) {
+  console.error("Error fetching claims:", err);
+  res.status(500).json({ success: false, error: err.message, results: [] });
+}
   } catch (err) {
     console.error("Error fetching claims:", err);
     res.status(500).json({ success: false, error: err.message, results: [] });
   }
 });
 
-// 🔹 GET CLAIM DETAILS
+
 adminRoutes.get("/claim-items/:claimId", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();

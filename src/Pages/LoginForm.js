@@ -47,7 +47,7 @@ function LoginForm() {
         if (response.role === "student") {
           navigate("/cli/home");
         } else if (response.role === "admin") {
-          navigate("/main/found-items");
+          navigate("/main/dashboard");
         } else {
           setErrors({ general: "Unknown user role." });
         }

@@ -36,7 +36,7 @@ export const AdminFound = () => {
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
         key: item._id ? item._id.toString() : `row-${index}`,
-        _id: item._id ? item._id.toString() : null, // keep actual Mongo ID
+        _id: item._id ? item._id.toString() : null, 
         ...item,
         dateReported: item.dateReported
           ? new Date(item.dateReported).toLocaleString()

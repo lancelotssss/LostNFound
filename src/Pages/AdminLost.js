@@ -1,5 +1,4 @@
-// AdminDisplayData.js
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table, Button, Modal, Descriptions, Image, message } from "antd";
 import { getLostReport, approveLost } from "../api";
 import { jwtDecode } from "jwt-decode";
