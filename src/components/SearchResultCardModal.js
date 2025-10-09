@@ -67,7 +67,6 @@ export function SearchResultCardModal({ item, onClaimSuccess }) {
         
         handleCancel();
 
-        // ✅ Notify parent to remove the card
         if (onClaimSuccess) {
           onClaimSuccess(item._id);
         }

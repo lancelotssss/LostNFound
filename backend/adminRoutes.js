@@ -633,64 +633,72 @@ adminRoutes.route("/storage").get(verifyToken, async (req, res) => {
   }
 });
 
-adminRoutes.put("/storage/approve", verifyToken, async (req, res) => {
+adminRoutes.post("/storage/approve", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
-    const { itemObjectId, status, approvedBy } = req.body;
+    const { itemId, claimerId, reason, adminDecisionBy, photoUrl, lostReferenceFound } = req.body;
+    
 
-    console.log("Incoming Approve Payload:", req.body);
+    console.log("Incoming Claim Payload:", req.body);
 
-    if (!itemObjectId || !status || !approvedBy) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing required fields" });
+    if (!itemId || !claimerId || !adminDecisionBy || !reason) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing required fields (itemId, claimerId, adminDecisionBy, reason)" 
+      });
     }
 
-    if (!ObjectId.isValid(itemObjectId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid itemId" });
+    if (!ObjectId.isValid(itemId)) {
+      return res.status(400).json({ success: false, message: "Invalid itemId" });
     }
 
-    const objectId = new ObjectId(itemObjectId);
+    const objectId = new ObjectId(itemId);
 
-    const updateResult = await db
-      .collection("lost_found_db")
-      .updateOne(
-        { _id: objectId },
-        { $set: { status, approvedBy, updatedAt: new Date() } }
-      );
+    // Update lost_found_db status to "Claimed"
+    const updateResult = await db.collection("lost_found_db").updateOne(
+      { _id: objectId },
+      { $set: { status: "Returned", updatedAt: new Date() } }
+    );
 
     if (updateResult.modifiedCount === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Item not found" });
+      return res.status(404).json({ success: false, message: "Item not found or already claimed" });
     }
 
-    const item = await db
-      .collection("lost_found_db")
-      .findOne({ _id: objectId });
-    if (!item) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Item not found" });
-    }
+    const item = await db.collection("lost_found_db").findOne({ _id: objectId });
 
+    // Insert claim into claims_db
+    const claimMongo = {
+      cid: `C-${Date.now()}`,
+      itemId,
+      claimerId,
+      reason,
+      adminDecisionBy,
+      claimStatus: "Completed",
+      createdAt: new Date(),
+      photoUrl: photoUrl || "",
+      selectedLostId: null,
+      lostReferenceFound: lostReferenceFound || null,
+      reviewedAt: new Date(),
+    };
+
+    await db.collection("claims_db").insertOne(claimMongo);
+
+    // Create audit log
     const auditMongo = {
       aid: `A-${Date.now()}`,
-      action: status === "Disposed" ? "DISPOSED_ITEM" : "CLAIMED_ITEM",
-      targetUser: "",
-      performedBy: approvedBy,
+      action: "CLAIMED_ITEM",
+      targetUser: claimerId,
+      performedBy: adminDecisionBy,
       timestamp: new Date(),
       ticketId: item.tid,
-      details: `${approvedBy} set item ${item.tid} status to ${status}.`,
+      details: `${adminDecisionBy} approved claim by ${claimerId} for item ${item.tid}.`
     };
 
     await db.collection("audit_db").insertOne(auditMongo);
 
-    res.json({ success: true, message: `Item ${status}`, audit: auditMongo });
+    res.json({ success: true, message: "Claim report created successfully", claim: claimMongo, audit: auditMongo });
   } catch (err) {
-    console.error("Error approving/denying item:", err);
+    console.error("Error creating claim report:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
