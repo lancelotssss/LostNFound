@@ -256,15 +256,18 @@ export async function getStorage(token) {
   }
 }
 
-export async function approveStorage(itemObjectId, status, approvedBy, token) {
+export async function approveStorage(claimPayload, token) {
   try {
-    const response = await axios.put(`${URL}/main/storage/approve`,
-      { itemObjectId, status, approvedBy },
-      { headers: { Authorization: `Bearer ${token}` } }
+    const response = await axios.post(
+      `${URL}/main/storage/approve`, // make sure this matches your backend mount
+      claimPayload,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
     );
     return response.data;
   } catch (err) {
-    console.error("Error updating found item:", err);
+    console.error("Error creating claim report:", err.response?.data || err.message);
     throw err;
   }
 }
