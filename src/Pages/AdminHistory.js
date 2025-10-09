@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message } from "antd";
+import { useEffect, useState } from "react";
+import { Table, Button, Modal, Descriptions, Image, message, Input  } from "antd";
 import { getHistory, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
 
@@ -13,6 +13,7 @@ export const AdminHistory = () => {
   const [denyModal, setDenyModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [searchText, setSearchText] = useState("");
 
   
   useEffect(() => {
@@ -104,14 +105,36 @@ const confirmDeny = async () => {
   }
 };
 
+const filteredData = data.filter((item) => {
+  const search = searchText.toLowerCase();
+  return (
+    item.tid?.toLowerCase().includes(search) ||
+    item.category?.toLowerCase().includes(search) ||
+    item.keyItem?.toLowerCase().includes(search) ||
+    item.itemBrand.toLowerCase().includes(search)
+  );
+});
+
 
   return (
     <>
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
         Refresh
       </Button>
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+  <Input
+    placeholder="Search by TID, Category, or Key Item"
+    value={searchText}
+    onChange={(e) => setSearchText(e.target.value)}
+    style={{ width: 300 }}
+    allowClear
+  />
+  
+</div>
+
       <Table
-        dataSource={data}
+        dataSource={filteredData}
         onRow={(record) => ({
           onClick: () => handleRowClick(record),
           style: { cursor: "pointer" },
@@ -160,7 +183,7 @@ const confirmDeny = async () => {
             </Descriptions>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button onClick={handleModalClose}>Cancel</Button>
+              <Button onClick={handleModalClose}>OK</Button>
             </div>
           </>
         )}

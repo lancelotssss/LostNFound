@@ -388,5 +388,17 @@ export async function getAuditLogs(token) {
 
 
 
-
+export async function getUsers(token){
+  try {
+    const response = await axios.get(`${URL}/main/users`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // { count, results }
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+    return { results: [] };
+  }
+}
 

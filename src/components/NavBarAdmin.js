@@ -25,12 +25,20 @@ const pageDataAdmin = [
         path: "/main/claim-items"
     },
     {
+      name: "Report Item",
+      path: "/main/report"
+    },
+    {
       name: "Storage",
       path: "/main/storage"
     },
     {
       name: "History",
       path: "/main/history"
+    },
+    {
+      name: "Manage Users",
+      path: "/main/users"
     },
     {
         name: "Activity Logs",

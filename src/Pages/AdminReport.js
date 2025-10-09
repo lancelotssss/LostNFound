@@ -1,0 +1,738 @@
+import React, { useMemo, useState, useEffect } from "react";
+import { Steps, Button, Card, Typography, Input, Select, DatePicker, message } from "antd";
+import { DownloadOutlined, SearchOutlined } from '@ant-design/icons';
+import dayjs from "dayjs";
+import "./styles/ReportItem.css";
+
+
+const { Title } = Typography;
+
+export const AdminReport = () =>  {
+  const [registerData, setRegisterData] = useState({
+    reportType: "",
+    category: "",
+    keyItem: "",
+    itemBrand: "",
+    location: "",
+    startDate: "",
+    endDate: "",
+    dateFound: "",
+    description: "",
+    photoUrl: "",
+    title: "",
+    file: null,
+  });
+
+  const [current, setCurrent] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (current === 1) {
+      setRegisterData((prev) => ({ ...prev, category: "" }));
+    }
+  }, [current]);
+  
+
+  function setField(name, value) {
+    setRegisterData((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleChange(e) {
+  const { name, value } = e.target;
+
+  if (name === "reportType") {
+    setRegisterData({
+      reportType: value,
+      category: "",
+      keyItem: "",
+      itemBrand: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      dateFound: "",
+      description: "",
+      photoUrl: "",
+      title: "",
+      file: null,
+    });
+    setCurrent(1);
+  } 
+  else {
+    setField(name, value);
+  }
+}
+
+  function handleFileChange(e) {
+    setField("file", e.target.files?.[0] ?? null);
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const token = sessionStorage.getItem("User");
+      if (!token) {
+        alert("You must be logged in before submitting a report.");
+        return;
+      }
+
+      
+      const { reportType, category, keyItem, itemBrand } = registerData;
+      const brandPart = itemBrand ? `, ${itemBrand}` : "";
+      const generatedTitle = `${reportType} Item: ${category}: ${keyItem}${brandPart}`;
+
+      
+      const formData = new FormData();
+      for (const key in registerData) {
+        if (key === "file" && registerData.file) {
+          formData.append("file", registerData.file);
+        } else if (registerData[key] !== "") {
+          formData.append(key, registerData[key]);
+        }
+      }
+      formData.append("title", generatedTitle);
+
+      const response = await fetch("http://localhost:3110/main/report", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        message.success("Report submitted successfully!");
+        setRegisterData({
+          reportType: "",
+          category: "",
+          keyItem: "",
+          itemBrand: "",
+          location: "",
+          startDate: "",
+          endDate: "",
+          dateFound: "",
+          description: "",
+          photoUrl: "",
+          title: "",
+          file: null,
+        });
+        setCurrent(0);
+      } else {
+        message.error("Report submission failed");
+      }
+    } catch (err) {
+      console.error("Error submitting report:", err);
+      message.error("Error submitting report");
+    } finally{
+      setSubmitting(false)
+    }
+  }
+
+  const steps = [
+    { title: "Choose Type of Report", description: "Select Lost or Found" },
+    { title: "Select Category", description: "Pick the closest category" },
+    { title: "Item Details", description: "Name the item + brand" },
+    { title: "When & Where", description: "Location and dates" },
+    { title: "Describe & Upload", description: "Extra info and photo" },
+  ];
+
+  const handleStepChange = (value) => {
+    if (value <= current) setCurrent(value); 
+  };
+
+  const canGoNextFrom3 = registerData.keyItem?.trim();
+  const canGoNextFrom4 = (() => {
+    if (!registerData.location?.trim()) return false;
+    if (registerData.reportType === "Lost")
+      return Boolean(registerData.startDate && registerData.endDate);
+    if (registerData.reportType === "Found")
+      return Boolean(registerData.dateFound);
+    return false;
+  })();
+
+
+  const disableFuture = (cur) => cur && cur > dayjs().endOf("day");
+
+  // -------------------- Step content  --------------------
+  const StepOne = (
+    <div className="step-one">
+      <Title level={4} className="step-title">WHAT DO YOU WANT TO REPORT</Title>
+      <div className="step-one-container">
+
+        <Button
+          size="large"
+          className="step-one-button"
+          onClick={() => { setField("reportType", "Lost"); setCurrent(1); }}
+        >
+          <div className="step-one-button-inner">
+            <SearchOutlined className="step-one-button-icon" />
+            <span className="step-one-button-title">REPORT MISSING ITEM</span>
+            <span className="step-one-button-desc">
+              Submit details about an item you lost or found so it can be recorded and matched in the system.
+            </span>
+          </div>
+        </Button>
+
+        <Button
+          size="large"
+          className="step-one-button"
+          onClick={() => { setField("reportType", "Found"); setCurrent(1); }}
+        >
+          <div className="step-one-button-inner">
+            <DownloadOutlined className="step-one-button-icon" />
+            <span className="step-one-button-title">REPORT FOUND ITEM</span>
+            <span className="step-one-button-desc">
+              Share where and when you found it so owners can identify and claim their items.
+            </span>
+          </div>
+        </Button>
+
+      </div>
+    </div>
+  );
+
+  const StepTwo = (
+  <div className="step-two">
+    <Title level={4} className="step-title">
+      {registerData.reportType === "Found"
+        ? "WHAT CATEGORY OF AN ITEM DID YOU FIND?"
+        : "WHAT CATEGORY OF AN ITEM DID YOU LOSE?"}
+    </Title>
+
+    <Select
+      placeholder="SELECT A CATEGORY"
+      value={registerData.category || undefined}
+      onChange={(val) => {
+        setRegisterData((prev) => ({
+          ...prev,
+          category: val,
+          keyItem: "", 
+        }));
+        setCurrent(2);
+      }}
+      className="field-wide"
+      options={[
+        { value: "Gadgets", label: "Gadgets" },
+        { value: "Identification Card", label: "Identification Card" },
+        { value: "Personal Belongings", label: "Personal Belongings" },
+        { value: "School Supplies", label: "School Supplies" },
+        { value: "Wearables", label: "Wearables" },
+        { value: "Others", label: "Others" },
+
+      ]}
+    />
+    
+    <div className="footer-actions" style={{ marginTop: "20px" }}>
+      <Button
+        className="footer-buttons"
+        type="primary"
+        disabled={!registerData.category}
+        onClick={() => setCurrent(2)}
+      >
+        Next
+      </Button>
+    </div>
+  </div>
+);
+
+
+  const StepThree = (
+  <div className="step-three">
+    <Title level={4} className="step-title">
+      {registerData.reportType === "Found"
+        ? "WHAT ITEM DID YOU FIND?"
+        : "WHAT ITEM DID YOU LOSE?"}
+    </Title>
+
+    <div className="field-col">
+      {/* Category-based item selection */}
+      {registerData.category === "Others" ? (
+        <Input
+          name="keyItem"
+          placeholder="Enter Item"
+          value={registerData.keyItem}
+          onChange={handleChange}
+          className="field-wide"
+        />
+      ) : (
+        <Select
+          placeholder="Select an Item"
+          value={registerData.keyItem || undefined}
+          onChange={(val) => setField("keyItem", val)}
+          className="field-wide"
+          disabled={!registerData.category}
+          options={
+            registerData.category === "Gadgets"
+              ? [
+                  { value: "Audio Device", label: "Audio Device" },
+                  { value: "Calculator", label: "Calculator" },
+                  { value: "Charging Utilities", label: "Charging Utilities" },
+                  { value: "CPU", label: "CPU" },
+                  { value: "Laptop", label: "Laptop" },
+                  { value: "Mobile Device", label: "Mobile Device" },
+                  { value: "Power Bank", label: "Power Bank" },
+                  { value: "Watch", label: "Watch" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "Personal Belongings"
+              ? [
+                  { value: "Accessories", label: "Accessories" },
+                  { value: "Bag", label: "Bag" },
+                  { value: "Cosmetic Products", label: "Cosmetic Products" },
+                  { value: "Handkerchief", label: "Handkerchief" },
+                  { value: "Keys", label: "Keys" },
+                  { value: "Tumbler", label: "Tumbler" },
+                  { value: "Umbrella", label: "Umbrella" },
+                  { value: "Wallet", label: "Wallet" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "School Supplies"
+              ? [
+                  { value: "Architecture Materials", label: "Architecture Materials" },
+                  { value: "Books", label: "Books" },
+                  { value: "Medical Materials", label: "Medical Materials" },
+                  { value: "Office Supplies", label: "Office Supplies" },
+                  { value: "Pen", label: "Pen" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "Wearables"
+              ? [
+                  { value: "Cap", label: "Cap" },
+                  { value: "Eyeglass", label: "Eyeglass" },
+                  { value: "Foot Wearables", label: "Foot Wearables" },
+                  { value: "Hat", label: "Hat" },
+                  { value: "Jacket", label: "Jacket" },
+                  { value: "Lab Gown", label: "Lab Gown" },
+                  { value: "T-shirt", label: "T-shirt" },
+                  { value: "Trousers", label: "Trousers" },
+                  { value: "Uniform", label: "Uniform" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : registerData.category === "Identification Card"
+              ? [
+                  { value: "Driver’s License", label: "Driver’s License" },
+                  { value: "National ID", label: "National ID" },
+                  { value: "Passport", label: "Passport" },
+                  { value: "School ID", label: "School ID" },
+                  { value: "Others", label: "Others" },
+
+                ]
+              : []
+          }
+        />
+        
+          
+
+      )}
+
+      {/* Hide item brand if category is Identification Card */}
+      {registerData.category !== "Identification Card" && (
+        <Input
+          name="itemBrand"
+          placeholder="ITEM BRAND (optional)"
+          value={registerData.itemBrand}
+          onChange={handleChange}
+          className="field-wide"
+        />
+      )}
+    </div>
+  </div>
+);
+
+
+  const StepFour = (
+  <div className="step-four">
+    <Title level={4} className="step-title">
+      {registerData.reportType === "Found"
+        ? "WHEN AND WHERE DID YOU FIND THE ITEM?"
+        : "WHEN AND WHERE DID YOU LOSE THE ITEM?"}
+    </Title>
+
+    <div className="field-col">
+      <Select
+      placeholder="LOCATION"
+      value={registerData.location || undefined}
+      onChange={(val) => setField("location", val)}
+      className="field-wide"
+      options={[
+        { value: "Ground Floor", label: "Ground Floor" },
+        { value: "7th Floor", label: "7th Floor" },
+        { value: "8th Floor", label: "8th Floor" },
+        { value: "9th Floor", label: "9th Floor" },
+        { value: "10th Floor", label: "10th Floor" },
+        { value: "11th Floor", label: "11th Floor" },
+        { value: "12th Floor", label: "12th Floor" },
+        { value: "Outside of Campus", label: "Outside of Campus" },
+        ]}
+      />
+
+      {registerData.reportType === "Lost" ? (
+        <div className="date-row">
+          <DatePicker
+            className="field-half"
+            placeholder="START DATE"
+            value={registerData.startDate ? dayjs(registerData.startDate) : null}
+            onChange={(_, dateStr) => {
+              setField("startDate", dateStr);
+              
+              setField("endDate", "");
+            }}
+            disabledDate={disableFuture}
+          />
+
+          <DatePicker
+            className="field-half"
+            placeholder="END DATE"
+            value={registerData.endDate ? dayjs(registerData.endDate) : null}
+            onChange={(_, dateStr) => setField("endDate", dateStr)}
+            disabled={!registerData.startDate} 
+            disabledDate={(cur) => {
+              
+              if (!registerData.startDate) return true;
+              const start = dayjs(registerData.startDate);
+              const maxEnd = start.add(5, "day");
+              return cur < start || cur > maxEnd || cur > dayjs().endOf("day");
+            }}
+          />
+        </div>
+      ) : (
+        <DatePicker
+          className="field-wide"
+          placeholder="DATE FOUND"
+          value={registerData.dateFound ? dayjs(registerData.dateFound) : null}
+          onChange={(_, dateStr) => setField("dateFound", dateStr)}
+          disabledDate={disableFuture}
+        />
+      )}
+    </div>
+  </div>
+);
+
+
+  const StepFive = (
+    <div className="step-five">
+      <Title level={4} className="step-title">
+        {registerData.reportType === "Found"
+          ? "PLEASE DESCRIBE THE ITEM. A PHOTO WOULD HELP."
+          : "PLEASE DESCRIBE YOUR MISSING ITEM. A PHOTO WOULD HELP."}
+      </Title>
+      <div className="field-col">
+        <Input.TextArea
+          name="description"
+          rows={4}
+          placeholder="DESCRIPTION"
+          value={registerData.description}
+          onChange={handleChange}
+          className="field-wide"
+        />
+        <input type="file" name="file" onChange={handleFileChange} />
+      </div>
+    </div>
+  );
+
+  const content = useMemo(() => {
+    switch (current) {
+      case 0: return StepOne;
+      case 1: return StepTwo;
+      case 2: return StepThree;
+      case 3: return StepFour;
+      case 4: return StepFive;
+      default: return StepOne;
+    }
+  }, [current, registerData]);
+
+  return (
+    <form onSubmit={handleSubmit} className="report-wrap">
+      <Card className="report-card">
+        <Steps
+        size="small"
+          current={current}
+          onChange={handleStepChange}
+          items={steps.map(s => ({ title: s.title, description: s.description }))}
+        />
+
+        <div className="step-content">{content}</div>
+
+        <div className="footer-actions">
+          <Button className="footer-buttons" disabled={current === 0} onClick={() => setCurrent(p => Math.max(p - 1, 0))}>
+            Back
+          </Button>
+          {current === 2 && (
+            <Button className="footer-buttons" type="primary" disabled={!canGoNextFrom3} onClick={() => setCurrent(3)}>
+              Next
+            </Button>
+          )}
+          {current === 3 && (
+            <Button className="footer-buttons" type="primary" disabled={!canGoNextFrom4} onClick={() => setCurrent(4)}>
+              Next
+            </Button>
+          )}
+          {current === 4 && (
+          <Button
+            className="footer-buttons"
+            type="primary"
+            htmlType="submit"
+            loading={submitting} // shows spinner
+            disabled={submitting} // blocks extra clicks
+          >
+            {submitting ? "Submitting..." : "Confirm"}
+          </Button>
+        )}
+        </div>
+      </Card>
+    </form>
+  );
+  return (
+  <form onSubmit={handleSubmit}>
+    <h1>Lost and Found Report</h1>
+
+    {/* Step 1: Report Type */}
+    <div>
+      <p>Type of Report</p>
+      <label>
+        <input
+          type="radio"
+          name="reportType"
+          value="Lost"
+          checked={registerData.reportType === "Lost"}
+          onChange={handleChange}
+        />{"  "}
+        Lost
+      </label>
+      <label>
+        <input
+          type="radio"
+          name="reportType"
+          value="Found"
+          checked={registerData.reportType === "Found"}
+          onChange={handleChange}
+        />{" "}
+        Found
+      </label>
+    </div>
+
+    {/* Step 2: Category */}
+    {registerData.reportType && (
+      <div>
+        <p>
+          Category{" "}
+          <select
+            name="category"
+            value={registerData.category}
+            onChange={handleChange}
+          >
+            <option value="">Select Category</option>
+            <option value="Gadgets">Gadgets</option>
+            <option value="Personal Belongings">Personal Belongings</option>
+            <option value="School Supplies">School Supplies</option>
+            <option value="Wearables">Wearables</option>
+            <option value="Identification Card">Identification Card</option>
+            <option value="Others">Others</option>
+          </select>
+        </p>
+      </div>
+    )}
+
+    {/* Step 3: Key Item */}
+    {registerData.reportType && (
+      <div>
+        <p>
+          Key Item{" "}
+          {registerData.category === "Others" ? (
+            <input
+              type="text"
+              name="keyItem"
+              value={registerData.keyItem}
+              onChange={handleChange}
+              placeholder="Enter Item"
+            />
+          ) : (
+            <select
+              name="keyItem"
+              value={registerData.keyItem}
+              onChange={handleChange}
+              disabled={!registerData.category}
+            >
+              <option value="">Select Item</option>
+
+              {/* Gadgets */}
+              {registerData.category === "Gadgets" && (
+                <>
+                  <option>Mobile Device</option>
+                  <option>Laptop</option>
+                  <option>Watch</option>
+                  <option>Calculator</option>
+                  <option>Power Bank</option>
+                  <option>Charging Utilities</option>
+                  <option>CPU</option>
+                  <option>Audio Device</option>
+                  <option>Others</option>
+                </>
+              )}
+
+              {/* Personal Belongings */}
+              {registerData.category === "Personal Belongings" && (
+                <>
+                  <option>Wallet</option>
+                  <option>Tumbler</option>
+                  <option>Bag</option>
+                  <option>Accessories</option>
+                  <option>Cosmetic Products</option>
+                  <option>Handkerchief</option>
+                  <option>Umbrella</option>
+                  <option>Keys</option>
+                  <option>Others</option>
+                </>
+              )}
+
+              {/* School Supplies */}
+              {registerData.category === "School Supplies" && (
+                <>
+                  <option>Office Supplies</option>
+                  <option>Pen</option>
+                  <option>Books</option>
+                  <option>Architecture Materials</option>
+                  <option>Medical Materials</option>
+                  <option>Others</option>
+                </>
+              )}
+
+              {/* Wearables */}
+              {registerData.category === "Wearables" && (
+                <>
+                  <option>Eyeglass</option>
+                  <option>Jacket</option>
+                  <option>Hat</option>
+                  <option>T-shirt</option>
+                  <option>Lab Gown</option>
+                  <option>Uniform</option>
+                  <option>Foot Wearables</option>
+                  <option>Cap</option>
+                  <option>Trousers</option>
+                  <option>Others</option>
+                </>
+              )}
+
+              {/* Identification Card */}
+              {registerData.category === "Identification Card" && (
+                <>
+                  <option>School ID</option>
+                  <option>National ID</option>
+                  <option>Passport</option>
+                  <option>Driver’s License</option>
+                  <option>Others</option>
+                </>
+              )}
+            </select>
+          )}
+        </p>
+      </div>
+    )}
+
+    {/* Step 4: Item Brand */}
+    {registerData.keyItem && (
+      <div>
+        <p>
+          Item Brand{" "}
+          <input
+            type="text"
+            name="itemBrand"
+            placeholder="Enter Item Brand"
+            value={registerData.itemBrand}
+            onChange={handleChange}
+          />
+        </p>
+      </div>
+    )}
+
+    {/* Step 5: Location */}
+    {registerData.itemBrand && (
+      <div>
+        <p>
+          Location{" "}
+          <input
+            type="text"
+            name="location"
+            placeholder="Enter Location"
+            value={registerData.location}
+            onChange={handleChange}
+          />
+        </p>
+      </div>
+    )}
+
+    {/* Step 6: Date Inputs */}
+    {registerData.reportType === "Lost" && registerData.location && (
+      <>
+        <p>
+          Start Date{" "}
+          <input
+            type="date"
+            name="startDate"
+            value={registerData.startDate}
+            onChange={handleChange}
+          />
+        </p>
+        <p>
+          End Date{" "}
+          <input
+            type="date"
+            name="endDate"
+            value={registerData.endDate}
+            onChange={handleChange}
+          />
+        </p>
+      </>
+    )}
+
+    {registerData.reportType === "Found" && registerData.location && (
+      <p>
+        Date Found{" "}
+        <input
+          type="date"
+          name="dateFound"
+          value={registerData.dateFound}
+          onChange={handleChange}
+        />
+      </p>
+    )}
+
+    {/* Step 7: Description and File Upload */}
+    {((registerData.reportType === "Lost" &&
+      registerData.startDate &&
+      registerData.endDate) ||
+      (registerData.reportType === "Found" &&
+        registerData.dateFound)) && (
+      <>
+        <div>
+          <p>
+            Description{" "}
+            <textarea
+              name="description"
+              placeholder="Enter Description"
+              value={registerData.description}
+              onChange={handleChange}
+            />
+          </p>
+        </div>
+
+        <div>
+          <p>
+            Upload Photo{" "}
+            <input type="file" name="file" onChange={handleFileChange} />
+          </p>
+        </div>
+
+        <div>
+          <button type="submit">SUBMIT REPORT</button>
+        </div>
+      </>
+    )}
+  </form>
+);
+}

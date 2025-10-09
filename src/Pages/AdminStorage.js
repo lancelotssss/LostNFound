@@ -74,7 +74,7 @@ export const AdminStorage = () => {
   setConfirmLoading(true);
   const token = sessionStorage.getItem("User");
   try {
-    await approveFound(selectedItem._id, "Claimed", user.studentId, token);
+    await approveFound(selectedItem._id, "Returned", user.studentId, token);
     message.success("Item claimed successfully!");
     setApproveModal(false);
     setIsModalVisible(false);

@@ -4,6 +4,10 @@ const ObjectId = require("mongodb").ObjectId;
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config({ path: "./config.env" });
+const multer = require("multer");
+const supabase = require("./supabaseClient");
+const userRoutes = require("./userRoute");
+const upload = multer({ storage: multer.memoryStorage() });
 
 let adminRoutes = express.Router();
 const SALT_ROUNDS = 6;
@@ -755,6 +759,88 @@ adminRoutes.route("/settings/edit").put(verifyToken, async (req, res) => {
   }
 });
 
+//------------------------------------------------------------------------REPORT ITEM------------------------------------------------------------------------------
+
+adminRoutes.route("/report").post(verifyToken, upload.single("file"), async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+    let photoUrl = req.body.photoUrl || "";
+
+    
+    //Preparing the file
+    if (req.file) {
+      const { originalname, buffer, mimetype } = req.file;
+
+      const { data, error } = await supabase.storage
+        .from("user_uploads")
+        .upload(`report-${Date.now()}-${originalname}`, buffer, {
+          contentType: mimetype,
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("user_uploads")
+        .getPublicUrl(data.path);
+
+      photoUrl = publicUrlData.publicUrl;
+    }
+
+    const mongoReport = {
+      tid: `T-${Date.now()}`,
+      title: req.body.title || "No title",
+      keyItem: req.body.keyItem || "No item",
+      category: req.body.category || "No category",
+      itemBrand: req.body.itemBrand || "No brand provided",
+      description: req.body.description || "No description provided",
+      status: "Listed",
+      reportType: req.body.reportType,
+      reportedBy: studentId,
+      approvedBy: "",
+      location: req.body.location || "No location provided",
+      dateReported: new Date,
+      dateFound: req.body.dateFound ? new Date(req.body.dateFound) : null,
+      startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+      endDate: req.body.endDate ? new Date(req.body.endDate) : null,
+      photoUrl,
+      updatedAt: new Date(),
+      claimedBy: ""
+    };
+
+    await db.collection("lost_found_db").insertOne(mongoReport);
+
+    const reportType = req.body.reportType?.toLowerCase();
+    const reportAuditMongo = {
+      aid: `A-${Date.now()}`,
+      action:
+        reportType === "lost"
+          ? "SUBMIT_LOST"
+          : reportType === "found"
+          ? "SUBMIT_FOUND"
+          : "UNKNOWN",
+      targetUser: "",
+      performedBy: `${studentId}`,
+      timestamp: new Date(),
+      ticketId: mongoReport.tid,
+      details:
+        reportType === "lost"
+          ? `${studentId} filed a lost item ${mongoReport.tid}.`
+          : reportType === "found"
+          ? `${studentId} filed a found item ${mongoReport.tid}.`
+          : `${studentId} filed a report ${mongoReport.tid}.`,
+    };
+
+    await db.collection("audit_db").insertOne(reportAuditMongo);
+
+    res.json({ success: true, report: mongoReport, audit: reportAuditMongo });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 //------------------------------------------------------------------------SETTINGS-PASSWORD------------------------------------------------------------------------
 adminRoutes.route("/settings/pass").put(verifyToken, async (req, res) => {
   try {
@@ -820,6 +906,25 @@ adminRoutes.route("/settings/pass").put(verifyToken, async (req, res) => {
   }
 });
 
+
+//-------------------------------------------------------------------------------------USERS--------------------------------------------------------------------
+
+adminRoutes.route("/users").get(verifyToken, async (req, res) => {
+
+try {
+    let db = database.getDb();
+
+    const users = await db
+      .collection("student_db").find({role:"student"}).toArray();
+
+    res.json({ count: users.length, results: users });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+})
+
+
+
 function verifyToken(request, response, next) {
   console.log("verifyToken middleware triggered");
   const authHeaders = request.headers["authorization"];
@@ -843,5 +948,8 @@ function verifyToken(request, response, next) {
             mapupunta siya sa next() which is itutuloy niya ung function  */
   });
 }
+
+
+
 
 module.exports = adminRoutes;
