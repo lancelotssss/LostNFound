@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select } from "antd";
 import { getLostReport, approveLost } from "../api";
 import { jwtDecode } from "jwt-decode";
 
 const { Column } = Table;
+const { Option } = Select;
 
 export const AdminLost = () => {
   const [data, setData] = useState([]);
@@ -14,6 +15,7 @@ export const AdminLost = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   
   useEffect(() => {
@@ -109,15 +111,19 @@ export const AdminLost = () => {
     }
   };
 
-  const filteredData = data.filter((item) => {
-  const search = searchText.toLowerCase();
-  return (
-    item.tid?.toLowerCase().includes(search) ||
-    item.category?.toLowerCase().includes(search) ||
-    item.keyItem?.toLowerCase().includes(search) ||
-    item.itemBrand?.toLowerCase().includes(search)
-  );
-});
+   const filteredData = data.filter((item) => {
+    const search = searchText.toLowerCase();
+    const matchesSearch =
+      item.tid?.toLowerCase().includes(search) ||
+      item.category?.toLowerCase().includes(search) ||
+      item.keyItem?.toLowerCase().includes(search) ||
+      item.itemBrand?.toLowerCase().includes(search);
+
+    const matchesStatus =
+      !statusFilter || item.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <>
@@ -133,6 +139,24 @@ export const AdminLost = () => {
         style={{ width: 300 }}
         allowClear
       />
+       {/* 🟩 Status Filter Dropdown */}
+        <Select
+          placeholder="Filter by Status"
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value)}
+          style={{ width: 200 }}
+          allowClear
+        >
+          <Option value="">All Status</Option>
+          <Option value="Reviewing">Reviewing</Option>
+          <Option value="Listed">Listed</Option>
+          <Option value="Reviewing Claim">Reviewing Claim</Option>
+          <Option value="Claim Approved">Claim Approved</Option>
+          <Option value="Returned">Returned</Option>
+          <Option value="Claim Rejected">Claim Rejected</Option>
+          <Option value="Denied">Denied</Option>
+          <Option value="Deleted">Deleted</Option>
+        </Select>
       
     </div>
       <Table

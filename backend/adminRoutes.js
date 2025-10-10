@@ -160,7 +160,7 @@ adminRoutes.put("/found/approve", verifyToken, async (req, res) => {
 
     const auditMongo = {
       aid: `A-${Date.now()}`,
-      action: status === "Active" ? "APPROVE_FOUND" : "DENY_FOUND",
+      action: status === "Listed" ? "APPROVE_FOUND" : "DENY_FOUND",
       targetUser: "",
       performedBy: approvedBy,
       timestamp: new Date(),
@@ -256,7 +256,7 @@ adminRoutes.put("/lost/approve", verifyToken, async (req, res) => {
 
     const auditMongo = {
       aid: `A-${Date.now()}`,
-      action: status === "Active" ? "APPROVE_LOST" : "DENY_LOST",
+      action: status === "Listed" ? "APPROVE_LOST" : "DENY_LOST",
       targetUser: "",
       performedBy: approvedBy,
       timestamp: new Date(),
@@ -489,7 +489,7 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
           {
             $set: {
               // Lost item becomes "Claim Rejected" if claim is denied, otherwise use the claim status
-              status: status === "Claim Rejected" ? "Claim Rejected" : status,
+              status: status === "Claim Rejected" ? "Listed" : status,
               approvedBy,
               updatedAt: new Date(),
             },
@@ -521,7 +521,7 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
       action: status === "Claim Approved" ? "APPROVE_CLAIM" : "DENY_CLAIM",
       performedBy: approvedBy,
       timestamp: new Date(),
-      details: `${approvedBy} set claim ${claimId.tid} to ${status}.`,
+      details: `${approvedBy} set claim ${claimId.cid} to ${status}.`,
     };
     await db.collection("audit_db").insertOne(audit);
 
@@ -719,9 +719,7 @@ adminRoutes.route("/logs").get(verifyToken, async (req, res) => {
   }
 });
 
-adminRoutes.route("/manage-users").get(verifyToken, async (req, res) => {});
 
-adminRoutes.route("/profile").get(verifyToken, async (req, res) => {});
 
 //------------------------------------------------------------------------SETTINGS-CONTACT------------------------------------------------------------------------
 adminRoutes.route("/settings/edit").put(verifyToken, async (req, res) => {

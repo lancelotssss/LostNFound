@@ -65,6 +65,10 @@ userRoutes.route("/register").post(async (req, res) => {
       sid: `A-${Date.now()}`,
       role: "student",
       name: req.body.name || "Unknown",
+      fname: req.body.fname || "Unknown",
+      mname: req.body.mname || "",
+      lname: req.body.lname || "Unknown",
+      suffix: req.body.suffix || "",
       email: req.body.email || "unknown@example.com",
       password: hash,
       studentId: req.body.studentId || "",
@@ -162,7 +166,9 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 status: user.status,
                 createdAt: user.createdAt,
                 phone: user.phone,
-                password: user.password
+                password: user.password,
+                lname: user.lname,
+                fname: user.fname
             }
             const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
 

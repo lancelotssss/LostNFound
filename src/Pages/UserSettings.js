@@ -24,11 +24,9 @@ import "./styles/UserSettings.css";
 
 
 // Helper: get initials from a full name
-const getInitials = (name = "") => {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0) return "";
-  const first = parts[0][0] || "";
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+const getInitials = (fname = "", lname = "") => {
+  const first = fname?.trim()?.charAt(0) || "";
+  const last = lname?.trim()?.charAt(0) || "";
   return (first + last).toUpperCase();
 };
 
@@ -50,6 +48,8 @@ export function UserSettings() {
     createdAt: "",
     phone: "",
     password: "",
+    fname: "",
+    lname: ""
   });
 
   const [isEditing, setIsEditing] = useState(false);               
@@ -85,6 +85,8 @@ export function UserSettings() {
         status: decodedUser.status || "",
         createdAt: decodedUser.createdAt || "",
         phone: decodedUser.phone || "",
+        lname: decodedUser.lname || "",
+        fname: decodedUser.fname || ""
       }));
     }
     loadUserData();
@@ -150,9 +152,9 @@ export function UserSettings() {
         <Col xs={24} md={12}>
           <Card className="settings-card" bordered>
             <Space align="center" size={16} className="settings-header">
-            {user?.name ? (
+            {user?.fname || user?.lname ? (
               <Avatar size={64} style={{ backgroundColor: '#014F86' }}>
-                {getInitials(user.name)}
+                {getInitials(user.fname, user.lname)}
               </Avatar>
             ) : (
               <Avatar size={64} icon={<UserOutlined />} />
@@ -164,7 +166,9 @@ export function UserSettings() {
                 <Text type="secondary">{user?.email || "—"}</Text>
                 <div>
                   <Tag color={statusColor} style={{ marginTop: 6 }}>
-                    {user?.status || "—"}
+                    {user?.status
+                      ? user.status.charAt(0).toUpperCase() + user.status.slice(1)
+                      : "—"}
                   </Tag>
                 </div>
               </div>
