@@ -391,16 +391,16 @@ export async function getAuditLogs(token) {
 
 
 
-export async function getUsers(token){
+export async function getUsers(token, role = "student") {
   try {
-    const response = await axios.get(`${URL}/main/users`, {
+    const response = await axios.get(`${URL}/main/users?role=${role}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
     return response.data; // { count, results }
   } catch (err) {
-    console.error("Error fetching reports:", err);
+    console.error("Error fetching users:", err);
     return { results: [] };
   }
 }
@@ -418,3 +418,14 @@ export async function updateUser(itemObjectId, status, approvedBy, token) {
   }
 }
 
+export async function createAdmin(user, token) {
+  try {
+    const response = await axios.post(`${URL}/main/admin`, user, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error creating admin:", err);
+    throw err; 
+  }
+}

@@ -69,7 +69,7 @@ userRoutes.route("/register").post(async (req, res) => {
       password: hash,
       studentId: req.body.studentId || "",
       phone: req.body.phone || "",
-      status: "Active",
+      status: "active",
       lastLogin: "Not logged in.",
       availableClaim: 3,
       availableFound: 5,

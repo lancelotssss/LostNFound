@@ -41,6 +41,10 @@ const pageDataAdmin = [
       path: "/main/users"
     },
     {
+      name: "Create Admin",
+      path: "/main/admin"
+    },
+    {
         name: "Activity Logs",
         path: "/main/logs"
     },
