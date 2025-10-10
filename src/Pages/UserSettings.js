@@ -91,32 +91,6 @@ export function UserSettings() {
   }, []);
 
   
-  async function handleSave() {
-    try {
-      if (formData.phone === user.phone) {
-        alert("No changes detected in phone number.");
-        return;
-      }
-      const token = sessionStorage.getItem("User");
-      if (!token) return;
-
-      const response = await editClient({ phone: formData.phone }, token);
-
-      if (!response.success) {
-        alert("Phone number could not be updated.");
-      } else {
-        alert("Phone number updated successfully!");
-        setUser({ ...user, phone: formData.phone });
-        setFormData((prev) => ({ ...prev, phone: formData.phone }));
-        setIsEditing(false);
-        
-      }
-    } catch (err) {
-      console.error("Error updating phone:", err);
-      alert("Error updating phone");
-    }
-  }
-
   async function handlePasswordSave() {
     const { oldPassword, newPassword, confirmPassword } = passwordForm;
 
@@ -202,69 +176,17 @@ export function UserSettings() {
               <Descriptions.Item label="Student ID">
                 {user?.studentId || "—"}
               </Descriptions.Item>
+              <Descriptions.Item label="Phone Number">
+                {user?.phone || "—"}
+              </Descriptions.Item>
               <Descriptions.Item label="Joined">{joined}</Descriptions.Item>
             </Descriptions>
 
             <Divider />
 
-            {/* Contact (no form submit; explicit Apply button) */}
-            <div className="settings-form">
-              <Title level={5} style={{ marginBottom: 12 }}>
-                Contact
-              </Title>
 
-              <label className="settings-label" htmlFor="phone">
-                Phone
-              </label>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Phone Number"
-                prefix={<PhoneOutlined />}
-                disabled={!isEditing}              
-                className="settings-input"
-              />
-
-              <div className="settings-actions">
-                {!isEditing ? (
-                  <>
-                    <Button
-                      type="default"
-                      onClick={() => setIsEditing(true)} 
-                    >
-                      Edit
-                    </Button>
-                    <Button type="primary" disabled>
-                      Apply
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      type="default"
-                      onClick={() => {
-                        
-                        setFormData((prev) => ({ ...prev, phone: user.phone || "" }));
-                        setIsEditing(false);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="primary"
-                      onClick={handleSave}          
-                    >
-                      Apply
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
           </Card>
         </Col>
-
         {/* RIGHT: Security / Password */}
         <Col xs={24} md={12}>
           <Card className="settings-card" bordered>
