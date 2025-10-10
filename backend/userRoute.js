@@ -69,7 +69,7 @@ userRoutes.route("/register").post(async (req, res) => {
       password: hash,
       studentId: req.body.studentId || "",
       phone: req.body.phone || "",
-      status: "Active",
+      status: "active",
       lastLogin: "Not logged in.",
       availableClaim: 3,
       availableFound: 5,
@@ -140,6 +140,14 @@ userRoutes.route("/users/login").post(async (request, response) => {
     if (user){
         console.log("User found:", user.studentId);
 
+
+        if (user.status && user.status.toLowerCase() === "suspended") {
+          return response.status(403).json({
+            success: false,
+            message: "Your account has been suspended. Please contact the administrator for assistance."
+          });
+        }
+
         let confirmation = await bcrypt.compare(request.body.password, user.password)
         if (confirmation) {
             console.log("Password correct, issuing token...");
@@ -171,7 +179,7 @@ userRoutes.route("/users/login").post(async (request, response) => {
             console.log("Inserting audit record:", mongoAuditObject);
 
             await db.collection("audit_db").insertOne(mongoAuditObject);
-            return response.json({ success: true, token, role: user.role });
+            return response.json({ success: true, token, role: user.role?.toLowerCase() });
         }
         else {
             return response.json({success:false, message: "Incorrect Password"})

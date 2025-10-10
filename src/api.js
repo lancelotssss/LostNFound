@@ -15,14 +15,14 @@ export async function verifyUser(user) {
     console.log("Raw response:", response);
     console.log("Response data:", response.data);
 
-    if (response.data.success) {
-      return response.data; // token + success
-    } else {
-      throw new Error(response.data.message || "Login failed");
-    }
+    // Always return the response object
+    return response.data; 
   } catch (err) {
     console.error("verifyUser error:", err);
-    throw err;
+
+    // Return structured error if possible
+    if (err.response?.data) return err.response.data;
+    return { success: false, message: err.message || "Network error" };
   }
 }
 
@@ -391,17 +391,41 @@ export async function getAuditLogs(token) {
 
 
 
-export async function getUsers(token){
+export async function getUsers(token, role = "student") {
   try {
-    const response = await axios.get(`${URL}/main/users`, {
+    const response = await axios.get(`${URL}/main/users?role=${role}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
     return response.data; // { count, results }
   } catch (err) {
-    console.error("Error fetching reports:", err);
+    console.error("Error fetching users:", err);
     return { results: [] };
   }
 }
 
+export async function updateUser(itemObjectId, status, approvedBy, token) {
+  try {
+    const response = await axios.put(`${URL}/main/users/update`,
+      { itemObjectId, status, approvedBy },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error updating found item:", err);
+    throw err;
+  }
+}
+
+export async function createAdmin(user, token) {
+  try {
+    const response = await axios.post(`${URL}/main/admin`, user, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error creating admin:", err);
+    throw err; 
+  }
+}

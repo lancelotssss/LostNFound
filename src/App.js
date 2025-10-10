@@ -26,6 +26,7 @@ import { AdminHistory } from "./Pages/AdminHistory"
 import { AdminDashboard } from "./Pages/AdminDashboard";
 import { AdminReport } from "./Pages/AdminReport";
 import { AdminUsers } from "./Pages/AdminUsers";
+import { AdminCreate }from "./Pages/AdminCreate";
 
 function App() {
   useEffect(() => {
@@ -143,7 +144,9 @@ function App() {
               <Route path="/main/users" element = {<ProtectedRoute allowedRoles={["admin"]}>
                 <AdminUsers/>
               </ProtectedRoute>} />
-
+              <Route path="/main/admin" element = {<ProtectedRoute allowedRoles={["admin"]}>
+                <AdminCreate/>
+              </ProtectedRoute>} />
           </Route>
 
 

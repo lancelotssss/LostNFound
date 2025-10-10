@@ -918,19 +918,152 @@ adminRoutes.route("/settings/pass").put(verifyToken, async (req, res) => {
 //-------------------------------------------------------------------------------------USERS--------------------------------------------------------------------
 
 adminRoutes.route("/users").get(verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
 
-try {
-    let db = database.getDb();
+    
+    const role = req.query.role || "student";
 
-    const users = await db
-      .collection("student_db").find({role:"student"}).toArray();
+    
+    const users = await db.collection("student_db").find({ role }).toArray();
 
     res.json({ count: users.length, results: users });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-})
+});
 
+
+adminRoutes.put("/users/update", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const { itemObjectId, status, approvedBy } = req.body;
+
+    console.log("Incoming Approve Payload:", req.body);
+
+    if (!itemObjectId || !status || !approvedBy) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
+    if (!ObjectId.isValid(itemObjectId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid itemObjectId" });
+    }
+
+    const objectId = new ObjectId(itemObjectId);
+
+ 
+    const user = await db.collection("student_db").findOne({ _id: objectId });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+  
+    const updateResult = await db.collection("student_db").updateOne(
+      { _id: objectId },
+      { $set: { status, updatedAt: new Date() } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Failed to update user status" });
+    }
+
+
+    const auditMongo = {
+      aid: `A-${Date.now()}`,
+      action: status === "Active" ? "ACTIVATE_USER" : "SUSPEND_USER",
+      targetUser: user.studentId,
+      performedBy: approvedBy,
+      timestamp: new Date(),
+      details: `${approvedBy} has set the student ${user.studentId} status to ${status}.`,
+    };
+
+    await db.collection("audit_db").insertOne(auditMongo);
+
+    res.json({
+      success: true,
+      message: `User ${status} successfully.`,
+      audit: auditMongo,
+    });
+  } catch (err) {
+    console.error("Error approving/denying user:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+adminRoutes.route("/admin").post(async (req, res) => {
+  const db = database.getDb();
+  try {
+    // Check for duplicate email or studentId
+    const existingUser = await db.collection("student_db").findOne({
+      $or: [
+        { email: req.body.email },
+        { studentId: req.body.studentId }
+      ]
+    });
+
+    if (existingUser) {
+      if (existingUser.email === req.body.email) {
+        return res.status(400).json({
+          success: false,
+          field: "email",
+          message: "Email already exists",
+        });
+      }
+      if (existingUser.studentId === req.body.studentId) {
+        return res.status(400).json({
+          success: false,
+          field: "studentId",
+          message: "Employee ID already exists",
+        });
+      }
+    }
+
+    // Hash password
+    const hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
+
+    const mongoObject = {
+      sid: `A-${Date.now()}`,
+      role: "admin",
+      name: req.body.name || "Unknown",
+      email: req.body.email || "unknown@example.com",
+      password: hash,
+      studentId: req.body.studentId || "",
+      phone: req.body.phone || "",
+      status: "active",
+      lastLogin: "Not logged in.",
+      availableClaim: 3,
+      availableFound: 5,
+      availableMissing: 5,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await db.collection("student_db").insertOne(mongoObject);
+
+    const mongoAuditObject = {
+      aid: `A-${Date.now()}`,
+      action: "REGISTER",
+      targetUser: mongoObject.email,
+      performedBy: "System",
+      timestamp: new Date(),
+      ticketId: "",
+      details: `User ${mongoObject.studentId} registered successfully.`,
+    };
+
+    await db.collection("audit_db").insertOne(mongoAuditObject);
+
+    res.json({ success: true, student: mongoObject, audit: mongoAuditObject });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 
 function verifyToken(request, response, next) {
