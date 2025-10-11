@@ -360,7 +360,7 @@ userRoutes.put("/home/:id/delete", verifyToken, async (req, res) => {
       performedBy: studentId,
       timestamp: new Date(),
       ticketId: claim.tid || "",
-      details: `${studentId} deleted claim ${claim.tid || claimId}`,
+      details: `${studentId} deleted claim ${claim.cid}`,
     };
 
     await db.collection("audit_db").insertOne(audit);
@@ -426,7 +426,7 @@ userRoutes.put("/home/:id/cancel", verifyToken, async (req, res) => {
       performedBy: studentId,
       timestamp: new Date(),
       ticketId: claim.tid || "",
-      details: `${studentId} cancelled claim ${claim.tid || claimId}`,
+      details: `${studentId} cancelled claim ${claim.cid}`,
     };
 
     await db.collection("audit_db").insertOne(audit);
@@ -817,6 +817,11 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
 
     await Promise.all(updates);
 
+    let itemTid = itemId; // fallback to ID
+    const item = await db.collection("lost_found_db").findOne({ _id: new ObjectId(itemId) });
+    if (item) itemTid = item.tid || itemId;
+
+
     // Log audit
     const auditMongo = {
       aid: `A-${Date.now()}`,
@@ -824,7 +829,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
       performedBy: `${studentId}`,
       timestamp: new Date(),
       ticketId: mongoClaim.cid,
-      details: `${studentId} filed a claim for item ${mongoClaim.itemId.tid}. Claim ID: ${mongoClaim.cid}`,
+      details: `${studentId} filed a claim for item ${itemTid}. Claim ID: ${mongoClaim.cid}`,
     };
 
     await db.collection("audit_db").insertOne(auditMongo);
