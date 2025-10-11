@@ -1,0 +1,170 @@
+/* CONTAINER NG SUMMARY CARDS NATIN <--------- */
+.summary-row{
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  /* background-color: red !important; */
+}
+.summary-card{
+  grid-column: span 12;
+  box-shadow: 0 0 5px 1px rgba(0,0,0,0.1);
+  border-top: 8px solid #ffff0079 !important;
+  box-sizing: border-box;
+}
+
+.overview-admin{
+  width: 100%;
+  color: #525252ff;
+}
+@media (min-width: 992px){
+  .summary-card{ grid-column: span 4; }  
+}
+
+
+
+.card-container{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+
+.stat-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  align-items: stretch;           
+}
+.stat-grid .ant-statistic{
+  display: flex;                  
+  flex-direction: column;
+  justify-content: center;        
+  height: 100%;                   
+  text-align: center;
+  padding: 12px 10px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  box-sizing: border-box;
+}
+.stat-grid .ant-statistic-title{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  min-height: 34px;
+  margin-bottom: 8px;
+  color: #525252;
+  font-weight: 600;
+}
+.stat-grid .ant-statistic-content{
+  line-height: 1.1;
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.stat-grid-1{ 
+    grid-template-columns: repeat(1, minmax(120px, 1fr)); 
+}
+.stat-grid-2{ 
+    grid-template-columns: repeat(2, minmax(120px, 1fr)); 
+}
+
+
+
+
+
+
+/* OVERVIEW CARDS <--------- */
+.dash-2col{
+  display: grid;
+  grid-template-columns: 1fr;    
+  gap: 16px;
+  align-items: stretch;
+  width: 100%;
+}
+
+@media (min-width: 992px){
+  .dash-2col{ grid-template-columns: 1.2fr 1fr; }
+}
+.dash-left{
+  display: grid;
+  grid-template-columns: 1fr;    
+  gap: 16px;
+  align-items: stretch;
+}
+@media (min-width: 768px){
+  .dash-left{ grid-template-columns: 1fr 1fr; }   
+}
+
+
+/* OVERVIEW CARDS <--------- */
+.tile-card{
+  box-shadow: 0 0 5px 1px rgba(0,0,0,0.1);
+  border-top: 8px solid #ffff0079 !important;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.tile-card .ant-card-body{
+  flex: 1 1 auto;
+  display: flex;
+  padding: 16px;
+}
+.tile-card .stat-grid{
+  flex: 1 1 auto;
+  display: grid;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* RIGHT SIDE TO <--------- */
+.dash-right{ display: flex; }
+.fill-card{
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 380px; 
+}
+.fill-card .ant-card-body{
+  flex: 1 1 auto;
+  display: flex;
+}
+.pie-wrap{
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 320px; 
+}
+
+
+
+
+
+
+
+
+
+
+/* ICONS <--------- */
+.stat-title{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.stat-title-icon{
+  font-size: 18px;
+  line-height: 1;
+  color: #6b7280;
+}
+.ant-card-head-title{
+  display: flex;
+  align-items: center;
+}
