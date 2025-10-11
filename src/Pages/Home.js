@@ -777,205 +777,210 @@ export const Home = () => {
         open={isClaimModalVisible}
         onCancel={handleClaimModalClose}
         footer={[<Button key="close" onClick={handleClaimModalClose}>Close</Button>]}
-        width={isMobile ? "95%" : 1200}
+        /* wider on desktop, still friendly on mobile */
+        width={isMobile ? "95%" : 1500}      // ⬅️ was 1200
         maskClosable={false}
         className="modal-claim"
         closable={false}
         styles={{ body: { padding: 16 } }}
       >
-        {claimDetails ? (
-          <div className="claim-details-grid">
-            <div className="h1h2container">
-              <h1 className="claim-details-grid-h1">CLAIM TRANSACTION NO.</h1>
-              <h2 className="claim-details-grid-h2">
-                <Text className="claim-details-grid-h2-Text" copyable>
-                  {claimDetails.claim.cid}
-                </Text>
-              </h2>
-            </div>
+{claimDetails ? (
+  <div className="claim-details-grid">
+    {/* ======= Transaction No. (FULL WIDTH, ON TOP) ======= */}
+    <div className="h1h2container">
+      <h1 className="claim-details-grid-h1">CLAIM TRANSACTION NO.</h1>
+      <h2 className="claim-details-grid-h2">
+        <Text className="claim-details-grid-h2-Text" copyable>
+          {claimDetails.claim.cid}
+        </Text>
+      </h2>
+    </div>
 
-            {/* Found Item ---------------------------------------------------------  */}
-            <h3 className="claim-section-h3">Found Item Information</h3>
-            <div className="claim-col claim-section">
-              <div className="fixed-photo-wrapper">
-                <div className="photo-wrap fixed-photo">
-                  {claimDetails?.foundItem?.photoUrl ? (
-                    <Image src={claimDetails.foundItem.photoUrl} preview />
-                  ) : (
-                    <p className="no-image-placeholder">No image submitted</p>
-                  )}
-                </div>
+    {/* ======= Three columns below (Found | Lost | Claim Info) ======= */}
+    <Row gutter={[16, 16]} className="claim-3col" wrap>
+      {/* Found Item --------------------------------------------------- */}
+      <Col xs={24} md={8}>
+        <div className="claim-card">
+          <h3 className="claim-section-h3">Found Item Information</h3>
+          <div className="claim-col claim-section">
+            <div className="fixed-photo-wrapper">
+              <div className="photo-wrap fixed-photo">
+                {claimDetails?.foundItem?.photoUrl ? (
+                  <Image src={claimDetails.foundItem.photoUrl} preview />
+                ) : (
+                  <p className="no-image-placeholder">No image submitted</p>
+                )}
               </div>
-
-              {/* Details ___________________________  */}
-              {claimDetails?.foundItem ? (
-                <Descriptions
-                  bordered
-                  column={1}
-                  size={isMobile ? "small" : "middle"}
-                  layout={isMobile ? "vertical" : "horizontal"}
-                  className="claim-descriptions"
-                >
-                  <Descriptions.Item label="TID">
-                    {claimDetails.foundItem.tid}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Title">
-                    {claimDetails.foundItem.title}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Category">
-                    {claimDetails.foundItem.category}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Location">
-                    {claimDetails.foundItem.location}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Date Found">
-                    {claimDetails.foundItem.dateFound
-                      ? new Date(
-                          claimDetails.foundItem.dateFound
-                        ).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                        })
-                      : "N/A"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Status">
-                    {claimDetails.foundItem.status}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Description">
-                    {claimDetails.foundItem.description}
-                  </Descriptions.Item>
-                </Descriptions>
-              ) : (
-                <p className="muted">No found item data.</p>
-              )}
             </div>
 
-            {/* Lost Item --------------------------------------------------------- */}
-            <h3 className="claim-section-h3">Lost Item Reference</h3>
-            <div className="claim-col claim-section">
-              <div className="fixed-photo-wrapper">
-                <div className="photo-wrap fixed-photo">
-                  {claimDetails?.lostItem?.photoUrl ? (
-                    <Image src={claimDetails.lostItem.photoUrl} preview />
-                  ) : (
-                    <p className="no-image-placeholder">No image submitted</p>
-                  )}
-                </div>
-              </div>
-              {/* DETAILS ___________________________ */}
-              {claimDetails?.lostItem ? (
-                <Descriptions
-                  bordered
-                  column={1}
-                  size={isMobile ? "small" : "middle"}
-                  layout={isMobile ? "vertical" : "horizontal"}
-                  className="claim-descriptions"
-                >
-                  <Descriptions.Item label="TID">
-                    {claimDetails.lostItem.tid}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Title">
-                    {claimDetails.lostItem.title}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Category">
-                    {claimDetails.lostItem.category}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Location">
-                    {claimDetails.lostItem.location}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Start Date">
-                    {claimDetails.lostItem.startDate
-                      ? new Date(
-                          claimDetails.lostItem.startDate
-                        ).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                        })
-                      : "N/A"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="End Date">
-                    {claimDetails.lostItem.endDate
-                      ? new Date(
-                          claimDetails.lostItem.endDate
-                        ).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                        })
-                      : "N/A"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Status">
-                    {claimDetails.lostItem.status}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Description">
-                    {claimDetails.lostItem.description}
-                  </Descriptions.Item>
-                </Descriptions>
-              ) : (
-                <p className="muted">No linked lost item found.</p>
-              )}
-            </div>
-
-            {/* Claim Info --------------------------------------------------------- */}
-            <h3 className="claim-section-h3">Claim Information</h3>
-            <div className="claim-col claim-section">
-              <div className="fixed-photo-wrapper">
-                <div className="photo-wrap fixed-photo">
-                  {claimDetails?.claim?.photoUrl ? (
-                    <Image src={claimDetails.claim.photoUrl} preview />
-                  ) : (
-                    <p className="no-image-placeholder">No image submitted</p>
-                  )}
-                </div>
-              </div>
-              {/* DETAILS ___________________________ */}
-              {claimDetails?.claim ? (
-                <Descriptions
-                  bordered
-                  column={1}
-                  size={isMobile ? "small" : "middle"}
-                  layout={isMobile ? "vertical" : "horizontal"}
-                  className="claim-descriptions"
-                >
-                  <Descriptions.Item label="Claim ID">
-                    {claimDetails.claim.cid}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Claimer ID">
-                    {claimDetails.claim.claimerId}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Claim Status">
-                    {claimDetails.claim.claimStatus}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Admin Decision By">
-                    {claimDetails.claim.adminDecisionBy
-                      ? claimDetails.claim.adminDecisionBy
-                      : "No actions yet."}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Created At">
-                    {claimDetails.claim.createdAt
-                      ? new Date(
-                          claimDetails.claim.createdAt
-                        ).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                        })
-                      : "N/A"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Reason">
-                    {claimDetails.claim.reason}
-                  </Descriptions.Item>
-                </Descriptions>
-              ) : (
-                <p className="muted">No claim record found for this item.</p>
-              )}
-            </div>
+            {claimDetails?.foundItem ? (
+              <Descriptions
+                bordered
+                column={1}
+                size={isMobile ? "small" : "middle"}
+                layout={isMobile ? "vertical" : "horizontal"}
+                className="claim-descriptions"
+              >
+                <Descriptions.Item label="TID">
+                  {claimDetails.foundItem.tid}
+                </Descriptions.Item>
+                <Descriptions.Item label="Title">
+                  {claimDetails.foundItem.title}
+                </Descriptions.Item>
+                <Descriptions.Item label="Category">
+                  {claimDetails.foundItem.category}
+                </Descriptions.Item>
+                <Descriptions.Item label="Location">
+                  {claimDetails.foundItem.location}
+                </Descriptions.Item>
+                <Descriptions.Item label="Date Found">
+                  {claimDetails.foundItem.dateFound
+                    ? new Date(claimDetails.foundItem.dateFound).toLocaleDateString(
+                        "en-US",
+                        { month: "2-digit", day: "2-digit", year: "numeric" }
+                      )
+                    : "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Status">
+                  {claimDetails.foundItem.status}
+                </Descriptions.Item>
+                <Descriptions.Item label="Description">
+                  {claimDetails.foundItem.description}
+                </Descriptions.Item>
+              </Descriptions>
+            ) : (
+              <p className="muted">No found item data.</p>
+            )}
           </div>
-        ) : (
-          <p className="muted">No claim details available.</p>
-        )}
+        </div>
+      </Col>
+
+      {/* Lost Item ---------------------------------------------------- */}
+      <Col xs={24} md={8}>
+        <div className="claim-card">
+          <h3 className="claim-section-h3">Lost Item Reference</h3>
+          <div className="claim-col claim-section">
+            <div className="fixed-photo-wrapper">
+              <div className="photo-wrap fixed-photo">
+                {claimDetails?.lostItem?.photoUrl ? (
+                  <Image src={claimDetails.lostItem.photoUrl} preview />
+                ) : (
+                  <p className="no-image-placeholder">No image submitted</p>
+                )}
+              </div>
+            </div>
+
+            {claimDetails?.lostItem ? (
+              <Descriptions
+                bordered
+                column={1}
+                size={isMobile ? "small" : "middle"}
+                layout={isMobile ? "vertical" : "horizontal"}
+                className="claim-descriptions"
+              >
+                <Descriptions.Item label="TID">
+                  {claimDetails.lostItem.tid}
+                </Descriptions.Item>
+                <Descriptions.Item label="Title">
+                  {claimDetails.lostItem.title}
+                </Descriptions.Item>
+                <Descriptions.Item label="Category">
+                  {claimDetails.lostItem.category}
+                </Descriptions.Item>
+                <Descriptions.Item label="Location">
+                  {claimDetails.lostItem.location}
+                </Descriptions.Item>
+                <Descriptions.Item label="Start Date">
+                  {claimDetails.lostItem.startDate
+                    ? new Date(claimDetails.lostItem.startDate).toLocaleDateString(
+                        "en-US",
+                        { month: "2-digit", day: "2-digit", year: "numeric" }
+                      )
+                    : "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="End Date">
+                  {claimDetails.lostItem.endDate
+                    ? new Date(claimDetails.lostItem.endDate).toLocaleDateString(
+                        "en-US",
+                        { month: "2-digit", day: "2-digit", year: "numeric" }
+                      )
+                    : "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Status">
+                  {claimDetails.lostItem.status}
+                </Descriptions.Item>
+                <Descriptions.Item label="Description">
+                  {claimDetails.lostItem.description}
+                </Descriptions.Item>
+              </Descriptions>
+            ) : (
+              <p className="muted">No linked lost item found.</p>
+            )}
+          </div>
+        </div>
+      </Col>
+
+      {/* Claim Info --------------------------------------------------- */}
+      <Col xs={24} md={8}>
+        <div className="claim-card">
+          <h3 className="claim-section-h3">Claim Information</h3>
+          <div className="claim-col claim-section">
+            <div className="fixed-photo-wrapper">
+              <div className="photo-wrap fixed-photo">
+                {claimDetails?.claim?.photoUrl ? (
+                  <Image src={claimDetails.claim.photoUrl} preview />
+                ) : (
+                  <p className="no-image-placeholder">No image submitted</p>
+                )}
+              </div>
+            </div>
+
+            {claimDetails?.claim ? (
+              <Descriptions
+                bordered
+                column={1}
+                size={isMobile ? "small" : "middle"}
+                layout={isMobile ? "vertical" : "horizontal"}
+                className="claim-descriptions"
+              >
+                <Descriptions.Item label="Claim ID">
+                  {claimDetails.claim.cid}
+                </Descriptions.Item>
+                <Descriptions.Item label="Claimer ID">
+                  {claimDetails.claim.claimerId}
+                </Descriptions.Item>
+                <Descriptions.Item label="Claim Status">
+                  {claimDetails.claim.claimStatus}
+                </Descriptions.Item>
+                <Descriptions.Item label="Admin Decision By">
+                  {claimDetails.claim.adminDecisionBy
+                    ? claimDetails.claim.adminDecisionBy
+                    : "No actions yet."}
+                </Descriptions.Item>
+                <Descriptions.Item label="Created At">
+                  {claimDetails.claim.createdAt
+                    ? new Date(claimDetails.claim.createdAt).toLocaleDateString(
+                        "en-US",
+                        { month: "2-digit", day: "2-digit", year: "numeric" }
+                      )
+                    : "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Reason">
+                  {claimDetails.claim.reason}
+                </Descriptions.Item>
+              </Descriptions>
+            ) : (
+              <p className="muted">No claim record found for this item.</p>
+            )}
+          </div>
+        </div>
+      </Col>
+    </Row>
+  </div>
+) : (
+  <p className="muted">No claim details available.</p>
+)}
+
       </Modal>
 
     </div>

@@ -3,6 +3,9 @@ import { Card, Row, Col, message } from "antd";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
+
+
+
 export const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [user, setUser] = useState(null);
@@ -23,9 +26,7 @@ export const AdminDashboard = () => {
     try {
       setLoading(true);
       const res = await axios.get("http://localhost:3110/main/dashboard");
-      console.log("Dashboard response:", res.data); // 🔍 DEBUG
-
-      // Adjust this based on your backend response structure
+      console.log("Dashboard response:", res.data); 
       if (res?.data?.statusCounts) {
         setStats(res.data.statusCounts);
       } else if (res?.data?.counts) {

@@ -139,7 +139,7 @@
   100% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
 }
 
-.login-btn.success-pulse {
+.login-btn .success-pulse {
   animation: successPulse 0.5s ease-out forwards;
   background-color: #16a34a !important; /* green */
   border-color: #16a34a !important;

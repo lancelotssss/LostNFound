@@ -4,28 +4,25 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   HomeOutlined,
   FileAddOutlined,
-  SearchOutlined,
   SettingOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
 import { logOutUser } from "../api";
-import { Menu, Modal } from "antd";
+import { Menu, Modal, Button } from "antd";
+import "../../src/Pages/styles/NavBar.css";
 
 export const pageDataClient = [
   { key: "home", name: "Home", path: "/cli/home", icon: <HomeOutlined /> },
   { key: "report", name: "Report Item", path: "/cli/report", icon: <FileAddOutlined /> },
-  // Your router shows results under /cli/search/result. If you also have a search page,
-  // you can add it too. For now we link to the results route you’re using.
-  // { key: "search", name: "Search", path: "/cli/search/result", icon: <SearchOutlined /> },
   { key: "settings", name: "User Settings", path: "/cli/settings", icon: <SettingOutlined /> },
-  { key: "logout", name: "Logout", icon: <LogoutOutlined /> },
+  { key: "logout", name: "Logout", icon: <LogoutOutlined /> }, 
 ];
 
 export function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [openKeys, setOpenKeys] = useState([]);
-  const { confirm } = Modal; 
+  const { confirm } = Modal;
 
   async function handleLogout() {
     const token = sessionStorage.getItem("User");
@@ -39,9 +36,21 @@ export function NavBar() {
     }
   }
 
-  const items = useMemo(
+  function showLogoutConfirm() {
+    confirm({
+      title: "Are you sure you want to log out?",
+      okText: "Log out",
+      cancelText: "Cancel",
+      centered: true,
+      onOk: handleLogout,
+    });
+  }
+
+  // Split menus (top excludes logout)
+  const topPages = pageDataClient.filter((m) => m.key !== "logout");
+  const itemsTop = useMemo(
     () =>
-      pageDataClient.map((m) => ({
+      topPages.map((m) => ({
         key: m.key,
         icon: m.icon,
         label: m.path ? <Link to={m.path}>{m.name}</Link> : m.name,
@@ -49,38 +58,39 @@ export function NavBar() {
     []
   );
 
-  const onClick = ({ key }) => {
-    if (key === "logout") showLogoutConfirm();
-  };
-
-  // Highlight the active item based on current URL
+  // Highlight active item based on URL
   const selectedKeys = useMemo(() => {
-    const match = pageDataClient.find(
-      (m) => m.path && location.pathname.startsWith(m.path)
-    );
-    return [match?.key ?? pageDataClient[0].key];
+    const match = topPages.find((m) => m.path && location.pathname.startsWith(m.path));
+    return [match?.key ?? topPages[0].key];
   }, [location.pathname]);
 
-  function showLogoutConfirm() {
-  confirm({
-    title: "Are you sure you want to log out?",
-    okText: "Log out",
-    cancelText: "Cancel",
-    centered: true,
-    onOk: handleLogout,  
-  });
-}
-
   return (
-    <Menu
-      mode="inline"
-      items={items}
-      selectedKeys={selectedKeys}
-      openKeys={openKeys}
-      onOpenChange={setOpenKeys}
-      onClick={onClick}
-      style={{ borderRight: 0 }}   
-      theme="dark"                
-    />
+    <div className="sider-rail">
+      {/* Scrollable top menu */}
+      <Menu
+        mode="inline"
+        items={itemsTop}
+        selectedKeys={selectedKeys}
+        openKeys={openKeys}
+        onOpenChange={setOpenKeys}
+        theme="dark"
+        className="NavBarMenu menu-top"
+      />
+
+      {/* Fixed bottom section with Button */}
+      <div className="menu-bottom">
+        <Button
+          block
+          size="large"
+          type="default"
+          danger
+          icon={<LogoutOutlined />}
+          onClick={showLogoutConfirm}
+          className="logout-btn"
+        >
+          <span className="logout-text">Logout</span>
+        </Button>
+      </div>
+    </div>
   );
 }

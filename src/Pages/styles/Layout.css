@@ -201,3 +201,98 @@
   }
 }
 
+
+
+/* .sider-scroll{
+  background-color: red !important;
+} */
+
+/* .app-sider{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100% !important;
+  background-color: pink !important;
+}
+
+.app-sider .ant-menu-item{
+  background-color: green !important;
+} */
+
+
+/* Ensure the scroll area becomes the flex parent for top/bottom split */
+.sider-scroll {
+  /* height: 100%; */
+  display: flex;
+  flex-direction: column;
+  /* min-height: 0; */
+}
+
+
+
+.app-sider {
+  background: #014F86;
+  max-width: 220px;
+  width: 220px !important;
+  /* let inner flex handle scroll */
+  overflow: hidden;            /* ✅ important */
+  padding-top: 20px;
+  border-top: 3px solid yellow;
+
+  /* make its child fill height in a column */
+  display: flex;               /* ✅ */
+  flex-direction: column;      /* ✅ */
+  /* background-color: red !important; */
+  padding-bottom: 10px;
+}
+
+.sider-scroll {
+  height: 100%;                /* ✅ fill the Sider */
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;              /* ✅ take remaining height */
+  min-height: 0;               /* ✅ allow inner scroll areas */
+}
+
+
+.sider-rail {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  
+}
+
+.menu-top {
+  flex: 1 1 auto;
+  overflow-y: auto;            /* ✅ the ONLY scrolling area */
+  min-height: 0;
+  
+}
+
+.menu-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 8px;
+  
+}
+
+
+
+/* Make the submenu parent ("Review Items") hover match other items */
+.app-sider .ant-menu-submenu-title {
+  color: #ffffff !important;
+}
+
+.app-sider .ant-menu-submenu-title:hover {
+  background-color: #0064ac !important; /* match your item hover */
+  color: #ffffff !important;
+  border-radius: 6px; /* optional to match selected look */
+}
+
+/* Optional: when the submenu is open, keep same active background */
+.app-sider .ant-menu-submenu-open > .ant-menu-submenu-title {
+  background-color: #0064ac !important;
+  color: #ffffff !important;
+  border-radius: 6px;
+}

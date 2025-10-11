@@ -120,7 +120,7 @@ function LoginForm() {
           <Button
             id="login-btn"
             size="large"
-            className="login-btn"
+            className="login-btn success-pulse"
             type="primary"
             htmlType="submit"
             onClick={handleSubmit}

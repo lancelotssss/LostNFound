@@ -1,431 +1,76 @@
-
-
-
-
-
-.main-container{
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    flex-direction: column;
-    width: 100% !important;
-
-    /* background-color: red; */
-    /* border: 1px solid red; */
-    
-}
-
-
-
-/* OVERVIEW -------------------------------------------------------------------- */
-/* 1. OVERVIEW*/
-/* 2. Container nya*/
-/* 3. TOTAL {} REPORTED <-  yung title ng each card*/
-/* 4.  icon at 11 <- mismong value*/
-.overview {
-    width: 100%;
-    margin-bottom: 16px;
-  /* background-color: red; */
-}
-.overview__title {
-  margin: 8px 0 12px;
-  color: #525252ff;
-  /* background-color: violet; */
-}
-.overview .ant-statistic .ant-statistic-title {
-  margin-bottom: 22px;
-  /* background-color: blue; */
-}
-.overview .ant-statistic .ant-statistic-content {
-  line-height: 1.1;
+/* ==============================
+   LAYOUT BASICS
+============================== */
+.main-container {
   display: flex;
-  justify-content: flex-start;
-  gap: 20px;
-  align-items: center;
-  flex-direction: row;
-  /* background-color: green; */
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100% !important;
 }
 
-.overview__card {
-  /* background-color: red; */
-  box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
-  font-family: 'Poppins', sans-serif;
-  font-weight: bold;
-  border-top: 8px solid #ffff0079 !important;
-  /* background-color: yellow; */
-}
-
-
-
-
-
-/* SECTION -------------------------------------------------------------------- */
-/* PURO H3 lang 'to */
-/* 1. MY LOST REPORT <- mga title ng bawat table*/
 .section-title {
-  margin: 0;
-  
-  margin-bottom: 20px;
-  margin-top: 50px;
+  margin: 50px 0 20px;
   color: #525252ff;
-  /* background-color: red; */
 }
 
-
-/* TABLE CELL -------------------------------------------------------------------- */
-.clickable-row {
-  cursor: pointer;
-  /* background-color: red; */
+.clickable-row { 
+  cursor: pointer; 
 }
 
-/* PICTURE SA LOOB NG MODAL -------------------------------------------------------------------- */
 .photo-wrap {
   text-align: center;
   margin-bottom: 16px;
 }
 
+/* ==============================
+   OVERVIEW
+============================== */
+.overview { 
+  width: 100%; margin-bottom: 16px; 
+}
+.overview__title { 
+  margin: 8px 0 12px; color: #525252ff; 
+}
 
+.overview .ant-statistic .ant-statistic-title { 
+  margin-bottom: 22px; 
+}
+.overview .ant-statistic .ant-statistic-content {
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
 
+.overview__card {
+  box-shadow: 0 0 5px 1px rgba(0,0,0,0.1);
+  font-family: 'Poppins', sans-serif;
+  font-weight: bold;
+  border-top: 8px solid #ffff0079 !important;
+}
 
-/* LAHAT NG TABLE -------------------------------------------------------------------- */
-/* 1. Container*/
-/* 2. Mismong Ant Table*/
+/* ==============================
+   TABLES
+============================== */
 .table-responsive {
-  /* background-color: blue; */
   width: 100%;
   overflow-x: auto;
-  box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
+  box-shadow: 0 0 5px 1px rgba(0,0,0,0.1);
 }
 .ant-table-wrapper {
   border-radius: 6px;
   max-width: 100%;
-  background: white;
+  background: #fff;
   padding: 35px;
-  /* background-color: red; */
-  
 }
-
-/* PAGINATION TO MEN -------------------------------------------------------------------- */
 .ant-pagination-total-text {
   margin-right: 12px;
   white-space: nowrap;
-  /* background-color: red; */
 }
 
-/* MOBILE TWEAKS --------------------------------------------------------------- */
-@media (max-width: 576px) {
-  .overview .ant-statistic .ant-statistic-title {
-    margin-bottom: 10px;
-    font-size: 12px;
-  }
-  .overview .ant-statistic .ant-statistic-content {
-    gap: 10px;
-  }
-  .section-title {
-    font-size: 16px;
-  }
-  .ant-table {
-    font-size: 14px;
-  }
-  .photo-wrap img {
-    max-width: 100%;
-    height: auto;
-  }
-}
-
-
-
-
-
-
-/*  CLAIM TABLE ----------------------------------- */
-/* Scope to this modal only */
-.modal-claim .ant-modal-body {
-  max-height: 70vh;
-  overflow-y: auto;
-  
-}
-
-/* Stack sections vertically and center them */
-.claim-details-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 0px !important;
-  align-items: center;  /* center the ~90% wide sections */
-  /* background-color: pink; */
-  
-}
-
-.h1h2container{
-  border: 2px dotted rgba(0, 0, 0, 0.37);
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  padding-top: 50px;
-  padding-bottom: 50px;
-  flex-direction: column;
-  background-color: #F4F4F4;
-}
-
-.claim-details-grid-h1{
-  /* background-color: blue; */
-  width: 100%;
-  text-align: center;
-  color: rgb(36, 36, 36);
-  user-select: none;
-}
-.claim-details-grid-h2, .claim-details-grid-h2-Text{
-  /* background-color: red; */
-  width: 100%;
-  text-align: center;
-  color: #525252ff;
-  user-select: none;
-  font-size: 1.5rem;
-}
-.claim-section-h3{
-    /* background-color: red; */
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    width: 85%;
-    color: #525252ff;
-    /* background-color: aquamarine; */
-    
-}
-/* Each section is ~90% width, neatly stacked */
-.claim-section {
-  width: 100% !important;
-  /* background-color: red !important; */
-  max-width: 980px;     /* cap width for very wide screens */
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 90px;
-  padding-bottom: 20px;
-  padding-left: 20px;
-  padding-right: 20px;
-  /* border: 2px solid green !important; */
-  padding: 40px;
-}
-
-/* Keep compatibility with your existing .claim-col */
-.claim-col {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Descriptions should grow to full width of the section */
-.claim-descriptions,
-.claim-section .ant-descriptions {
-  width: 100%;;
-}
-
-/* Fixed-size image container so photos are consistent */
-.fixed-photo-wrapper{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    /* background-color: green; */
-    
-    width: 100%;
-}
-.fixed-photo {
-  width: 100%;
-  max-width: 220px;
-  height: 260px;
-  margin: 0 auto;
-  margin-bottom: 40px;
-  margin-top: 40px;
-  border-radius: 10px;
-  background: #f6f6f6;
-  /* background-color: red !important; */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
-  width: 100% !important;
-}
-
-/* Your existing helper still fine */
-.photo-wrap {
-  display: flex;
-  justify-content: center;
-}
-
-.claim-section{
-    border-top: 8px solid #ffff0079 !important;
-    background-color: #bbbbbb2a;
-    /* padding-top: 30px; */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100% ;
-    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.1);
-    border: none;
-    /* border-inline-end: red; */
-}
-.ant-descriptions-item-label{
-    /* background-color: blue !important; */
-}
-.ant-descriptions-view{
-    /* background-color: pink !important; */
-    /* border-radius: 0px 0px 30px 30px; */
-    background-color: white !important;
-    /* border: 2px solid brown; */
-    
-
-}
-
-
-
-/* Headings spacing */
-.claim-section > h3 {
-
-  margin: 0 0 6px 0;
-}
-.claim-section h3 {
-    /* margin-top: 50px; */
-    width: 100%;
-    margin-top: 20px;
-    margin-left: 30px;
-}
-/* Mobile: keep stacked but relax sizes */
-@media (max-width: 768px) {
-  .claim-section {
-    width: 100%;
-    max-width: none;
-  }
-  .fixed-photo {
-    max-width: 100%;
-    height: 220px;
-  }
-}
-
-
-
-
-/* HERO wrapper */
-.hero {
-  width: 100%;
-  margin: 8px 0 18px;
-  border-radius: 50px;
-  background: transparent;         /* was pink */
-}
-
-
-.hero-slide {
-  height: 220px;
-  border-radius: 12px;
-  padding: 22px;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  background-size: cover;
-  background-position: center;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  position: relative;
-  overflow: hidden;
-}
-
-/* subtle dark overlay for text readability */
-.hero-slide::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.55)); */
-}
-.hero-slide > * { 
-  position: relative; z-index: 1; 
-}
-.hero-slide h3.ant-typography { 
-  color: #fff; 
-}
-.hero-slide p { 
-  margin: 4px 0 12px; opacity: 0.95; 
-}
-.hero-slide { 
-  height: 300px;             /* was 220px */
-  background-size: cover;
-  background-position: 50% 35%;  /* x% y% — lift focus upward a bit */
-}
-
-/* CTA group */
-.hero-cta { display: flex; gap: 10px; flex-wrap: wrap; }
-
-/* Banner (alternative to carousel) */
-.hero-banner {
-  width: 100%;
-  padding: 22px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #014F86 0%, #2A6F97 50%, #61A5C2 100%);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  gap: 12px;
-}
-.hero-banner-text { opacity: 0.95; margin: 6px 0 0; }
-
-/* Responsive tweaks */
-@media (max-width: 768px) {
-  .hero-slide { height: 180px; padding: 16px; }
-  .hero-banner { flex-direction: column; align-items: flex-start; }
-}
-
-
-
-/* No box bg around each slide */
-.hero { 
-  background: transparent;         /* was pink */
-}
-
-.hero-carousel .slick-slide {
-  background: transparent !important;
-  padding: 0 6px;          /* ← tiny horizontal gap */
-  box-sizing: border-box;
-}
-
-/* keep the corner rounding on the *inner* slide content */
-.hero-carousel .slick-slide > div {
-  border-radius: 16px;
-  overflow: hidden;
-  
-}
-
-/* your slide */
-.hero-slide{
-  height: 300px;
-  background-size: cover;
-  background-position: center;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-}
-
-
-
-
-
-
-.hero-img-cover {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;     /* ✅ fills screen like a modern website */
-  object-position: center;
-}
-@media (max-width: 768px) {
-  .hero-slide { height: 300px; }
-}
-
-
-/* HERO WRAPPER */
+/* ==============================
+   HERO / CAROUSEL
+============================== */
 .hero {
   width: 100%;
   margin: 8px 0 18px;
@@ -433,80 +78,209 @@
   background: transparent;
 }
 
-/* MAIN SLIDE STYLE */
 .hero-slide {
   height: 300px;
   border-radius: 16px;
+  padding: 22px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   background-size: cover;
   background-position: center;
   position: relative;
   overflow: hidden;
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
+.hero-slide::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.hero-slide > * { 
+  position: relative; z-index: 1; 
+}
 
-/* Small gap between slides */
 .hero-carousel .slick-slide {
+  background: transparent !important;
   padding: 0 6px;
   box-sizing: border-box;
-  background: transparent !important;
 }
-.hero-carousel .slick-list {
-  margin: 0 -6px;
+.hero-carousel .slick-list { 
+  margin: 0 -6px; 
 }
 
-/* CTA button inside slide */
-.hero-cta {
-  position: absolute;
-  bottom: 20px;
-  left: 25px;
-  z-index: 2;
+.carousel-desktop { 
+  display: block; 
+}
+.carousel-mobile { 
+  display: none; 
+}
+
+/* ==============================
+   CLAIM MODAL
+============================== */
+.modal-claim .ant-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.claim-details-grid {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+  padding: 0 !important;
 }
 
-/* Visibility rules */
-.carousel-desktop { display: block; }
-.carousel-mobile { display: none; }
-
-@media (max-width: 768px) {
-  .hero-slide {
-    height: 200px; /* smaller on phones */
-  }
-  .carousel-desktop { display: none; }
-  .carousel-mobile { display: block; }
+.h1h2container{
+  border: 2px dotted rgba(0,0,0,0.37);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 50px 20px;
+  background-color: #F4F4F4;
+}
+.claim-details-grid-h1,
+.claim-details-grid-h2,
+.claim-details-grid-h2-Text {
+  width: 100%;
+  text-align: center;
+  user-select: none;
+  color: #525252ff;
+}
+.claim-details-grid-h1 { 
+  color: #242424; 
 }
 
+.claim-section-h3 {
+  display: flex;
+  align-items: center;
+  width: 85%;
+  color: #525252ff;
+  margin: 0 0 12px 0;
+}
+.modal-claim .claim-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.claim-section {
+  width: 100% !important;
+  max-width: 980px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 90px;
+  padding: 40px 20px 20px;
+  border-top: 8px solid #ffff0079 !important;
+  background-color: #bbbbbb2a;
+  box-shadow: 0 0 5px 1px rgba(0,0,0,0.1);
+  border: none;
+  align-items: center;
+  justify-content: center;
+}
 
+.claim-col { 
+  display: flex; flex-direction: column; 
+}
 
-/* =========================================================
-   MODAL RESPONSIVENESS (Lost, Found, Claim Details)
-   ========================================================= */
+.claim-descriptions,
+.claim-section .ant-descriptions { 
+  width: 100%; 
+}
+
+.fixed-photo-wrapper{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.fixed-photo {
+  width: 100%;
+  max-width: 220px;
+  height: 260px;
+  margin: 40px auto;
+  border-radius: 10px;
+  background: #f6f6f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 0 5px 1px rgba(0,0,0,0.1);
+}
+.no-image-placeholder {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  font-size: 14px;
+}
+
+.ant-descriptions-view { 
+  background-color: #fff !important; 
+}
+.modal-claim .claim-card .claim-section { 
+  flex: 1 1 auto; 
+}
+.modal-claim .claim-card .fixed-photo-wrapper { 
+  flex: 0 0 auto; 
+}
+.modal-claim .claim-card .claim-descriptions {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+.modal-claim .claim-card .claim-descriptions .ant-descriptions-view {
+  flex: 1 1 auto;
+  height: 100%;
+}
+.modal-claim .claim-3col .claim-card { 
+  min-height: 640px; 
+}
+
+/* ==============================
+   RESPONSIVE
+============================== */
+@media (max-width: 576px) {
+  .overview .ant-statistic .ant-statistic-title { 
+    margin-bottom: 10px; font-size: 12px; 
+  }
+  .overview .ant-statistic .ant-statistic-content { 
+    gap: 10px; 
+  }
+  .section-title { 
+    font-size: 16px; 
+  }
+  .ant-table { 
+    font-size: 14px; 
+  }
+  .photo-wrap img { 
+    max-width: 100%; height: auto; 
+  }
+}
 
 @media (max-width: 768px) {
-  /* Generic modal content */
-  .ant-modal {
-    width: 95% !important;
-    max-width: none !important;
+  .ant-modal { 
+    width: 95% !important; max-width: none !important; 
+  }
+  .ant-modal-body { 
+    padding: 12px !important; overflow-x: hidden; 
   }
 
-  .ant-modal-body {
-    padding: 12px !important;
-    overflow-x: hidden;
+  .claim-section { 
+    max-width: none; 
+  }
+  .fixed-photo { 
+    height: 220px; 
+  }
+  .fixed-photo img { 
+    max-width: 100%; height: auto; 
   }
 
-  /* Ensure images scale correctly */
-  .photo-wrap img,
-  .fixed-photo img {
-    max-width: 100% !important;
-    height: auto !important;
+  .ant-descriptions { 
+    width: 100%; overflow-x: auto; 
   }
-
-  /* Descriptions layout improvements */
-  .ant-descriptions {
-    width: 100%;
-    overflow-x: auto;
-  }
-
   .ant-descriptions-item-label {
     width: 40% !important;
     white-space: normal !important;
@@ -514,94 +288,31 @@
     text-align: left !important;
     font-weight: 600;
   }
-
   .ant-descriptions-item-content {
     width: 60% !important;
     white-space: normal !important;
     word-wrap: break-word;
     text-align: left !important;
   }
-
-  /* Smaller font sizes for compact display */
-  .ant-descriptions-item-label,
-  .ant-descriptions-item-content {
-    font-size: 13px !important;
-    line-height: 1.4;
+  .ant-descriptions,
+  .ant-descriptions::-webkit-scrollbar { 
+    scrollbar-width: none; 
+  }
+  .ant-descriptions::-webkit-scrollbar { 
+    display: none; 
   }
 
-  /* Fix grid spacing inside Claim modal */
-  .claim-details-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  .hero-slide { 
+    height: 200px; padding: 16px; 
+  }
+  .carousel-desktop { 
+    display: none; 
+  }
+  .carousel-mobile { 
+    display: block; 
   }
 
-  .claim-section-h3 {
-    margin-top: 10px;
-    font-size: 15px !important;
+  .modal-claim .claim-3col .claim-card { 
+    min-height: initial; 
   }
-
-  .claim-col {
-    width: 100%;
-  }
-
-  /* Photos inside claim sections */
-  .fixed-photo-wrapper,
-  .photo-wrap.fixed-photo {
-    width: 100% !important;
-    text-align: center;
-  }
-
-  /* Center claim header (CLAIM TRANSACTION NO.) */
-  .h1h2container {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 4px;
-  }
-
-  .claim-details-grid-h1 {
-    font-size: 16px !important;
-  }
-
-  .claim-details-grid-h2 {
-    font-size: 14px !important;
-    word-break: break-all;
-  }
-
-  /* Slightly smaller modal title */
-  .ant-modal-title {
-    font-size: 16px !important;
-    text-align: center;
-  }
-
-  /* Scrollbars hidden for neatness */
-  .ant-descriptions {
-    -ms-overflow-style: none; /* hide scroll in IE and Edge */
-    scrollbar-width: none; /* hide scroll in Firefox */
-  }
-  .ant-descriptions::-webkit-scrollbar {
-    display: none; /* hide scroll in Chrome, Safari */
-  }
-}
-
-
-/* --- Image Placeholder --- */
-.fixed-photo {
-  width: 250px;
-  height: 250px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f8f8f8;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.no-image-placeholder {
-  color: #999;
-  font-style: italic;
-  text-align: center;
-  font-size: 14px;
 }
