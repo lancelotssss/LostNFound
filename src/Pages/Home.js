@@ -382,7 +382,7 @@ const handleCancel = async (id, type) => {
           type: "info",
         };
       case "reviewing":
-      case "reviewing claim":
+      
         return {
           message: "This item is under admin review. Please wait for approval.",
           type: "warning",
@@ -399,6 +399,11 @@ const handleCancel = async (id, type) => {
           message: "This item has been successfully returned.",
           type: "success",
         };
+      case "reviewing claim":
+        return {
+          message: "This item is under review for claim. The item you found almost finds its way home.",
+          type: "info"
+        }
       default:
         return null;
     }
