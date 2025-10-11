@@ -1,5 +1,4 @@
-// src/Pages/Home.js
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   Button,
@@ -16,6 +15,7 @@ import {
   Popconfirm,
   Grid,
   Typography,
+  Alert
 } from "antd";
 import {
   SearchOutlined,
@@ -322,6 +322,38 @@ export const Home = () => {
     setSelectedClaim(null);
     setClaimDetails(null);
   };
+  
+ const getAlertProps = (status) => {
+    const s = normalizeStatus(status);
+    switch (s) {
+      case "listed":
+        return {
+          message: "This item is currently listed and visible to others.",
+          type: "info",
+        };
+      case "reviewing":
+      case "reviewing claim":
+        return {
+          message: "This item is under admin review. Please wait for approval.",
+          type: "warning",
+        };
+      case "denied":
+      case "claim rejected":
+        return {
+          message: "This report or claim has been denied by the admin.",
+          type: "error",
+        };
+      case "returned":
+      case "completed":
+        return {
+          message: "This item has been successfully returned.",
+          type: "success",
+        };
+      default:
+        return null;
+    }
+  };
+  
 
   return (
     <div className="main-container">
@@ -678,6 +710,18 @@ export const Home = () => {
                   : "No Information Provided"}
               </Descriptions.Item>
             </Descriptions>
+            {/* 🟡 ALERT BASED ON STATUS */}
+            {(() => {
+              const alertProps = getAlertProps(selectedLost.status);
+              return alertProps ? (
+                <Alert
+                  style={{ marginTop: 16 }}
+                  showIcon
+                  message={alertProps.message}
+                  type={alertProps.type}
+                />
+              ) : null;
+            })()}
           </>
         )}
       </Modal>
@@ -698,10 +742,8 @@ export const Home = () => {
               selectedFound?._id && handleDispose(selectedFound._id, "found")
             }
             disabled={
-              !["Active", "Pending Verification"].includes(
-                selectedFound?.status || ""
-              )
-            }
+                ![ "Reviewing"].includes(selectedFound?.status || "")
+              }
           >
             Delete
           </Button>,
@@ -767,6 +809,19 @@ export const Home = () => {
                 {selectedFound.description}
               </Descriptions.Item>
             </Descriptions>
+            {/* 🔵 ALERT BASED ON STATUS */}
+            {(() => {
+              const alertProps = getAlertProps(selectedFound.status);
+              return alertProps ? (
+                <Alert
+                  style={{ marginTop: 16 }}
+                  showIcon
+                  message={alertProps.message}
+                  type={alertProps.type}
+                />
+              ) : null;
+            })()}
+
           </>
         )}
       </Modal>
@@ -846,6 +901,7 @@ export const Home = () => {
                     {claimDetails.foundItem.description}
                   </Descriptions.Item>
                 </Descriptions>
+                
               ) : (
                 <p className="muted">No found item data.</p>
               )}
@@ -932,42 +988,54 @@ export const Home = () => {
               </div>
               {/* DETAILS ___________________________ */}
               {claimDetails?.claim ? (
-                <Descriptions
-                  bordered
-                  column={1}
-                  size={isMobile ? "small" : "middle"}
-                  layout={isMobile ? "vertical" : "horizontal"}
-                  className="claim-descriptions"
-                >
-                  <Descriptions.Item label="Claim ID">
-                    {claimDetails.claim.cid}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Claimer ID">
-                    {claimDetails.claim.claimerId}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Claim Status">
-                    {claimDetails.claim.claimStatus}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Admin Decision By">
-                    {claimDetails.claim.adminDecisionBy
-                      ? claimDetails.claim.adminDecisionBy
-                      : "No actions yet."}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Created At">
-                    {claimDetails.claim.createdAt
-                      ? new Date(
-                          claimDetails.claim.createdAt
-                        ).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                        })
-                      : "N/A"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Reason">
-                    {claimDetails.claim.reason}
-                  </Descriptions.Item>
-                </Descriptions>
+                <>
+                  <Descriptions
+                    bordered
+                    column={1}
+                    size={isMobile ? "small" : "middle"}
+                    layout={isMobile ? "vertical" : "h orizontal"}
+                    className="claim-descriptions"
+                  >
+                    <Descriptions.Item label="Claim ID">
+                      {claimDetails.claim.cid}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Claimer ID">
+                      {claimDetails.claim.claimerId}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Claim Status">
+                      {claimDetails.claim.claimStatus}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Admin Decision By">
+                      {claimDetails.claim.adminDecisionBy
+                        ? claimDetails.claim.adminDecisionBy
+                        : "No actions yet."}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Created At">
+                      {claimDetails.claim.createdAt
+                        ? new Date(claimDetails.claim.createdAt).toLocaleDateString(
+                            "en-US",
+                            { month: "2-digit", day: "2-digit", year: "numeric" }
+                          )
+                        : "N/A"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Reason">
+                      {claimDetails.claim.reason}
+                    </Descriptions.Item>
+                  </Descriptions>
+
+                  {/* ✅ Alert rendered below claim details */}
+                  {(() => {
+                    const alertProps = getAlertProps(claimDetails.claim?.claimStatus);
+                    return alertProps ? (
+                      <Alert
+                        style={{ marginTop: 16 }}
+                        showIcon
+                        message={alertProps.message}
+                        type={alertProps.type}
+                      />
+                    ) : null;
+                  })()}
+                </>
               ) : (
                 <p className="muted">No claim record found for this item.</p>
               )}

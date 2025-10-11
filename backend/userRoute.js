@@ -550,7 +550,38 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
   }
 });
 
-
+userRoutes.delete("/settings/delete", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = new ObjectId(req.user.id); // convert to ObjectId
+ 
+    if (!studentId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+ 
+    const result = await db.collection("student_db").deleteOne({ _id: studentId });
+ 
+    if (result.deletedCount === 0) {
+      return res.status(400).json({ success: false, message: "User not found or already deleted" });
+    }
+ 
+    const audit = {
+      aid: `A-${Date.now()}`,
+      action: "DELETE_USER",
+      targetUser: studentId,
+      performedBy: studentId,
+      timestamp: new Date(),
+      ticketId: "",
+      details: `${studentId} deleted their account.`,
+    };
+    await db.collection("audit_db").insertOne(audit);
+ 
+    res.json({ success: true, message: "User deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 userRoutes.post("/similar-items", verifyToken, async (req, res) => {
   try {
