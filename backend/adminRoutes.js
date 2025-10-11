@@ -17,6 +17,7 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
 
+    // --- COUNTING BASIC REPORTS ---
     const [
       reviewFoundCount,
       reviewLostCount,
@@ -24,6 +25,7 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       listedLostCount,
       reviewClaimsCount,
       claimReturnedCount,
+      totalStorageCount, // all "Listed"
     ] = await Promise.all([
       db
         .collection("lost_found_db")
@@ -31,23 +33,100 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       db
         .collection("lost_found_db")
         .countDocuments({ reportType: "Lost", status: "Reviewing" }),
-      db.collection("lost_found_db").countDocuments({ reportType: "Found" }),
-      db.collection("lost_found_db").countDocuments({ reportType: "Lost" }),
+      db
+        .collection("lost_found_db")
+        .countDocuments({ reportType: "Found", status: "Listed" }),
+      db
+        .collection("lost_found_db")
+        .countDocuments({ reportType: "Lost", status: "Listed" }),
       db.collection("claims_db").countDocuments({ claimStatus: "Reviewing" }),
       db.collection("claims_db").countDocuments({ claimStatus: "Completed" }),
+      db.collection("lost_found_db").countDocuments({ status: "Listed" }),
     ]);
 
+    // --- RATIO LOST : FOUND ---
+    const totalLost = await db
+      .collection("lost_found_db")
+      .countDocuments({ reportType: "Lost" });
+    const totalFound = await db
+      .collection("lost_found_db")
+      .countDocuments({ reportType: "Found" });
+    const lostToFoundRatio = totalFound
+      ? `${((totalLost / totalFound) * 100).toFixed(1)}%`
+      : "0%";
+
+    // --- MOST COMMON PLACE LOST ---
+    const commonPlaceAgg = await db
+      .collection("lost_found_db")
+      .aggregate([
+        { $match: { reportType: "Lost" } },
+        { $group: { _id: "$location", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 1 },
+      ])
+      .toArray();
+    const mostCommonPlace =
+      commonPlaceAgg.length > 0 ? commonPlaceAgg[0]._id : "N/A";
+
+    // --- MOST COMMON KEY ITEM LOST ---
+    const commonKeyItemAgg = await db
+      .collection("lost_found_db")
+      .aggregate([
+        { $match: { reportType: "Lost" } },
+        { $group: { _id: "$keyItem", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 1 },
+      ])
+      .toArray();
+    const mostCommonKeyItem =
+      commonKeyItemAgg.length > 0 ? commonKeyItemAgg[0]._id : "N/A";
+
+    // --- WEEKLY REPORT (LAST 7 DAYS) ---
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const [returnedThisWeek, receivedFoundThisWeek] = await Promise.all([
+      db.collection("claims_db").countDocuments({
+        claimStatus: "Completed",
+        updatedAt: { $gte: oneWeekAgo },
+      }),
+      db.collection("lost_found_db").countDocuments({
+        reportType: "Found",
+        dateReported: { $gte: oneWeekAgo },
+      }),
+    ]);
+
+    // --- PIE CHART DATA ---
+    const pieData = [
+      { name: "Listed Found", value: listedFoundCount },
+      { name: "Listed Lost", value: listedLostCount },
+    ];
+
+    // --- RESPONSE ---
     res.json({
       success: true,
       message: "Dashboard data fetched successfully.",
       statusCounts: {
         reviewFoundCount,
-        reviewLostCount,
         listedFoundCount,
+        reviewLostCount,
         listedLostCount,
         reviewClaimsCount,
         claimReturnedCount,
+        totalStorageCount,
       },
+      ratios: {
+        lostToFoundRatio,
+      },
+      mostCommon: {
+        place: mostCommonPlace,
+        keyItem: mostCommonKeyItem,
+      },
+      weeklyReport: {
+        returnedItems: returnedThisWeek,
+        receivedFoundItems: receivedFoundThisWeek,
+      },
+      pieChart: pieData,
       totalReports:
         reviewFoundCount +
         reviewLostCount +
@@ -353,28 +432,37 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
 
 adminRoutes.route("/history/delete").delete(verifyToken, async (req, res) => {
   try {
-    let db = database.getDb();
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
 
-      const result = await db.collection("lost_found_db").deleteMany({
-      status: { $in: ["Deleted"] }
+    const deletedReports = await db
+      .collection("lost_found_db")
+      .find({ status: "Deleted" })
+      .project({ cid: 1 })
+      .toArray();
+
+    const result = await db.collection("lost_found_db").deleteMany({
+      status: "Deleted"
     });
 
-    res.json({ 
+    if (deletedReports.length > 0) {
+      const audit = {
+        aid: `A-${Date.now()}`,
+        action: "DELETE_REPORT",
+        targetUser: "",
+        performedBy: studentId,
+        timestamp: new Date(),
+        ticketId: deletedReports.map(r => r.cid).join(", "), 
+        details: `${studentId} deleted ${deletedReports.length} report(s): ${deletedReports.map(r => r.cid).join(", ")}`,
+      };
+      await db.collection("audit_db").insertOne(audit);
+    }
+
+    res.json({
       success: true,
       message: `${result.deletedCount} deleted history record(s) removed.`,
-      });
-
-
-    const audit = {
-      aid: `A-${Date.now()}`,
-      action: "DELETE_REPORT",
-      targetUser: "",
-      performedBy: studentId,
-      timestamp: new Date(),
-      ticketId: report.tid || "",
-      details: `${studentId} deleted a report ${report.tid}.`,
-    };
-    await db.collection("audit_db").insertOne(audit);
+      deletedReports: deletedReports.map(r => r.cid)
+    });
 
   } catch (err) {
     console.error("Error deleting history:", err);
@@ -406,7 +494,8 @@ try {
                 { case: { $eq: ["$claimStatus", "Claim Approved"] }, then: 2 },
                 { case: { $eq: ["$claimStatus", "Completed"] }, then: 3 },
                 { case: { $eq: ["$claimStatus", "Claim Rejected"] }, then: 4 },
-                { case: { $eq: ["$claimStatus", "Claim Deleted"] }, then: 5 },
+                { case: { $eq: ["$claimStatus", "Claim Cancelled"] }, then: 5 },
+                { case: { $eq: ["$claimStatus", "Claim Deleted"] }, then: 6 },
               ],
               default: 999,
             },
@@ -510,6 +599,7 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
           claimStatus: status,
           adminDecisionBy: approvedBy,
           reviewedAt: new Date(),
+          updatedAt: new Date()
         },
       }
     );
@@ -556,7 +646,8 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
       action: status === "Claim Approved" ? "APPROVE_CLAIM" : "DENY_CLAIM",
       performedBy: approvedBy,
       timestamp: new Date(),
-      details: `${approvedBy} set claim ${claimId.cid} to ${status}.`,
+      details: `${approvedBy} set claim ${claim.cid || claimId} to ${status}.`,
+
     };
     await db.collection("audit_db").insertOne(audit);
 
@@ -595,9 +686,19 @@ adminRoutes.put("/claim-items/complete", verifyToken, async (req, res) => {
           claimStatus: "Completed",
           adminDecisionBy: approvedBy,
           reviewedAt: new Date(),
+          updatedAt: new Date()
         },
       }
     );
+
+    let ticketId = "Unknown";
+    if (claim.selectedLostId) {
+      const lostItem = await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.selectedLostId) });
+      ticketId = lostItem?.tid || ticketId;
+    } else if (claim.lostReferenceFound) {
+      const foundItem = await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.lostReferenceFound) });
+      ticketId = foundItem?.tid || ticketId;
+    }
 
     // Update both linked lost_found_db items to Returned
     const updates = [];
@@ -634,13 +735,15 @@ adminRoutes.put("/claim-items/complete", verifyToken, async (req, res) => {
 
     await Promise.all(updates);
 
+
+    
     // Add audit trail
     const audit = {
       aid: `A-${Date.now()}`,
       action: "COMPLETE_CLAIM",
       performedBy: approvedBy,
       timestamp: new Date(),
-      details: `${approvedBy} completed and returned ${claimId}.`,
+      details: `${approvedBy} completed and returned claim ${ticketId}.`,
     };
     await db.collection("audit_db").insertOne(audit);
 

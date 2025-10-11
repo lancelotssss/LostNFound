@@ -171,12 +171,13 @@ export const AdminStorage = () => {
         })}
         pagination={{ pageSize: 8 }}
       >
-        <Column title="TID" dataIndex="tid" key="tid" />
-        <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
-        <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
-        <Column title="Status" dataIndex="status" key="status" />
-        <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
-        <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
+        <Column title="CATEGORY" dataIndex="category" key="category" />
+        <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
+        <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
+        <Column title="LOCATION" dataIndex="location" key="location" />
+        <Column title="STATUS" dataIndex="status" key="status" />
+        <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
+        <Column title="DATE FOUND" dataIndex="dateFound" key="dateFound" />
       </Table>
 
       {/* -------------------- MODALS -------------------- */}
@@ -199,16 +200,15 @@ export const AdminStorage = () => {
             <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
-              <Descriptions.Item label="Report Type">{selectedItem.reportType}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
               <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
+              <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
               <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
+              <Descriptions.Item label="Date Found">{selectedItem.dateFound}</Descriptions.Item>
               <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
               <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
-              <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
               <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
-              <Descriptions.Item label="Date Found">{selectedItem.dateFound}</Descriptions.Item>
               <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
             </Descriptions>
 
