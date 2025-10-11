@@ -17,6 +17,7 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
 
+    // --- COUNTING BASIC REPORTS ---
     const [
       reviewFoundCount,
       reviewLostCount,
@@ -24,6 +25,7 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       listedLostCount,
       reviewClaimsCount,
       claimReturnedCount,
+      totalStorageCount, // all "Listed"
     ] = await Promise.all([
       db
         .collection("lost_found_db")
@@ -31,23 +33,100 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       db
         .collection("lost_found_db")
         .countDocuments({ reportType: "Lost", status: "Reviewing" }),
-      db.collection("lost_found_db").countDocuments({ reportType: "Found" }),
-      db.collection("lost_found_db").countDocuments({ reportType: "Lost" }),
+      db
+        .collection("lost_found_db")
+        .countDocuments({ reportType: "Found", status: "Listed" }),
+      db
+        .collection("lost_found_db")
+        .countDocuments({ reportType: "Lost", status: "Listed" }),
       db.collection("claims_db").countDocuments({ claimStatus: "Reviewing" }),
       db.collection("claims_db").countDocuments({ claimStatus: "Completed" }),
+      db.collection("lost_found_db").countDocuments({ status: "Listed" }),
     ]);
 
+    // --- RATIO LOST : FOUND ---
+    const totalLost = await db
+      .collection("lost_found_db")
+      .countDocuments({ reportType: "Lost" });
+    const totalFound = await db
+      .collection("lost_found_db")
+      .countDocuments({ reportType: "Found" });
+    const lostToFoundRatio = totalFound
+      ? `${((totalLost / totalFound) * 100).toFixed(1)}%`
+      : "0%";
+
+    // --- MOST COMMON PLACE LOST ---
+    const commonPlaceAgg = await db
+      .collection("lost_found_db")
+      .aggregate([
+        { $match: { reportType: "Lost" } },
+        { $group: { _id: "$location", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 1 },
+      ])
+      .toArray();
+    const mostCommonPlace =
+      commonPlaceAgg.length > 0 ? commonPlaceAgg[0]._id : "N/A";
+
+    // --- MOST COMMON KEY ITEM LOST ---
+    const commonKeyItemAgg = await db
+      .collection("lost_found_db")
+      .aggregate([
+        { $match: { reportType: "Lost" } },
+        { $group: { _id: "$keyItem", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 1 },
+      ])
+      .toArray();
+    const mostCommonKeyItem =
+      commonKeyItemAgg.length > 0 ? commonKeyItemAgg[0]._id : "N/A";
+
+    // --- WEEKLY REPORT (LAST 7 DAYS) ---
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const [returnedThisWeek, receivedFoundThisWeek] = await Promise.all([
+      db.collection("claims_db").countDocuments({
+        claimStatus: "Completed",
+        updatedAt: { $gte: oneWeekAgo },
+      }),
+      db.collection("lost_found_db").countDocuments({
+        reportType: "Found",
+        dateReported: { $gte: oneWeekAgo },
+      }),
+    ]);
+
+    // --- PIE CHART DATA ---
+    const pieData = [
+      { name: "Listed Found", value: listedFoundCount },
+      { name: "Listed Lost", value: listedLostCount },
+    ];
+
+    // --- RESPONSE ---
     res.json({
       success: true,
       message: "Dashboard data fetched successfully.",
       statusCounts: {
         reviewFoundCount,
-        reviewLostCount,
         listedFoundCount,
+        reviewLostCount,
         listedLostCount,
         reviewClaimsCount,
         claimReturnedCount,
+        totalStorageCount,
       },
+      ratios: {
+        lostToFoundRatio,
+      },
+      mostCommon: {
+        place: mostCommonPlace,
+        keyItem: mostCommonKeyItem,
+      },
+      weeklyReport: {
+        returnedItems: returnedThisWeek,
+        receivedFoundItems: receivedFoundThisWeek,
+      },
+      pieChart: pieData,
       totalReports:
         reviewFoundCount +
         reviewLostCount +
