@@ -351,6 +351,41 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
   }
 });
 
+adminRoutes.route("/history/delete").delete(verifyToken, async (req, res) => {
+  try {
+    let db = database.getDb();
+
+      const result = await db.collection("lost_found_db").deleteMany({
+      status: { $in: ["Deleted"] }
+    });
+
+    res.json({ 
+      success: true,
+      message: `${result.deletedCount} deleted history record(s) removed.`,
+      });
+
+
+    const audit = {
+      aid: `A-${Date.now()}`,
+      action: "DELETE_REPORT",
+      targetUser: "",
+      performedBy: studentId,
+      timestamp: new Date(),
+      ticketId: report.tid || "",
+      details: `${studentId} deleted a report ${report.tid}.`,
+    };
+    await db.collection("audit_db").insertOne(audit);
+
+  } catch (err) {
+    console.error("Error deleting history:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete history.",
+      error: err.message
+    });
+  }
+});
+
 //---------------------------------------------------------------------------REVIEW CLAIM ITEMS---------------------------------------------------------------------------
 
 adminRoutes.get("/claim-items", verifyToken, async (req, res) => {
@@ -615,6 +650,7 @@ adminRoutes.put("/claim-items/complete", verifyToken, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 //---------------------------------------------------------------------------STORAGE---------------------------------------------------------------------------
 adminRoutes.route("/storage").get(verifyToken, async (req, res) => {

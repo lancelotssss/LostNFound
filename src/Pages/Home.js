@@ -291,6 +291,56 @@ export const Home = () => {
     message.error("An error occurred while disposing the report.");
   }
 };
+
+const handleDeleted = async (id) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:3110/home/${id}/delete`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (response.data.success) {
+      message.success(response.data.message);
+      // Refresh claims table
+      await fetchData(token);
+
+      // Close claim modal if open
+      handleClaimModalClose();
+    } else {
+      message.error(response.data.message || "Failed to delete claim");
+    }
+  } catch (err) {
+    console.error("Delete error:", err);
+    message.error("Server error while deleting claim.");
+  }
+};
+
+const handleCancel = async (id, type) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:3110/home/${id}/cancel`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (response.data.success) {
+      message.success(response.data.message);
+      // Refresh claims table
+      await fetchData(token);
+
+      // Close claim modal if open
+      handleClaimModalClose();
+    } else {
+      message.error(response.data.message || "Failed to cancel claim");
+    }
+  } catch (err) {
+    console.error("cancel error:", err);
+    message.error("Server error while cancelling claim.");
+  }
+};
+
+
   
   // CLAIM handlers
   const handleClaimRowClick = async (record) => {
@@ -831,7 +881,26 @@ export const Home = () => {
         title={selectedClaim ? selectedClaim.title : "Claim Details"}
         open={isClaimModalVisible}
         onCancel={handleClaimModalClose}
-        footer={[<Button key="close" onClick={handleClaimModalClose}>Close</Button>]}
+        footer={[<Button key="close" onClick={handleClaimModalClose}>Close</Button>, 
+        <Button key="delete" danger
+                onClick={() => selectedClaim?._id && handleDeleted(selectedClaim._id)}
+                disabled={normalizeStatus(selectedClaim?.claimStatus) === "completed"}>
+        Delete</Button>, <Button
+  type="primary"
+  danger
+  disabled={
+    selectedClaim?.claimStatus?.toLowerCase() === "completed" ||
+    selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled"
+  }
+  onClick={() => handleCancel(selectedClaim?._id)}
+>
+  {selectedClaim?.claimStatus?.toLowerCase() === "completed" 
+    ? "Completed"
+    : selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled"
+    ? "Cancelled"
+    : "Cancel Claim"}
+</Button>]}
+        
         width={isMobile ? "95%" : 1200}
         maskClosable={false}
         className="modal-claim"

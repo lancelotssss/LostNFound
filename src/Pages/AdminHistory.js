@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Table, Button, Modal, Descriptions, Image, message, Input  } from "antd";
-import { getHistory, approveFound } from "../api";
+import { getHistory, deleteHistory, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
 
 const { Column } = Table;
@@ -71,6 +71,20 @@ export const AdminHistory = () => {
   const handleApprove = () => setApproveModal(true);
   const handleDeny = () => setDenyModal(true);
 
+  const handleDeleteAll = async () => {
+    if (!window.confirm("Are you sure you want to delete all deleted items?")) return;
+    const token = sessionStorage.getItem("User");
+    const result = await deleteHistory(token);
+    if (result.success) {
+      message.success("All deleted items deleted!");
+      fetchData();
+    } else {
+      message.error(result.message);
+    }
+  };
+
+
+
   const confirmApprove = async () => {
   setConfirmLoading(true);
   const token = sessionStorage.getItem("User");
@@ -121,6 +135,7 @@ const filteredData = data.filter((item) => {
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
         Refresh
       </Button>
+      <Button onClick={handleDeleteAll} style={{ marginBottom: 16 }}>Clear Deleted Reports</Button>
 
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
   <Input

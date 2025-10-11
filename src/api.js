@@ -72,6 +72,18 @@ export async function deleteReport(id, token) {
   }
 }
 
+export async function deleteHistory(token) {
+  try {
+    const response = await axios.delete(`${URL}/main/history/delete`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting report:", error);
+    return { success: false };
+  }
+}
+
 export async function getClaimDetailsClient(token, itemId) {
   const response = await axios.get(`${URL}/cli/claim-items/${itemId}`, {
     headers: { Authorization: `Bearer ${token}` },
