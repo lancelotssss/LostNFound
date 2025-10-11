@@ -406,7 +406,8 @@ try {
                 { case: { $eq: ["$claimStatus", "Claim Approved"] }, then: 2 },
                 { case: { $eq: ["$claimStatus", "Completed"] }, then: 3 },
                 { case: { $eq: ["$claimStatus", "Claim Rejected"] }, then: 4 },
-                { case: { $eq: ["$claimStatus", "Claim Deleted"] }, then: 5 },
+                { case: { $eq: ["$claimStatus", "Claim Cancelled"] }, then: 5 },
+                { case: { $eq: ["$claimStatus", "Claim Deleted"] }, then: 6 },
               ],
               default: 999,
             },
@@ -510,6 +511,7 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
           claimStatus: status,
           adminDecisionBy: approvedBy,
           reviewedAt: new Date(),
+          updatedAt: new Date()
         },
       }
     );
@@ -595,6 +597,7 @@ adminRoutes.put("/claim-items/complete", verifyToken, async (req, res) => {
           claimStatus: "Completed",
           adminDecisionBy: approvedBy,
           reviewedAt: new Date(),
+          updatedAt: new Date()
         },
       }
     );

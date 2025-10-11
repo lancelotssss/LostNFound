@@ -86,6 +86,7 @@ export const Home = () => {
   const STATUS_COLORS = {
     denied: "volcano",
     deleted: "volcano",
+    disposed: "volcano",
     pending: "orange",
     "pending claimed": "orange",
     active: "blue",
@@ -404,7 +405,16 @@ const handleCancel = async (id, type) => {
           message: "This item is under review for claim. The item you found almost finds its way home.",
           type: "info"
         }
-
+      case "claim approved":
+        return {
+          message: "The item is ready to receive by the owner.",
+          type: "success"
+        }
+      case "disposed":
+        return {
+          message: "The item was disposed by the admins.",
+          type: "error"
+        }
         
       default:
         return null;
@@ -560,21 +570,22 @@ const handleCancel = async (id, type) => {
           pagination={paginationConfig}
           scroll={{ x: "max-content" }}
         >
-          <Column title="LOST ITEMS" dataIndex="title" key="title" />
+          <Column title="CATEGORY" dataIndex="category" key="category" />
           <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
-          <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
+          <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
+          <Column title="LOCATION" dataIndex="location" key="location" />
           <Column
-            title="Status"
+            title="STATUS"
             dataIndex="status"
             key="status"
             render={(status) => <StatusTag status={status} />}
           />
           <Column
-            title="Date Reported"
+            title="DATE REPORTED"
             dataIndex="dateReported"
             key="dateReported"
           />
-          <Column title="Date Range Lost" dataIndex="dateFound" key="dateRange" 
+          <Column title="DATE RANGE LOST" dataIndex="dateFound" key="dateRange" 
           render={(_, record) => {
     const start = record.startDate
       ? new Date(record.startDate).toLocaleDateString("en-US")
@@ -601,22 +612,23 @@ const handleCancel = async (id, type) => {
           pagination={paginationConfig}
           scroll={{ x: "max-content" }}
         >
-          <Column title="FOUND ITEMS" dataIndex="title" key="title" />
+          <Column title="CATEGORY" dataIndex="category" key="category" />
           <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
-          <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
+          <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
+          <Column title="LOCATION" dataIndex="location" key="location" />
           <Column
-            title="Status"
+            title="STATUS"
             dataIndex="status"
             key="status"
             render={(status) => <StatusTag status={status} />}
           />
           <Column
-            title="Date Reported"
+            title="DATE REPORTED"
             dataIndex="dateReported"
             key="dateReported"
           />
           <Column
-            title="Date Found"
+            title="DATE FOUND"
             dataIndex="dateFound"
             key="dateFound"
             render={(date) =>
@@ -639,15 +651,32 @@ const handleCancel = async (id, type) => {
           pagination={paginationConfig}
           scroll={{ x: "max-content" }}
         >
-          <Column title="Claim ID" dataIndex="cid" key="cid" />
-          <Column title="Claimer ID" dataIndex="claimerId" key="claimerId" />
+          <Column title="CLAIM ID" dataIndex="cid" key="cid" />
           <Column
-            title="Claim Status"
+            title="CLAIM STATUS"
             dataIndex="claimStatus"
             key="claimStatus"
             render={(status) => <StatusTag status={status} />}
           />
-          <Column title="Created At" dataIndex="createdAt" key="createdAt" />
+          <Column
+            title="UPDATED AT"
+            dataIndex="updatedAt"
+            key="updatedAt"
+            render={(text) => {
+              if (!text) return "No actions yet";
+              const date = new Date(text);
+              return date.toLocaleString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true,
+              });
+            }}
+          />
+          <Column title="CREATED AT" dataIndex="createdAt" key="createdAt" />
         </Table>
       </div>
 
@@ -734,26 +763,11 @@ const handleCancel = async (id, type) => {
               <Descriptions.Item label="Item Brand">
                 {selectedLost.itemBrand}
               </Descriptions.Item>
-              <Descriptions.Item label="Status">
-                {selectedLost.status}
-              </Descriptions.Item>
-              <Descriptions.Item label="Reported By">
-                {selectedLost.reportedBy}
-              </Descriptions.Item>
-              <Descriptions.Item label="Approved By">
-                {selectedLost.approvedBy ? selectedLost.approvedBy : "No actions yet."}
-              </Descriptions.Item>
               <Descriptions.Item label="Location">
                 {selectedLost.location}
               </Descriptions.Item>
-              <Descriptions.Item label="Date Reported">
-                {selectedLost.dateReported}
-              </Descriptions.Item>
-              <Descriptions.Item label="Report Type">
-                {selectedLost.reportType}
-              </Descriptions.Item>
-              <Descriptions.Item label="Description">
-                {selectedLost.description}
+              <Descriptions.Item label="Status">
+                {selectedLost.status}
               </Descriptions.Item>
               <Descriptions.Item label="Date Range Lost">
                 {selectedLost.startDate && selectedLost.endDate
@@ -766,6 +780,21 @@ const handleCancel = async (id, type) => {
                     )}`
                   : "No Information Provided"}
               </Descriptions.Item>
+              <Descriptions.Item label="Reported By">
+                {selectedLost.reportedBy}
+              </Descriptions.Item>
+              <Descriptions.Item label="Approved By">
+                {selectedLost.approvedBy ? selectedLost.approvedBy : "No actions yet."}
+              </Descriptions.Item>
+              
+              <Descriptions.Item label="Date Reported">
+                {selectedLost.dateReported}
+              </Descriptions.Item>
+              
+              <Descriptions.Item label="Description">
+                {selectedLost.description}
+              </Descriptions.Item>
+              
             </Descriptions>
             {/* 🟡 ALERT BASED ON STATUS */}
             {(() => {
@@ -842,8 +871,16 @@ const handleCancel = async (id, type) => {
               <Descriptions.Item label="Item Brand">
                 {selectedFound.itemBrand}
               </Descriptions.Item>
+              <Descriptions.Item label="Location">
+                {selectedFound.location}
+              </Descriptions.Item>
               <Descriptions.Item label="Status">
                 {selectedFound.status}
+              </Descriptions.Item>
+              <Descriptions.Item label="Date Found">
+                {selectedFound?.dateFound
+                  ? new Date(selectedFound.dateFound).toLocaleDateString("en-US")
+                  : "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Reported By">
                 {selectedFound.reportedBy}
@@ -851,16 +888,8 @@ const handleCancel = async (id, type) => {
               <Descriptions.Item label="Approved By">
                 {selectedFound.approvedBy ? selectedFound.approvedBy : "No actions yet."}
               </Descriptions.Item>
-              <Descriptions.Item label="Location">
-                {selectedFound.location}
-              </Descriptions.Item>
               <Descriptions.Item label="Date Reported">
                 {selectedFound.dateReported}
-              </Descriptions.Item>
-              <Descriptions.Item label="Date Found">
-                {selectedFound?.dateFound
-                  ? new Date(selectedFound.dateFound).toLocaleDateString("en-US")
-                  : "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Description">
                 {selectedFound.description}
@@ -891,13 +920,14 @@ const handleCancel = async (id, type) => {
         footer={[<Button key="close" onClick={handleClaimModalClose}>Close</Button>, 
         <Button key="delete" danger
                 onClick={() => selectedClaim?._id && handleDeleted(selectedClaim._id)}
-                disabled={normalizeStatus(selectedClaim?.claimStatus) === "completed"}>
+                disabled={normalizeStatus(selectedClaim?.claimStatus) === "completed" || normalizeStatus(selectedClaim?.claimStatus) === "claim approved"}>
         Delete</Button>, <Button
   type="primary"
   danger
   disabled={
     selectedClaim?.claimStatus?.toLowerCase() === "completed" ||
-    selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled"
+    selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled" ||
+    selectedClaim?.claimStatus?.toLowerCase() === "claim rejected"
   }
   onClick={() => handleCancel(selectedClaim?._id)}
 >
@@ -960,9 +990,19 @@ const handleCancel = async (id, type) => {
                 <Descriptions.Item label="Category">
                   {claimDetails.foundItem.category}
                 </Descriptions.Item>
+                <Descriptions.Item label="Key Item">
+                  {claimDetails.foundItem.keyItem}
+                </Descriptions.Item>
+                <Descriptions.Item label="Item Brand">
+                  {claimDetails.foundItem.itemBrand}
+                </Descriptions.Item>
                 <Descriptions.Item label="Location">
                   {claimDetails.foundItem.location}
                 </Descriptions.Item>
+                <Descriptions.Item label="Status">
+                  {claimDetails.foundItem.status}
+                </Descriptions.Item>
+                
                 <Descriptions.Item label="Date Found">
                   {claimDetails.foundItem.dateFound
                     ? new Date(claimDetails.foundItem.dateFound).toLocaleDateString(
@@ -970,9 +1010,24 @@ const handleCancel = async (id, type) => {
                         { month: "2-digit", day: "2-digit", year: "numeric" }
                       )
                     : "N/A"}
+                </Descriptions.Item>      
+                <Descriptions.Item label="Reported By">
+                  {claimDetails.foundItem.reportedBy}
                 </Descriptions.Item>
-                <Descriptions.Item label="Status">
-                  {claimDetails.foundItem.status}
+                <Descriptions.Item label="Approved By">
+                  {claimDetails.foundItem.approvedBy}
+                </Descriptions.Item>
+                <Descriptions.Item label="Date Reported">
+                  {claimDetails.foundItem.dateReported
+                    ? new Date(claimDetails.foundItem.dateReported).toLocaleString("en-US", {
+                        month: "2-digit",
+                        day: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      }).replace(",", "")
+                    : "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Description">
                   {claimDetails.foundItem.description}
@@ -1017,28 +1072,49 @@ const handleCancel = async (id, type) => {
                 <Descriptions.Item label="Category">
                   {claimDetails.lostItem.category}
                 </Descriptions.Item>
+                <Descriptions.Item label="Key Item">
+                  {claimDetails.lostItem.keyItem}
+                </Descriptions.Item>
+                <Descriptions.Item label="Item Brand">
+                  {claimDetails.lostItem.itemBrand}
+                </Descriptions.Item>
                 <Descriptions.Item label="Location">
                   {claimDetails.lostItem.location}
-                </Descriptions.Item>
-                <Descriptions.Item label="Start Date">
-                  {claimDetails.lostItem.startDate
-                    ? new Date(claimDetails.lostItem.startDate).toLocaleDateString(
-                        "en-US",
-                        { month: "2-digit", day: "2-digit", year: "numeric" }
-                      )
-                    : "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="End Date">
-                  {claimDetails.lostItem.endDate
-                    ? new Date(claimDetails.lostItem.endDate).toLocaleDateString(
-                        "en-US",
-                        { month: "2-digit", day: "2-digit", year: "numeric" }
-                      )
-                    : "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Status">
                   {claimDetails.lostItem.status}
                 </Descriptions.Item>
+                <Descriptions.Item label="Date Range">
+                {claimDetails.lostItem.startDate && claimDetails.lostItem.endDate
+                  ? `${new Date(claimDetails.lostItem.startDate).toLocaleDateString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                    })} - ${new Date(claimDetails.lostItem.endDate).toLocaleDateString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                    })}`
+                  : "N/A"}
+              </Descriptions.Item>
+                <Descriptions.Item label="Reported By">
+                  {claimDetails.lostItem.reportedBy}
+                </Descriptions.Item>
+                <Descriptions.Item label="Approved By">
+                  {claimDetails.lostItem.approvedBy}
+                </Descriptions.Item>
+                <Descriptions.Item label="Date Reported">
+                {claimDetails.lostItem.dateReported
+                  ? new Date(claimDetails.foundItem.dateReported).toLocaleString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    }).replace(",", "")
+                  : "N/A"}
+              </Descriptions.Item>
                 <Descriptions.Item label="Description">
                   {claimDetails.lostItem.description}
                 </Descriptions.Item>
@@ -1087,14 +1163,18 @@ const handleCancel = async (id, type) => {
                     ? claimDetails.claim.adminDecisionBy
                     : "No actions yet."}
                 </Descriptions.Item>
-                <Descriptions.Item label="Created At">
-                  {claimDetails.claim.createdAt
-                    ? new Date(claimDetails.claim.createdAt).toLocaleDateString(
-                        "en-US",
-                        { month: "2-digit", day: "2-digit", year: "numeric" }
-                      )
-                    : "N/A"}
-                </Descriptions.Item>
+                <Descriptions.Item label="Date Reported">
+                {claimDetails.claim.createdAt
+                  ? new Date(claimDetails.claim.createdAt).toLocaleString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    }).replace(",", "")
+                  : "N/A"}
+              </Descriptions.Item>
                 <Descriptions.Item label="Reason">
                   {claimDetails.claim.reason}
                 </Descriptions.Item>
@@ -1106,6 +1186,7 @@ const handleCancel = async (id, type) => {
         </div>
       </Col>
     </Row>
+    
   </div>
 ) : (
   <p className="muted">No claim details available.</p>
