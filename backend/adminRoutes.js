@@ -353,28 +353,37 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
 
 adminRoutes.route("/history/delete").delete(verifyToken, async (req, res) => {
   try {
-    let db = database.getDb();
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
 
-      const result = await db.collection("lost_found_db").deleteMany({
-      status: { $in: ["Deleted"] }
+    const deletedReports = await db
+      .collection("lost_found_db")
+      .find({ status: "Deleted" })
+      .project({ cid: 1 })
+      .toArray();
+
+    const result = await db.collection("lost_found_db").deleteMany({
+      status: "Deleted"
     });
 
-    res.json({ 
+    if (deletedReports.length > 0) {
+      const audit = {
+        aid: `A-${Date.now()}`,
+        action: "DELETE_REPORT",
+        targetUser: "",
+        performedBy: studentId,
+        timestamp: new Date(),
+        ticketId: deletedReports.map(r => r.cid).join(", "), 
+        details: `${studentId} deleted ${deletedReports.length} report(s): ${deletedReports.map(r => r.cid).join(", ")}`,
+      };
+      await db.collection("audit_db").insertOne(audit);
+    }
+
+    res.json({
       success: true,
       message: `${result.deletedCount} deleted history record(s) removed.`,
-      });
-
-
-    const audit = {
-      aid: `A-${Date.now()}`,
-      action: "DELETE_REPORT",
-      targetUser: "",
-      performedBy: studentId,
-      timestamp: new Date(),
-      ticketId: report.tid || "",
-      details: `${studentId} deleted a report ${report.tid}.`,
-    };
-    await db.collection("audit_db").insertOne(audit);
+      deletedReports: deletedReports.map(r => r.cid)
+    });
 
   } catch (err) {
     console.error("Error deleting history:", err);
@@ -558,7 +567,8 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
       action: status === "Claim Approved" ? "APPROVE_CLAIM" : "DENY_CLAIM",
       performedBy: approvedBy,
       timestamp: new Date(),
-      details: `${approvedBy} set claim ${claimId.cid} to ${status}.`,
+      details: `${approvedBy} set claim ${claim.cid || claimId} to ${status}.`,
+
     };
     await db.collection("audit_db").insertOne(audit);
 
@@ -602,6 +612,15 @@ adminRoutes.put("/claim-items/complete", verifyToken, async (req, res) => {
       }
     );
 
+    let ticketId = "Unknown";
+    if (claim.selectedLostId) {
+      const lostItem = await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.selectedLostId) });
+      ticketId = lostItem?.tid || ticketId;
+    } else if (claim.lostReferenceFound) {
+      const foundItem = await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.lostReferenceFound) });
+      ticketId = foundItem?.tid || ticketId;
+    }
+
     // Update both linked lost_found_db items to Returned
     const updates = [];
 
@@ -637,13 +656,15 @@ adminRoutes.put("/claim-items/complete", verifyToken, async (req, res) => {
 
     await Promise.all(updates);
 
+
+    
     // Add audit trail
     const audit = {
       aid: `A-${Date.now()}`,
       action: "COMPLETE_CLAIM",
       performedBy: approvedBy,
       timestamp: new Date(),
-      details: `${approvedBy} completed and returned ${claimId}.`,
+      details: `${approvedBy} completed and returned claim ${ticketId}.`,
     };
     await db.collection("audit_db").insertOne(audit);
 
