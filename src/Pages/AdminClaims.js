@@ -183,11 +183,11 @@ export const AdminClaims = () => {
           style: { cursor: "pointer" },
         })}
       >
-        <Column title="Claim ID" dataIndex="cid" key="cid" />
-        <Column title="Claimer ID" dataIndex="claimerId" key="claimerId" />
-        <Column title="Claim Status" dataIndex="claimStatus" key="claimStatus" />
-        <Column title="Created At" dataIndex="createdAt" key="createdAt" />
-        <Column title="Admin Decision By" dataIndex="adminDecisionBy" key="adminDecisionBy" />
+        <Column title="CLAIM ID" dataIndex="cid" key="cid" />
+        <Column title="CLAIMER ID" dataIndex="claimerId" key="claimerId" />
+        <Column title="CLAIM STATUS" dataIndex="claimStatus" key="claimStatus" />
+        <Column title="CREATED AT" dataIndex="createdAt" key="createdAt" />
+        <Column title="ADMIN DECISION BY" dataIndex="adminDecisionBy" key="adminDecisionBy" />
       </Table>
 
       {/* Details Modal */}
@@ -215,9 +215,26 @@ export const AdminClaims = () => {
                   <Descriptions.Item label="TID">{details.foundItem.tid}</Descriptions.Item>
                   <Descriptions.Item label="Title">{details.foundItem.title}</Descriptions.Item>
                   <Descriptions.Item label="Category">{details.foundItem.category}</Descriptions.Item>
+                  <Descriptions.Item label="Key Item">{details.foundItem.keyItem}</Descriptions.Item>
+                  <Descriptions.Item label="Item Brand">{details.foundItem.itemBrand}</Descriptions.Item>
                   <Descriptions.Item label="Location">{details.foundItem.location}</Descriptions.Item>
-                  <Descriptions.Item label="Date Found">{new Date(details.foundItem.dateFound).toLocaleDateString()}</Descriptions.Item>
                   <Descriptions.Item label="Status">{details.foundItem.status}</Descriptions.Item>
+                  <Descriptions.Item label="Date Found">{new Date(details.foundItem.dateFound).toLocaleDateString()}</Descriptions.Item>
+                  <Descriptions.Item label="Reported By">{details.foundItem.reportedBy}</Descriptions.Item>
+                  <Descriptions.Item label="Approved By">{details.foundItem.approvedBy}</Descriptions.Item>
+                  <Descriptions.Item label="Date Reported">
+                    {details.foundItem.dateReported
+                      ? new Date(details.foundItem.dateReported).toLocaleString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        }).replace(",", "")
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Description">{details.foundItem.description}</Descriptions.Item>
                 </Descriptions>
               ) : <p>No found item data.</p>}
             </div>
@@ -235,9 +252,44 @@ export const AdminClaims = () => {
                   <Descriptions.Item label="TID">{details.lostItem.tid}</Descriptions.Item>
                   <Descriptions.Item label="Title">{details.lostItem.title}</Descriptions.Item>
                   <Descriptions.Item label="Category">{details.lostItem.category}</Descriptions.Item>
+                  <Descriptions.Item label="Key Item">{details.lostItem.keyItem}</Descriptions.Item>
+                  <Descriptions.Item label="Item Brand">{details.lostItem.itemBrand}</Descriptions.Item>
                   <Descriptions.Item label="Location">{details.lostItem.location}</Descriptions.Item>
-                  <Descriptions.Item label="Date Reported">{new Date(details.lostItem.dateReported).toLocaleDateString()}</Descriptions.Item>
                   <Descriptions.Item label="Status">{details.lostItem.status}</Descriptions.Item>
+                  <Descriptions.Item label="Date Range Found">
+                    {details.lostItem.startDate || details.lostItem.endDate
+                      ? `${details.lostItem.startDate
+                          ? new Date(details.lostItem.startDate).toLocaleDateString("en-US", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              year: "numeric",
+                            })
+                          : "N/A"} - ${
+                          details.lostItem.endDate
+                            ? new Date(details.lostItem.endDate).toLocaleDateString("en-US", {
+                                month: "2-digit",
+                                day: "2-digit",
+                                year: "numeric",
+                              })
+                            : "N/A"
+                        }`
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Reported By">{details.lostItem.reportedBy}</Descriptions.Item>
+                  <Descriptions.Item label="Approved By">{details.lostItem.approvedBy}</Descriptions.Item>
+                  <Descriptions.Item label="Date Reported">
+                    {details.lostItem.dateReported
+                      ? new Date(details.lostItem.dateReported).toLocaleString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        }).replace(",", "")
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Description">{details.lostItem.description}</Descriptions.Item>
                 </Descriptions>
               ) : <p style={{ color: "gray" }}>No linked lost item found.</p>}
             </div>

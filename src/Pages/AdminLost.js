@@ -166,13 +166,33 @@ export const AdminLost = () => {
           style: { cursor: "pointer" },
         })}
       >
-        <Column title="Title" dataIndex="title" key="title" />
-        <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
-        <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
+        <Column title="CATEGORY" dataIndex="category" key="category" />
+        <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
+        <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
+        <Column title="LOCATION" dataIndex="location" key="location" />
         <Column title="Status" dataIndex="status" key="status" />
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
-        <Column title="Start Date" dataIndex="startDate" key="startDate" />
-        <Column title="End Date" dataIndex="endDate" key="endDate" />
+        <Column
+          title="DATE RANGE"
+          key="dateRange"
+          render={(_, record) => {
+            const { startDate, endDate } = record;
+
+            if (!startDate && !endDate) return "N/A";
+
+            const formatDate = (date) =>
+              new Date(date).toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              });
+
+            const formattedStart = startDate ? formatDate(startDate) : "N/A";
+            const formattedEnd = endDate ? formatDate(endDate) : "N/A";
+
+            return `${formattedStart} - ${formattedEnd}`;
+          }}
+        />
       </Table>
 
       
@@ -193,15 +213,34 @@ export const AdminLost = () => {
             )}
             <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
-              <Descriptions.Item label="Report Type">{selectedItem.reportType}</Descriptions.Item>
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
               <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
+              <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
               <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
+              <Descriptions.Item label="Date Range">
+              {selectedItem.startDate || selectedItem.endDate
+                ? `${selectedItem.startDate
+                    ? new Date(selectedItem.startDate).toLocaleDateString("en-US", {
+                        month: "2-digit",
+                        day: "2-digit",
+                        year: "numeric",
+                      })
+                    : "N/A"} - ${
+                    selectedItem.endDate
+                      ? new Date(selectedItem.endDate).toLocaleDateString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                        })
+                      : "N/A"
+                  }`
+                : "N/A"}
+            </Descriptions.Item>
               <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
               <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
-              <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
+              
               <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
               <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
             </Descriptions>
