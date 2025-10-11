@@ -160,7 +160,7 @@ adminRoutes.put("/found/approve", verifyToken, async (req, res) => {
 
     const auditMongo = {
       aid: `A-${Date.now()}`,
-      action: status === "Active" ? "APPROVE_FOUND" : "DENY_FOUND",
+      action: status === "Listed" ? "APPROVE_FOUND" : "DENY_FOUND",
       targetUser: "",
       performedBy: approvedBy,
       timestamp: new Date(),
@@ -256,7 +256,7 @@ adminRoutes.put("/lost/approve", verifyToken, async (req, res) => {
 
     const auditMongo = {
       aid: `A-${Date.now()}`,
-      action: status === "Active" ? "APPROVE_LOST" : "DENY_LOST",
+      action: status === "Listed" ? "APPROVE_LOST" : "DENY_LOST",
       targetUser: "",
       performedBy: approvedBy,
       timestamp: new Date(),
@@ -348,6 +348,41 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
     res.json({ count: allReports.length, results: allReports });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+adminRoutes.route("/history/delete").delete(verifyToken, async (req, res) => {
+  try {
+    let db = database.getDb();
+
+      const result = await db.collection("lost_found_db").deleteMany({
+      status: { $in: ["Deleted"] }
+    });
+
+    res.json({ 
+      success: true,
+      message: `${result.deletedCount} deleted history record(s) removed.`,
+      });
+
+
+    const audit = {
+      aid: `A-${Date.now()}`,
+      action: "DELETE_REPORT",
+      targetUser: "",
+      performedBy: studentId,
+      timestamp: new Date(),
+      ticketId: report.tid || "",
+      details: `${studentId} deleted a report ${report.tid}.`,
+    };
+    await db.collection("audit_db").insertOne(audit);
+
+  } catch (err) {
+    console.error("Error deleting history:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete history.",
+      error: err.message
+    });
   }
 });
 
@@ -489,7 +524,7 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
           {
             $set: {
               // Lost item becomes "Claim Rejected" if claim is denied, otherwise use the claim status
-              status: status === "Claim Rejected" ? "Claim Rejected" : status,
+              status: status === "Claim Rejected" ? "Listed" : status,
               approvedBy,
               updatedAt: new Date(),
             },
@@ -521,7 +556,7 @@ adminRoutes.put("/claim-items/approve", verifyToken, async (req, res) => {
       action: status === "Claim Approved" ? "APPROVE_CLAIM" : "DENY_CLAIM",
       performedBy: approvedBy,
       timestamp: new Date(),
-      details: `${approvedBy} set claim ${claimId.tid} to ${status}.`,
+      details: `${approvedBy} set claim ${claimId.cid} to ${status}.`,
     };
     await db.collection("audit_db").insertOne(audit);
 
@@ -615,6 +650,7 @@ adminRoutes.put("/claim-items/complete", verifyToken, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 //---------------------------------------------------------------------------STORAGE---------------------------------------------------------------------------
 adminRoutes.route("/storage").get(verifyToken, async (req, res) => {
@@ -719,9 +755,7 @@ adminRoutes.route("/logs").get(verifyToken, async (req, res) => {
   }
 });
 
-adminRoutes.route("/manage-users").get(verifyToken, async (req, res) => {});
 
-adminRoutes.route("/profile").get(verifyToken, async (req, res) => {});
 
 //------------------------------------------------------------------------SETTINGS-CONTACT------------------------------------------------------------------------
 adminRoutes.route("/settings/edit").put(verifyToken, async (req, res) => {

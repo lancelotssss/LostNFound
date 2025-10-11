@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select } from "antd";
 import { jwtDecode } from "jwt-decode";
 import { getClaimReport, getClaimDetails, approveClaim, completeTransaction } from "../api";
 
 const { Column } = Table;
+const { Option } = Select;
 
 export const AdminClaims = () => {
 
@@ -18,6 +19,8 @@ export const AdminClaims = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [completeLoading, setCompleteLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   
   useEffect(() => {
@@ -110,6 +113,8 @@ export const AdminClaims = () => {
     }
     setConfirmLoading(false);
   };
+
+
   //-----------------------------------DO NOT DELETE-------------------------------
 
   const handleComplete = async () => {
@@ -128,6 +133,17 @@ export const AdminClaims = () => {
   
   setCompleteLoading(false);
 };
+
+ // ✅ Filtering Logic
+  const filteredData = data.filter((item) => {
+    const search = searchText.toLowerCase();
+    const matchSearch =
+      item.cid?.toLowerCase().includes(search) || item.claimerId?.toLowerCase().includes(search);
+
+    const matchStatus = statusFilter ? item.claimStatus === statusFilter : true;
+    return matchSearch && matchStatus;
+  });
+
   //-----------------------------------DO NOT DELETE-------------------------------
 
   return (
@@ -135,9 +151,33 @@ export const AdminClaims = () => {
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
         Refresh
       </Button>
+       {/* 🔍 Filters (Search + Status Select) */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+        <Input
+          placeholder="Search by Claim ID or Claimer ID"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 300 }}
+          allowClear
+        />
 
+        <Select
+          placeholder="Filter by Claim Status"
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value)}
+          style={{ width: 220 }}
+          allowClear
+        >
+          <Option value="">All Status</Option>
+          <Option value="Reviewing Claim">Reviewing Claim</Option>
+          <Option value="Claim Approved">Claim Approved</Option>
+          <Option value="Completed">Completed</Option>
+          <Option value="Claim Rejected">Claim Rejected</Option>
+          <Option value="Claim Deleted">Claim Deleted</Option>
+        </Select>
+      </div>
       <Table
-        dataSource={data}
+        dataSource={filteredData}
         onRow={(record) => ({
           onClick: () => handleRowClick(record),
           style: { cursor: "pointer" },

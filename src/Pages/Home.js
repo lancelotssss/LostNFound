@@ -1,5 +1,4 @@
-// src/Pages/Home.js
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   Button,
@@ -16,6 +15,7 @@ import {
   Popconfirm,
   Grid,
   Typography,
+  Alert
 } from "antd";
 import {
   SearchOutlined,
@@ -291,6 +291,56 @@ export const Home = () => {
     message.error("An error occurred while disposing the report.");
   }
 };
+
+const handleDeleted = async (id) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:3110/home/${id}/delete`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (response.data.success) {
+      message.success(response.data.message);
+      // Refresh claims table
+      await fetchData(token);
+
+      // Close claim modal if open
+      handleClaimModalClose();
+    } else {
+      message.error(response.data.message || "Failed to delete claim");
+    }
+  } catch (err) {
+    console.error("Delete error:", err);
+    message.error("Server error while deleting claim.");
+  }
+};
+
+const handleCancel = async (id, type) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:3110/home/${id}/cancel`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (response.data.success) {
+      message.success(response.data.message);
+      // Refresh claims table
+      await fetchData(token);
+
+      // Close claim modal if open
+      handleClaimModalClose();
+    } else {
+      message.error(response.data.message || "Failed to cancel claim");
+    }
+  } catch (err) {
+    console.error("cancel error:", err);
+    message.error("Server error while cancelling claim.");
+  }
+};
+
+
   
   // CLAIM handlers
   const handleClaimRowClick = async (record) => {
@@ -322,6 +372,45 @@ export const Home = () => {
     setSelectedClaim(null);
     setClaimDetails(null);
   };
+  
+ const getAlertProps = (status) => {
+    const s = normalizeStatus(status);
+    switch (s) {
+      case "listed":
+        return {
+          message: "This item is currently listed and visible to others.",
+          type: "info",
+        };
+      case "reviewing":
+      
+        return {
+          message: "This item is under admin review. Please wait for approval.",
+          type: "warning",
+        };
+      case "denied":
+      case "claim rejected":
+        return {
+          message: "This report or claim has been denied by the admin.",
+          type: "error",
+        };
+      case "returned":
+      case "completed":
+        return {
+          message: "This item has been successfully returned.",
+          type: "success",
+        };
+      case "reviewing claim":
+        return {
+          message: "This item is under review for claim. The item you found almost finds its way home.",
+          type: "info"
+        }
+
+        
+      default:
+        return null;
+    }
+  };
+  
 
   return (
     <div className="main-container">
@@ -678,6 +767,18 @@ export const Home = () => {
                   : "No Information Provided"}
               </Descriptions.Item>
             </Descriptions>
+            {/* 🟡 ALERT BASED ON STATUS */}
+            {(() => {
+              const alertProps = getAlertProps(selectedLost.status);
+              return alertProps ? (
+                <Alert
+                  style={{ marginTop: 16 }}
+                  showIcon
+                  message={alertProps.message}
+                  type={alertProps.type}
+                />
+              ) : null;
+            })()}
           </>
         )}
       </Modal>
@@ -698,10 +799,8 @@ export const Home = () => {
               selectedFound?._id && handleDispose(selectedFound._id, "found")
             }
             disabled={
-              !["Active", "Pending Verification"].includes(
-                selectedFound?.status || ""
-              )
-            }
+                ![ "Reviewing"].includes(selectedFound?.status || "")
+              }
           >
             Delete
           </Button>,
@@ -767,6 +866,19 @@ export const Home = () => {
                 {selectedFound.description}
               </Descriptions.Item>
             </Descriptions>
+            {/* 🔵 ALERT BASED ON STATUS */}
+            {(() => {
+              const alertProps = getAlertProps(selectedFound.status);
+              return alertProps ? (
+                <Alert
+                  style={{ marginTop: 16 }}
+                  showIcon
+                  message={alertProps.message}
+                  type={alertProps.type}
+                />
+              ) : null;
+            })()}
+
           </>
         )}
       </Modal>
@@ -776,9 +888,27 @@ export const Home = () => {
         title={selectedClaim ? selectedClaim.title : "Claim Details"}
         open={isClaimModalVisible}
         onCancel={handleClaimModalClose}
-        footer={[<Button key="close" onClick={handleClaimModalClose}>Close</Button>]}
-        /* wider on desktop, still friendly on mobile */
-        width={isMobile ? "95%" : 1500}      // ⬅️ was 1200
+        footer={[<Button key="close" onClick={handleClaimModalClose}>Close</Button>, 
+        <Button key="delete" danger
+                onClick={() => selectedClaim?._id && handleDeleted(selectedClaim._id)}
+                disabled={normalizeStatus(selectedClaim?.claimStatus) === "completed"}>
+        Delete</Button>, <Button
+  type="primary"
+  danger
+  disabled={
+    selectedClaim?.claimStatus?.toLowerCase() === "completed" ||
+    selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled"
+  }
+  onClick={() => handleCancel(selectedClaim?._id)}
+>
+  {selectedClaim?.claimStatus?.toLowerCase() === "completed" 
+    ? "Completed"
+    : selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled"
+    ? "Cancelled"
+    : "Cancel Claim"}
+</Button>]}
+        
+        width={isMobile ? "95%" : 1200}
         maskClosable={false}
         className="modal-claim"
         closable={false}

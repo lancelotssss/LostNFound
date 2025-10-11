@@ -72,6 +72,18 @@ export async function deleteReport(id, token) {
   }
 }
 
+export async function deleteHistory(token) {
+  try {
+    const response = await axios.delete(`${URL}/main/history/delete`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting report:", error);
+    return { success: false };
+  }
+}
+
 export async function getClaimDetailsClient(token, itemId) {
   const response = await axios.get(`${URL}/cli/claim-items/${itemId}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -109,18 +121,20 @@ export async function editClient(data, token) {
   }
 }
 
-export async function editPasswordClient(data, token) {
+export async function editPasswordClient(passwordForm, token) {
   try {
-    const response = await axios.put(`${URL}/cli/settings/pass`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-    });
-    console.log("Axios response: ", response)
-    return response.data;
-  } catch (err){
-    console.error("Error fetching reports:", err);
-    return { results: [] };
+    const response = await axios.put(
+      `${URL}/cli/settings/pass`,
+      passwordForm,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      newToken: response.data.newToken 
+    };
+  } catch (err) {
+    return { success: false, message: err.response?.data?.message || err.message };
   }
 }
 
@@ -427,5 +441,17 @@ export async function createAdmin(user, token) {
   } catch (err) {
     console.error("Error creating admin:", err);
     throw err; 
+  }
+}
+
+export async function deleteUser(token) {
+  try {
+    const response = await axios.delete(`${URL}/cli/settings/delete`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    return { success: false, message: err.response?.data?.message || "Error deleting user" };
   }
 }

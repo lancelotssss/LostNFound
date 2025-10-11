@@ -65,6 +65,10 @@ userRoutes.route("/register").post(async (req, res) => {
       sid: `A-${Date.now()}`,
       role: "student",
       name: req.body.name || "Unknown",
+      fname: req.body.fname || "Unknown",
+      mname: req.body.mname || "",
+      lname: req.body.lname || "Unknown",
+      suffix: req.body.suffix || "",
       email: req.body.email || "unknown@example.com",
       password: hash,
       studentId: req.body.studentId || "",
@@ -162,7 +166,9 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 status: user.status,
                 createdAt: user.createdAt,
                 phone: user.phone,
-                password: user.password
+                password: user.password,
+                lname: user.lname,
+                fname: user.fname
             }
             const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
 
@@ -225,7 +231,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
           $match: {
             claimerId: studentId,
             claimStatus: {
-              $in: ["Reviewing Claim", "Claim Approved", "Completed", "Claim Rejected"]
+              $in: ["Reviewing Claim", "Claim Approved", "Completed", "Claim Rejected", "Claim Cancelled"]
             }
           }
         },
@@ -320,6 +326,118 @@ userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+userRoutes.put("/home/:id/delete", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const claimId = req.params.id;
+    const studentId = req.user?.studentId;
+
+    // Find claim owned by the user
+    const claim = await db.collection("claims_db").findOne({
+      _id: new ObjectId(claimId),
+      claimerId: studentId,
+    });
+
+    if (!claim) {
+      return res.status(404).json({
+        success: false,
+        message: "Claim not found or not owned by you",
+      });
+    }
+
+    // Soft delete → update status to "Deleted"
+    await db.collection("claims_db").updateOne(
+      { _id: new ObjectId(claimId) },
+      { $set: { claimStatus: "Deleted", updatedAt: new Date() } }
+    );
+
+    // Add audit log
+    const audit = {
+      aid: `A-${Date.now()}`,
+      action: "DELETE_CLAIM",
+      targetUser: claim.reportedBy,
+      performedBy: studentId,
+      timestamp: new Date(),
+      ticketId: claim.tid || "",
+      details: `${studentId} deleted claim ${claim.tid || claimId}`,
+    };
+
+    await db.collection("audit_db").insertOne(audit);
+
+    res.json({ success: true, message: "Claim deleted successfully" });
+  } catch (err) {
+    console.error("Delete claim error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+userRoutes.put("/home/:id/cancel", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const claimId = req.params.id;
+    const studentId = req.user?.studentId;
+
+    // Find claim owned by the user
+    const claim = await db.collection("claims_db").findOne({
+      _id: new ObjectId(claimId),
+      claimerId: studentId,
+    });
+
+    if (!claim) {
+      return res.status(404).json({
+        success: false,
+        message: "Claim not found or not owned by you",
+      });
+    }
+
+    // Soft delete → update status to "Deleted"
+    await db.collection("claims_db").updateOne(
+      { _id: new ObjectId(claimId) },
+      { $set: { claimStatus: "Claim Cancelled", updatedAt: new Date() } }
+    );
+
+    const updates = [];
+    if (claim.selectedLostId) {
+      updates.push(
+        db.collection("lost_found_db").updateOne(
+          { _id: new ObjectId(claim.selectedLostId) },
+          { $set: { status: "Listed", updatedAt: new Date() } }
+        )
+      );
+    }
+    if (claim.lostReferenceFound) {
+      updates.push(
+        db.collection("lost_found_db").updateOne(
+          { _id: new ObjectId(claim.lostReferenceFound) },
+          { $set: { status: "Listed", updatedAt: new Date() } }
+        )
+      );
+    }
+
+    await Promise.all(updates);
+
+
+    // Add audit log
+    const audit = {
+      aid: `A-${Date.now()}`,
+      action: "CANCELLED_CLAIM",
+      targetUser: claim.reportedBy,
+      performedBy: studentId,
+      timestamp: new Date(),
+      ticketId: claim.tid || "",
+      details: `${studentId} cancelled claim ${claim.tid || claimId}`,
+    };
+
+    await db.collection("audit_db").insertOne(audit);
+
+    res.json({ success: true, message: "Claim cancelled successfully" });
+  } catch (err) {
+    console.error("Delete claim error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 userRoutes.get("/claim-items/:id", verifyToken, async (req, res) => {
   try {
@@ -544,7 +662,38 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
   }
 });
 
-
+userRoutes.delete("/settings/delete", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = new ObjectId(req.user.id); // convert to ObjectId
+ 
+    if (!studentId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+ 
+    const result = await db.collection("student_db").deleteOne({ _id: studentId });
+ 
+    if (result.deletedCount === 0) {
+      return res.status(400).json({ success: false, message: "User not found or already deleted" });
+    }
+ 
+    const audit = {
+      aid: `A-${Date.now()}`,
+      action: "DELETE_USER",
+      targetUser: studentId,
+      performedBy: studentId,
+      timestamp: new Date(),
+      ticketId: "",
+      details: `${studentId} deleted their account.`,
+    };
+    await db.collection("audit_db").insertOne(audit);
+ 
+    res.json({ success: true, message: "User deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 userRoutes.post("/similar-items", verifyToken, async (req, res) => {
   try {

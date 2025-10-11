@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { editClient, editPasswordClient } from "../api";
+import { deleteUser, editPasswordClient } from "../api";
 
 import {
   Card,
@@ -18,17 +18,16 @@ import {
 } from "antd";
 import { UserOutlined, PhoneOutlined, LockOutlined } from "@ant-design/icons";
 import "./styles/UserSettings.css";
+import { useNavigate } from "react-router-dom";
 
 
 
 
 
 // Helper: get initials from a full name
-const getInitials = (name = "") => {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0) return "";
-  const first = parts[0][0] || "";
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+const getInitials = (fname = "", lname = "") => {
+  const first = fname?.trim()?.charAt(0) || "";
+  const last = lname?.trim()?.charAt(0) || "";
   return (first + last).toUpperCase();
 };
 
@@ -40,7 +39,7 @@ const { Title, Text } = Typography;
 
 export function UserSettings() {
 
-
+  const nav = useNavigate();
   const [user, setUser] = useState({});
   const [formData, setFormData] = useState({
     studentId: "",
@@ -50,6 +49,8 @@ export function UserSettings() {
     createdAt: "",
     phone: "",
     password: "",
+    fname: "",
+    lname: ""
   });
 
   const [isEditing, setIsEditing] = useState(false);               
@@ -64,9 +65,22 @@ export function UserSettings() {
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
-  function handlePasswordChange(e) {
+ 
+
+
+const loadUserFromToken = () => {
+    const token = sessionStorage.getItem("User");
+    if (!token) return;
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const decoded = jwtDecode(token);
+    setUser(decoded);
+    setFormData({ phone: decoded.phone || "" });
+  };
+ 
+  const handlePasswordChange = (e) => {
     setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
-  }
+  };
+
 
   useEffect(() => {
     async function loadUserData() {
@@ -85,6 +99,8 @@ export function UserSettings() {
         status: decodedUser.status || "",
         createdAt: decodedUser.createdAt || "",
         phone: decodedUser.phone || "",
+        lname: decodedUser.lname || "",
+        fname: decodedUser.fname || ""
       }));
     }
     loadUserData();
@@ -93,34 +109,52 @@ export function UserSettings() {
   
   async function handlePasswordSave() {
     const { oldPassword, newPassword, confirmPassword } = passwordForm;
+ 
+  try {
+    const token = sessionStorage.getItem("User");
+    if (!token) return alert("User not logged in.");
+ 
+    const response = await editPasswordClient({ oldPassword, newPassword }, token);
+ 
+    if (!response.success) return alert(response.message || "Failed to update password.");
+ 
+ 
+    sessionStorage.setItem("User", response.newToken);
+    loadUserFromToken();
+ 
+    alert("Password updated successfully!");
+    setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    setIsPasswordEditing(false);
+    sessionStorage.removeItem("User");
+    nav("/");
+   
+  } catch (err) {
+    console.error("Error updating password:", err);
+    alert("Error updating password");
+  }
+};
 
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      alert("All password fields are required.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      alert("New passwords do not match.");
-      return;
-    }
-
+  const handleDeleteUser = async () => {
+    if (!window.confirm("Are you sure you want to delete your account?")) return;
+ 
     try {
       const token = sessionStorage.getItem("User");
-      if (!token) return;
-
-      const response = await editPasswordClient(passwordForm, token);
-
-      if (!response.success) {
-        alert("Password could not be updated.");
+      if (!token) return alert("User not logged in.");
+ 
+      const response = await deleteUser(token);
+ 
+      if (response.success) {
+        alert("User deleted successfully!");
+        sessionStorage.removeItem("User");
+        nav("/");
       } else {
-        alert("Password updated successfully!");
-        setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
-        setIsPasswordEditing(false);
+        alert(response.message || "Failed to delete user.");
       }
     } catch (err) {
-      console.error("Error updating password:", err);
-      alert("Error updating password");
+      console.error("Error deleting user:", err);
+      alert("Error deleting user");
     }
-  }
+  };
 
   const joined = user?.createdAt
     ? new Date(user.createdAt)
@@ -150,9 +184,9 @@ export function UserSettings() {
         <Col xs={24} md={12}>
           <Card className="settings-card" bordered>
             <Space align="center" size={16} className="settings-header">
-            {user?.name ? (
+            {user?.fname || user?.lname ? (
               <Avatar size={64} style={{ backgroundColor: '#014F86' }}>
-                {getInitials(user.name)}
+                {getInitials(user.fname, user.lname)}
               </Avatar>
             ) : (
               <Avatar size={64} icon={<UserOutlined />} />
@@ -164,14 +198,19 @@ export function UserSettings() {
                 <Text type="secondary">{user?.email || "—"}</Text>
                 <div>
                   <Tag color={statusColor} style={{ marginTop: 6 }}>
-                    {user?.status || "—"}
+                    {user?.status
+                      ? user.status.charAt(0).toUpperCase() + user.status.slice(1)
+                      : "—"}
                   </Tag>
                 </div>
               </div>
             </Space>
 
             <Divider />
-
+              <Button type="default" onClick={handleDeleteUser}>
+                Delete Account
+            </Button>
+            
             <Descriptions column={1} size="middle" labelStyle={{ width: 140 }}>
               <Descriptions.Item label="Student ID">
                 {user?.studentId || "—"}

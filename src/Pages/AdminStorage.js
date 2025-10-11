@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input } from "antd";
-import { getStorage, approveFound, approveStorage  } from "../api";
+import { useEffect, useState } from "react";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Form, Upload } from "antd";
+import { getStorage, approveFound, approveStorage } from "../api";
 import { jwtDecode } from "jwt-decode";
-import {Form, Upload} from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-
 
 const { TextArea } = Input;
 const { Column } = Table;
 
 export const AdminStorage = () => {
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]); 
+  const [searchText, setSearchText] = useState(""); 
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [approveModal, setApproveModal] = useState(false);
@@ -19,7 +19,6 @@ export const AdminStorage = () => {
   const [user, setUser] = useState(null);
   const [claimMode, setClaimMode] = useState(false);
   const [form] = Form.useForm();
-  
 
   
   useEffect(() => {
@@ -30,30 +29,28 @@ export const AdminStorage = () => {
     }
   }, []);
 
-
+ 
   const fetchData = async () => {
     try {
-      const token = sessionStorage.getItem("User"); 
-          if (!token) {
-            alert("You must be logged in");
-            return;
-          }
+      const token = sessionStorage.getItem("User");
+      if (!token) {
+        alert("You must be logged in");
+        return;
+      }
+
       const res = await getStorage(token);
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
-        key: item._id ? item._id.toString() : `row-${index}`,
-        _id: item._id ? item._id.toString() : null, 
-        ...item,
-        dateReported: item.dateReported
-          ? new Date(item.dateReported).toLocaleString()
-          : "N/A",
-        dateFound: item.dateFound
-          ? new Date(item.dateFound).toLocaleDateString()
-          : "N/A",
-          approvedBy: item.approvedBy ? item.approvedBy : "No actions yet"
-      }));
-      console.log("Formatted Data: ", formattedData)
+          key: item._id ? item._id.toString() : `row-${index}`,
+          _id: item._id ? item._id.toString() : null,
+          ...item,
+          dateReported: item.dateReported ? new Date(item.dateReported).toLocaleString() : "N/A",
+          dateFound: item.dateFound ? new Date(item.dateFound).toLocaleDateString() : "N/A",
+          approvedBy: item.approvedBy ? item.approvedBy : "No actions yet",
+        }));
+
         setData(formattedData);
+        setFilteredData(formattedData); 
       }
     } catch (err) {
       console.error("Error fetching found items:", err);
@@ -63,6 +60,23 @@ export const AdminStorage = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  
+  useEffect(() => {
+    if (!searchText.trim()) {
+      setFilteredData(data);
+    } else {
+      const filtered = data.filter(
+        (item) =>
+          item.tid?.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.keyItem?.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.itemBrand?.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }
+  }, [searchText, data]);
+
+  // ---------------- Modal logic ----------------
 
   const handleRowClick = (record) => {
     setSelectedItem(record);
@@ -74,87 +88,90 @@ export const AdminStorage = () => {
     setSelectedItem(null);
   };
 
-  const handleClaim = () => {
-
-    setClaimMode(true);
-
-  }
-
+  const handleClaim = () => setClaimMode(true);
   const handleApprove = () => setApproveModal(true);
   const handleDeny = () => setDenyModal(true);
 
   const confirmApprove = async () => {
-  try {
+    try {
+      setConfirmLoading(true);
+      const token = sessionStorage.getItem("User");
+
+      const values = await form.validateFields();
+
+      const claimPayload = {
+        itemId: selectedItem._id,
+        claimerId: values.id,
+        reason: values.reason,
+        adminDecisionBy: user.studentId,
+        photoUrl: values.image[0]?.originFileObj
+          ? URL.createObjectURL(values.image[0].originFileObj)
+          : "",
+        selectedLostId: selectedItem._id,
+        lostReferenceFound: selectedItem._id,
+      };
+
+      const res = await approveStorage(claimPayload, token);
+
+      if (res.success) {
+        message.success("Claim report submitted successfully!");
+        setClaimMode(false);
+        setApproveModal(false);
+        setIsModalVisible(false);
+        form.resetFields();
+        fetchData();
+      } else {
+        message.error(res.message || "Failed to submit claim report");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Please fill all required fields correctly.");
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+
+  const confirmDeny = async () => {
     setConfirmLoading(true);
     const token = sessionStorage.getItem("User");
-
-    // Ant Design validation
-    const values = await form.validateFields();
-
-    // Prepare payload
-    const claimPayload = {
-      itemId: selectedItem._id,
-      claimerId: values.id,
-      reason: values.reason,
-      adminDecisionBy: user.studentId,
-      photoUrl: values.image[0]?.originFileObj
-        ? URL.createObjectURL(values.image[0].originFileObj)
-        : "",
-      selectedLostId: selectedItem._id,
-      lostReferenceFound: selectedItem._id,
-    };
-
-    const res = await approveStorage(claimPayload, token);
-
-    if (res.success) {
-      message.success("Claim report submitted successfully!");
-      setClaimMode(false);
-      setApproveModal(false);
+    try {
+      await approveFound(selectedItem._id, "Disposed", user.studentId, token);
+      message.success("Item disposed successfully!");
+      setDenyModal(false);
       setIsModalVisible(false);
-      form.resetFields();
       fetchData();
-    } else {
-      message.error(res.message || "Failed to submit claim report");
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to dispose item.");
+    } finally {
+      setConfirmLoading(false);
     }
-  } catch (err) {
-    console.error(err);
-    message.error("Please fill all required fields correctly.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
-
-const confirmDeny = async () => {
-  setConfirmLoading(true);
-  const token = sessionStorage.getItem("User");
-  try {
-    await approveFound(selectedItem._id, "Disposed", user.studentId, token); 
-    message.success("Item disposed successfully!");
-    setDenyModal(false);
-    setIsModalVisible(false);
-    fetchData();
-  } catch (err) {
-    console.error(err);
-    message.error("Failed to dispose item.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
-
+  };
 
   return (
     <>
-      <Button onClick={fetchData} style={{ marginBottom: 16 }}>
-        Refresh
-      </Button>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+        <Button onClick={fetchData}>Refresh</Button>
+
+        
+        <Input
+          placeholder="Search by TID, Key Item, or Brand"
+          allowClear
+          style={{ width: 300 }}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
+
       <Table
-        dataSource={data}
+        dataSource={filteredData}
         onRow={(record) => ({
           onClick: () => handleRowClick(record),
           style: { cursor: "pointer" },
         })}
+        pagination={{ pageSize: 8 }}
       >
-        <Column title="Title" dataIndex="title" key="title" />
+        <Column title="TID" dataIndex="tid" key="tid" />
         <Column title="Key Item" dataIndex="keyItem" key="keyItem" />
         <Column title="Brand" dataIndex="itemBrand" key="itemBrand" />
         <Column title="Status" dataIndex="status" key="status" />
@@ -162,9 +179,10 @@ const confirmDeny = async () => {
         <Column title="Date Found" dataIndex="dateFound" key="dateFound" />
       </Table>
 
-      {/* Main modal */}
+      {/* -------------------- MODALS -------------------- */}
+
       <Modal
-        title={selectedItem ? selectedItem.title : "Lost Item Details"}
+        title={selectedItem ? selectedItem.tid : "Storage Item Details"}
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={null}
@@ -196,69 +214,57 @@ const confirmDeny = async () => {
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
               {!claimMode && (
-              <Button type="primary" onClick={handleClaim}  disabled={selectedItem.status === "Claimed"}>
-                Claim
-              </Button>
-
+                <Button type="primary" onClick={handleClaim} disabled={selectedItem.status === "Claimed"}>
+                  Claim
+                </Button>
               )}
 
-               {/* Right Side: Claim Form (Slides In) */}
-              <div
-                className={`w-1/2 pl-6 border-l transition-all duration-500 ${
-                  claimMode ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full"
-                }`}
-              >
-                  {claimMode && (
-    <Form
-      form={form}
-      layout="vertical"
-      initialValues={{
-        id: "",
-        reason: "",
-        image: [],
-      }}
-    >
-      <Form.Item
-        label="Identification Card"
-        name="id"
-        rules={[
-          { required: true, message: "Please enter your Identification Card" },
-        ]}
-      >
-        <Input placeholder="Enter your Identification Card" />
-      </Form.Item>
+              {claimMode && (
+                <Form
+                  form={form}
+                  layout="vertical"
+                  initialValues={{
+                    id: "",
+                    reason: "",
+                    image: [],
+                  }}
+                >
+                  <Form.Item
+                    label="Identification Card"
+                    name="id"
+                    rules={[{ required: true, message: "Please enter your Identification Card" }]}
+                  >
+                    <Input placeholder="Enter your Identification Card" />
+                  </Form.Item>
 
-      <Form.Item
-        label="Reason for Claim"
-        name="reason"
-        rules={[{ required: true, message: "Please enter a reason" }]}
-      >
-        <TextArea rows={4} placeholder="Enter your reason" />
-      </Form.Item>
+                  <Form.Item
+                    label="Reason for Claim"
+                    name="reason"
+                    rules={[{ required: true, message: "Please enter a reason" }]}
+                  >
+                    <TextArea rows={4} placeholder="Enter your reason" />
+                  </Form.Item>
 
-      <Form.Item
-        label="Upload Proof Image"
-        name="image"
-        valuePropName="fileList"
-        getValueFromEvent={(e) => e?.fileList || []}
-        rules={[{ required: true, message: "Please upload an image" }]}
-        initialValue={[]}
-      >
-        <Upload beforeUpload={() => false} listType="picture">
-          <Button icon={<UploadOutlined />}>Click to Upload</Button>
-        </Upload>
-      </Form.Item>
+                  <Form.Item
+                    label="Upload Proof Image"
+                    name="image"
+                    valuePropName="fileList"
+                    getValueFromEvent={(e) => e?.fileList || []}
+                    rules={[{ required: true, message: "Please upload an image" }]}
+                  >
+                    <Upload beforeUpload={() => false} listType="picture">
+                      <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                    </Upload>
+                  </Form.Item>
 
-      <div className="flex justify-end gap-2">
-        <Button onClick={handleModalClose}>Cancel</Button>
-        <Button type="primary" onClick={handleApprove}>
-          Submit
-        </Button>
-      </div>
-    </Form>
-  )}
-</div>
-
+                  <div className="flex justify-end gap-2">
+                    <Button onClick={handleModalClose}>Cancel</Button>
+                    <Button type="primary" onClick={handleApprove}>
+                      Submit
+                    </Button>
+                  </div>
+                </Form>
+              )}
 
               <Button danger onClick={handleDeny} disabled={selectedItem.status === "Dispose"}>
                 Dispose
