@@ -302,7 +302,7 @@ export default function ReportItem() {
           />
         )}
 
-        {/* Show itemBrand input unless Identification Card. Placeholder changed */}
+        
         {registerData.category !== "Identification Card" && (
           <Input
             name="itemBrand"
