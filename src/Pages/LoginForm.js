@@ -40,6 +40,12 @@ function LoginForm() {
       // do not touch backend logic
       let response = await verifyUser(loginData);
 
+
+       if (response && response.success === false && response.message?.toLowerCase().includes("suspended")) {
+          setErrors({ general: "Your account has been suspended. Please contact the administrator." });
+          return;
+        }
+        
       if (response && response.token) {
         sessionStorage.setItem("User", response.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${response.token}`;
@@ -48,7 +54,8 @@ function LoginForm() {
           navigate("/cli/home");
         } else if (response.role === "admin") {
           navigate("/main/found-items");
-        } else {
+        }
+        else {
           setErrors({ general: "Unknown user role." });
         }
       } else {

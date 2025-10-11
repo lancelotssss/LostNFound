@@ -192,7 +192,7 @@ useEffect(() => {
               <Button
                 danger
                 onClick={handleDeny}
-                disabled={selectedItem.status === "Suspended"}
+                disabled={selectedItem.role?.toLowerCase() === "admin" || selectedItem.status?.toLowerCase() === "suspended"}
               >
                 Suspend
               </Button>
