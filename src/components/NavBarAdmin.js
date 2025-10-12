@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   AppstoreOutlined,
   MailOutlined,
@@ -7,84 +7,112 @@ import {
   SearchOutlined,
   FileSearchOutlined,
 } from "@ant-design/icons";
-import { Menu, Button } from "antd";
+import { Menu, Button, Modal } from "antd";
+import { logOutUser } from "../api";
 import "../../src/Pages/styles/NavBar.css";
 
 const pageDataAdmin = [
-  { name: "Dashboard", path: "/main/dashboard" },
+  { key: "dashboard", name: "Dashboard", path: "/main/dashboard", icon: <AppstoreOutlined /> },
 
-  { name: "Review Found Items", path: "/main/found-items" },
-  { name: "Review Lost Items", path: "/main/lost-items" },
-  { name: "Review Claims", path: "/main/claim-items" },
+  // MGA CHILDREN
+  { key: "review-found",   group: "review", name: "Review Found Items", path: "/main/found-items" },
+  { key: "review-lost",    group: "review", name: "Review Lost Items",  path: "/main/lost-items" },
+  { key: "review-claims",  group: "review", name: "Review Claims",      path: "/main/claim-items" },
 
-  { name: "Report Item", path: "/main/report" },
-  { name: "Storage", path: "/main/storage" },
-  { name: "History", path: "/main/history" },
-  { name: "Manage Users", path: "/main/users" },
-  { name: "Create Admin", path: "/main/admin" },
-  { name: "Activity Logs", path: "/main/logs" },
-  { name: "User Settings", path: "/main/settings" },
+  { key: "report",    name: "Report Item",   path: "/main/report" },
+  { key: "storage",   name: "Storage",       path: "/main/storage" },
+  { key: "history",   name: "History",       path: "/main/history" },
+  { key: "users",     name: "Manage Users",  path: "/main/users" },
+  { key: "createadm", name: "Create Admin",  path: "/main/admin" },
+  { key: "logs",      name: "Activity Logs", path: "/main/logs" },
+  { key: "settings",  name: "User Settings", path: "/main/settings" },
 
-  { name: "Logout" },
+  // LOGOUT aaaaa
+  { key: "logout",    name: "Logout" }, 
 ];
 
 export function NavBarAdmin() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { confirm } = Modal;
 
-  // --- Group our 3 Review pages under one submenu ---
-  const reviewNames = [
-    "Review Found Items",
-    "Review Lost Items",
-    "Review Claims",
-  ];
 
-  const dashboardPage = pageDataAdmin.find((p) => p.name === "Dashboard");
-  const dashboardItem = {
-    key: "dashboard",
-    icon: <AppstoreOutlined />,
-    label: <Link to={dashboardPage.path}>{dashboardPage.name}</Link>,
-  };
+  const reviewChildren = useMemo(
+    () =>
+      pageDataAdmin
+        .filter((p) => p.group === "review")
+        .map((p) => ({
+          key: p.key,
+          icon: <FileSearchOutlined />,
+          label: <Link to={p.path}>{p.name}</Link>,
+          path: p.path,
+        })),
+    []
+  );
 
-  const reviewChildren = pageDataAdmin
-    .filter((p) => reviewNames.includes(p.name))
-    .map((p, i) => ({
-      key: `review-${i + 1}`,
-      icon: <FileSearchOutlined />,
+  const dashboardItem = useMemo(() => {
+    const p = pageDataAdmin.find((x) => x.key === "dashboard");
+    return {
+      key: p.key,
+      icon: p.icon ?? <AppstoreOutlined />,
       label: <Link to={p.path}>{p.name}</Link>,
-    }));
+      path: p.path,
+    };
+  }, []);
 
-  const reviewGroup = {
-    key: "review",
-    icon: <SearchOutlined />,
-    label: "Review Items",
-    children: reviewChildren,
-  };
+  const restTopPages = useMemo(
+    () =>
+      pageDataAdmin
+        .filter((p) => !p.group && p.key !== "dashboard" && p.key !== "logout")
+        .map((p, idx) => ({
+          key: p.key,
+          icon: p.icon ?? (idx % 2 === 0 ? <MailOutlined /> : <AppstoreOutlined />),
+          label: p.path ? <Link to={p.path}>{p.name}</Link> : p.name,
+          path: p.path,
+        })),
+    []
+  );
 
-  const restTopPages = pageDataAdmin
-    .filter(
-      (p) =>
-        p.name !== "Dashboard" &&
-        p.name !== "Logout" &&
-        !reviewNames.includes(p.name)
-    )
-    .map((p, idx) => ({
-      key: `top-${idx + 1}`,
-      icon: idx % 2 === 0 ? <MailOutlined /> : <AppstoreOutlined />,
-      label: p.path ? <Link to={p.path}>{p.name}</Link> : p.name,
-    }));
+  const items = useMemo(
+    () => [
+      dashboardItem,
+      {
+        key: "review",
+        icon: <SearchOutlined />,
+        label: "Review Items",
+        children: reviewChildren,
+      },
+      ...restTopPages,
+    ],
+    [dashboardItem, reviewChildren, restTopPages]
+  );
 
-  const items = [dashboardItem, reviewGroup, ...restTopPages];
+  // Flatten for matching path -> ke
+  const flatItems = useMemo(() => {
+    const flat = [dashboardItem, ...reviewChildren, ...restTopPages];
+    return flat.filter(Boolean);
+  }, [dashboardItem, reviewChildren, restTopPages]);
 
-  // ---------- Expand on desktop, avoid flicker on mobile ----------
+  // Determine selected key by current URL (prefix match like client
+  const selectedKeys = useMemo(() => {
+    const match =
+      flatItems.find((it) => it.path && location.pathname.startsWith(it.path)) ??
+      dashboardItem;
+    return [match.key];
+  }, [flatItems, dashboardItem, location.pathname]);
+
+  // Keep Review submenu open when a review child is activ
+  const reviewChildKeys = useMemo(() => reviewChildren.map((c) => c.key), [reviewChildren]);
+  const isReviewActive = reviewChildKeys.includes(selectedKeys[0]);
+
+  // ---------- Expand on desktop, avoid flicker on mobile ---------
   const [isNarrow, setIsNarrow] = useState(() =>
     window.matchMedia("(max-width: 992px)").matches
   );
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 992px)");
     const handler = (e) => setIsNarrow(e.matches);
-    // modern
     if (mql.addEventListener) mql.addEventListener("change", handler);
-    // safari/old
     else mql.addListener(handler);
     return () => {
       if (mql.removeEventListener) mql.removeEventListener("change", handler);
@@ -92,13 +120,36 @@ export function NavBarAdmin() {
     };
   }, []);
 
-  // Controlled open state only on desktop so it’s expanded by default + animates
+  // Controlled open state on desktop; auto-open review if a child is selecte
   const [openKeys, setOpenKeys] = useState(["review"]);
+  useEffect(() => {
+    if (!isNarrow) {
+      setOpenKeys(isReviewActive ? ["review"] : openKeys.includes("review") ? ["review"] : []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReviewActive, isNarrow]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("User");
-    navigate("/");
-  };
+  // --- Logout with confirm (same as client) --
+  async function handleLogout() {
+    const token = sessionStorage.getItem("User");
+    if (!token) return;
+    const res = await logOutUser(token);
+    if (res?.success) {
+      sessionStorage.removeItem("User");
+      navigate("/");
+    } else {
+      alert("Logout failed");
+    }
+  }
+  function showLogoutConfirm() {
+    confirm({
+      title: "Are you sure you want to log out?",
+      okText: "Log out",
+      cancelText: "Cancel",
+      centered: true,
+      onOk: handleLogout,
+    });
+  }
 
   return (
     <div className="sider-rail">
@@ -106,9 +157,7 @@ export function NavBarAdmin() {
         mode="inline"
         theme="dark"
         className="NavBarMenu menu-top"
-        defaultSelectedKeys={["dashboard"]}
-        // Desktop: controlled (starts open = ['review'] and animates)
-        // Mobile/collapsed: uncontrolled to prevent popup close/reopen flicker
+        selectedKeys={selectedKeys}                 
         {...(isNarrow
           ? { defaultOpenKeys: ["review"] }
           : { openKeys, onOpenChange: setOpenKeys })}
@@ -122,7 +171,7 @@ export function NavBarAdmin() {
           type="default"
           danger
           icon={<LogoutOutlined />}
-          onClick={handleLogout}
+          onClick={showLogoutConfirm}
           className="logout-btn"
         >
           <span className="logout-text">Logout</span>
