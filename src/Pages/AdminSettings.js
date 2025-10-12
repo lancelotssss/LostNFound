@@ -18,17 +18,17 @@ import {
 } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import "./styles/UserSettings.css";
+import { useNavigate } from "react-router-dom";
 
 
 
 
 
 // GET INITIALS -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-const getInitials = (name = "") => {
-  if (!name) return "";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+const getInitials = (fname = "", lname = "") => {
+  const first = fname?.trim()?.charAt(0) || "";
+  const last = lname?.trim()?.charAt(0) || "";
+  return (first + last).toUpperCase();
 };
 
 const { Title, Text } = Typography;
@@ -63,6 +63,7 @@ export function AdminSettings() {
     password: "",
   });
 
+  const nav = useNavigate()
   const [isEditing, setIsEditing] = useState(false);
   const [isPasswordEditing, setIsPasswordEditing] = useState(false);
 
@@ -143,12 +144,24 @@ export function AdminSettings() {
     const { oldPassword, newPassword, confirmPassword } = passwordForm;
 
     if (!oldPassword || !newPassword || !confirmPassword) {
-      Modal.warning({ title: "Missing fields", content: "All password fields are required." });
-      return;
-    }
+        Modal.warning({
+          title: "Missing Fields",
+          content: "All password fields are required.",
+          onOk: () => {
+            setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+          },
+        });
+        return;
+      }
 
     if (newPassword !== confirmPassword) {
-      Modal.error({ title: "Password Mismatch", content: "New passwords do not match." });
+      Modal.error({
+        title: "Password Mismatch",
+        content: "New passwords do not match.",
+        onOk: () => {
+          setPasswordForm((prev) => ({ oldPassword: "", newPassword: "", confirmPassword: "" }));
+        },
+      });
       return;
     }
 
@@ -176,6 +189,8 @@ export function AdminSettings() {
             Modal.success({ title: "Success", content: "Password updated successfully!" });
             setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
             setIsPasswordEditing(false);
+            sessionStorage.removeItem("User");
+            nav("/");
           }
         } catch (err) {
           console.error("Error updating password:", err);
@@ -215,7 +230,7 @@ export function AdminSettings() {
             <Space align="center" size={16} className="settings-header">
               {user?.name ? (
                 <Avatar size={64} style={{ backgroundColor: "#014F86" }}>
-                  {getInitials(user.name)}
+                  {getInitials(user.fname, user.lname)}
                 </Avatar>
               ) : (
                 <Avatar size={64} icon={<UserOutlined />} />

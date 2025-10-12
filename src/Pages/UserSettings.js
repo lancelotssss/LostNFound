@@ -104,14 +104,27 @@ export function UserSettings() {
  async function handlePasswordSave() {
   const { oldPassword, newPassword, confirmPassword } = passwordForm;
 
-  
-  if (newPassword !== confirmPassword) {
-    return Modal.error({
-      title: "Password Mismatch",
-      content: "New password and confirmation do not match.",
-    });
-  }
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        Modal.warning({
+          title: "Missing Fields",
+          content: "All password fields are required.",
+          onOk: () => {
+            setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+          },
+        });
+        return;
+      }
 
+    if (newPassword !== confirmPassword) {
+      Modal.error({
+        title: "Password Mismatch",
+        content: "New passwords do not match.",
+        onOk: () => {
+          setPasswordForm((prev) => ({ oldPassword: "", newPassword: "", confirmPassword: "" }));
+        },
+      });
+      return;
+    }
 
   Modal.confirm({
     title: "Confirm Password Change",
