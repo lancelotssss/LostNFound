@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag, Row, Col } from "antd";
 import { jwtDecode } from "jwt-decode";
 import { getClaimReport, getClaimDetails, approveClaim, completeTransaction, deleteClaims} from "../api";
 import "./styles/ant-input.css";
@@ -8,8 +8,6 @@ const { Option } = Select;
 const { Text } = Typography;
 
 export const AdminClaims = () => {
-
-  //-----------------------------------DO NOT DELETE-------------------------------
 
   const [data, setData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -24,7 +22,6 @@ export const AdminClaims = () => {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [clearClaimsModalVisible, setClearClaimsModalVisible] = useState(false);
-
 
   useEffect(() => {
     const token = sessionStorage.getItem("User");
@@ -53,8 +50,6 @@ export const AdminClaims = () => {
     fetchData();
   }, []);
 
-  //-----------------------------------DO NOT DELETE-------------------------------
-
   const handleRowClick = async (record) => {
     setSelectedItem(record);
     setIsModalVisible(true);
@@ -73,8 +68,6 @@ export const AdminClaims = () => {
   const handleApprove = () => setApproveModal(true);
   const handleDeny = () => setDenyModal(true);
   const handleComplete = () => setCompleteModal(true);
-
-  //-----------------------------------DO NOT DELETE-------------------------------
 
   const confirmApprove = async () => {
     setConfirmLoading(true);
@@ -130,8 +123,6 @@ export const AdminClaims = () => {
       }
     };
 
-  //-----------------------------------NEW COMPLETE MODAL HANDLING-------------------------------
-
   const confirmComplete = async () => {
     setCompleteLoading(true);
     const token = sessionStorage.getItem("User");
@@ -149,8 +140,6 @@ export const AdminClaims = () => {
 
     setCompleteLoading(false);
   };
-
-  //-----------------------------------FILTERING LOGIC-------------------------------
 
   const filteredData = data.filter((item) => {
     const search = searchText.toLowerCase();
@@ -178,8 +167,6 @@ export const AdminClaims = () => {
     completed: "green",
   };
 
-  //-----------------------------------DO NOT DELETE-------------------------------
-
   return (
     <>
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
@@ -187,21 +174,18 @@ export const AdminClaims = () => {
       </Button>
       <Button
           onClick={() => {
-            // Check if there are any deleted claims
             const hasDeleted = data.some(item => item.claimStatus === "Deleted");
             if (!hasDeleted) {
               message.info("No deleted items are present!");
               return;
             }
-            setClearClaimsModalVisible(true); // Show modal if there are deleted items
+            setClearClaimsModalVisible(true);
           }}
           style={{ marginBottom: 16 }}
         >
           Clear Deleted Claims
         </Button>
 
-
-      {/* 🔍 Filters */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
         <Input
           className="poppins-input"
@@ -249,177 +233,322 @@ export const AdminClaims = () => {
         <Column title="ADMIN DECISION BY" dataIndex="adminDecisionBy" key="adminDecisionBy" />
       </Table>
 
-      {/* DETAILS MODAL */}
-      <Modal
-        title={selectedItem ? "Claim Details" : "Item Details"}
-        open={isModalVisible}
-        onCancel={handleModalClose}
-        footer={null}
-        width={1300}
-        maskClosable={false}
-        styles={{ maxHeight: "70vh", overflowY: "auto" }}
-      >
-        {selectedItem && (
-          <div style={{ display: "flex", gap: 24 }}>
-            {/* Found Item */}
-            <div style={{ flex: 1 }}>
-              <h3>Found Item Information</h3>
-              {details.foundItem?.photoUrl && (
-                <div style={{ textAlign: "center", marginBottom: 16 }}>
-                  <Image src={details.foundItem.photoUrl} width={220} />
-                </div>
-              )}
-              {details.foundItem ? (
-                <Descriptions bordered column={1} size="middle">
-                  <Descriptions.Item label="TID">
-                    <Text copyable style={{ fontFamily: "Poppins" }}>{details.foundItem.tid}</Text>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Title">{details.foundItem.title}</Descriptions.Item>
-                  <Descriptions.Item label="Category">{details.foundItem.category}</Descriptions.Item>
-                  <Descriptions.Item label="Key Item">{details.foundItem.keyItem}</Descriptions.Item>
-                  <Descriptions.Item label="Item Brand">{details.foundItem.itemBrand}</Descriptions.Item>
-                  <Descriptions.Item label="Location">{details.foundItem.location}</Descriptions.Item>
-                  <Descriptions.Item label="Status">{details.foundItem.status}</Descriptions.Item>
-                  <Descriptions.Item label="Date Found">{new Date(details.foundItem.dateFound).toLocaleDateString()}</Descriptions.Item>
-                  <Descriptions.Item label="Reported By">{details.foundItem.reportedBy}</Descriptions.Item>
-                  <Descriptions.Item label="Approved By">{details.foundItem.approvedBy}</Descriptions.Item>
-                  <Descriptions.Item label="Date Reported">
-                    {details.foundItem.dateReported
-                      ? new Date(details.foundItem.dateReported).toLocaleString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        }).replace(",", "")
-                      : "N/A"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Description">{details.foundItem.description}</Descriptions.Item>
-                </Descriptions>
-              ) : <p>No found item data.</p>}
-            </div>
-
-            {/* Lost Item */}
-            <div style={{ flex: 1 }}>
-              <h3>Lost Item Reference</h3>
-              {details.lostItem?.photoUrl && (
-                <div style={{ textAlign: "center", marginBottom: 16 }}>
-                  <Image src={details.lostItem.photoUrl} width={220} />
-                </div>
-              )}
-              {details.lostItem ? (
-                <Descriptions bordered column={1} size="middle">
-                  <Descriptions.Item label="TID">
-                    <Text copyable style={{ fontFamily: "Poppins" }}>{details.lostItem.tid}</Text>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Title">{details.lostItem.title}</Descriptions.Item>
-                  <Descriptions.Item label="Category">{details.lostItem.category}</Descriptions.Item>
-                  <Descriptions.Item label="Key Item">{details.lostItem.keyItem}</Descriptions.Item>
-                  <Descriptions.Item label="Item Brand">{details.lostItem.itemBrand}</Descriptions.Item>
-                  <Descriptions.Item label="Location">{details.lostItem.location}</Descriptions.Item>
-                  <Descriptions.Item label="Status">{details.lostItem.status}</Descriptions.Item>
-                  <Descriptions.Item label="Date Range Found">
-                    {details.lostItem.startDate || details.lostItem.endDate
-                      ? `${details.lostItem.startDate
-                          ? new Date(details.lostItem.startDate).toLocaleDateString("en-US", {
-                              month: "2-digit",
-                              day: "2-digit",
-                              year: "numeric",
-                            })
-                          : "N/A"} - ${
-                          details.lostItem.endDate
-                            ? new Date(details.lostItem.endDate).toLocaleDateString("en-US", {
-                                month: "2-digit",
-                                day: "2-digit",
-                                year: "numeric",
-                              })
-                            : "N/A"
-                        }`
-                      : "N/A"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Reported By">{details.lostItem.reportedBy}</Descriptions.Item>
-                  <Descriptions.Item label="Approved By">{details.lostItem.approvedBy}</Descriptions.Item>
-                  <Descriptions.Item label="Date Reported">
-                    {details.lostItem.dateReported
-                      ? new Date(details.lostItem.dateReported).toLocaleString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        }).replace(",", "")
-                      : "N/A"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Description">{details.lostItem.description}</Descriptions.Item>
-                </Descriptions>
-              ) : <p style={{ color: "gray" }}>No linked lost item found.</p>}
-            </div>
-
-            {/* Claim Info */}
-            <div style={{ flex: 1 }}>
-              <h3>Claim Information</h3>
-              {details.claim ? (
-                <>
-                  {details.claim.photoUrl && (
-                    <div style={{ textAlign: "center", marginBottom: 16 }}>
-                      <Image src={details.claim.photoUrl} width={200} />
-                    </div>
-                  )}
-                  <Descriptions bordered column={1} size="middle">
-                    <Descriptions.Item label="Claim ID">
-                      <Text copyable style={{ fontFamily: "Poppins" }}>{details.claim.cid}</Text>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Claimer ID">{details.claim.claimerId}</Descriptions.Item>
-                    <Descriptions.Item label="Claim Status">{details.claim.claimStatus}</Descriptions.Item>
-                    <Descriptions.Item label="Reason">{details.claim.reason}</Descriptions.Item>
-                    <Descriptions.Item label="Admin Decision By">{details.claim.adminDecisionBy}</Descriptions.Item>
-                    <Descriptions.Item label="Created At">{new Date(details.claim.createdAt).toLocaleString()}</Descriptions.Item>
-                  </Descriptions>
-                </>
-              ) : (
-                <p style={{ color: "gray" }}>No claim record found.</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
+<Modal
+  title={selectedItem ? "Claim Details" : "Item Details"}
+  open={isModalVisible}
+  onCancel={handleModalClose}
+  width={"92%"}
+  maskClosable={false}
+  className="modal-claim"
+  centered
+  wrapClassName="modal-claim-wrap"
+  rootClassName="modal-claim-root"
+  /** match client: sticky header/footer, scrollable body **/
+  styles={{
+    header: { position: "sticky", top: 0, zIndex: 2, background: "#fff" },
+    body: { padding: 16, maxHeight: "85vh", overflowY: "auto" },
+    footer: { position: "sticky", bottom: 0, zIndex: 2, background: "#fff" }
+  }}
+  footer={
+    selectedItem
+      ? [
           <Button
+            key="complete"
             type="default"
             onClick={handleComplete}
             disabled={selectedItem?.claimStatus !== "Claim Approved"}
             loading={completeLoading}
           >
             Complete
-          </Button>
-
+          </Button>,
           <Button
+            key="approve"
             type="primary"
             onClick={handleApprove}
             disabled={
-              !(selectedItem?.claimStatus === "Reviewing Claim" || selectedItem?.claimStatus === "Claim Rejected")
+              !(
+                selectedItem?.claimStatus === "Reviewing Claim" ||
+                selectedItem?.claimStatus === "Claim Rejected"
+              )
             }
           >
             Approve
-          </Button>
-
+          </Button>,
           <Button
+            key="deny"
             danger
             onClick={handleDeny}
             disabled={
-              !(selectedItem?.claimStatus === "Reviewing Claim" || selectedItem?.claimStatus === "Claim Approved")
+              !(
+                selectedItem?.claimStatus === "Reviewing Claim" ||
+                selectedItem?.claimStatus === "Claim Approved"
+              )
             }
           >
             Deny
-          </Button>
+          </Button>,
+          <Button key="close" onClick={handleModalClose}>
+            Close
+          </Button>,
+        ]
+      : null
+  }
+>
+  {selectedItem && (
+    <div className="claim-details-grid">
+      {/* Transaction header */}
+      <div className="h1h2container">
+        <h1 className="claim-details-grid-h1">CLAIM TRANSACTION NO.</h1>
+        <h2 className="claim-details-grid-h2">
+          <Text className="claim-details-grid-h2-Text" copyable>
+            {details?.claim?.cid || selectedItem?.cid}
+          </Text>
+        </h2>
+      </div>
 
-          <Button onClick={handleModalClose}>Close</Button>
-        </div>
-      </Modal>
+      {/* Three columns: Found | Lost | Claim */}
+      <Row
+        gutter={[
+          { xs: 12, sm: 16, md: 24, lg: 32, xl: 40 },
+          { xs: 12, sm: 16, md: 24, lg: 32, xl: 40 },
+        ]}
+        className="claim-3col"
+        wrap
+      >
+        {/* Found Item */}
+        <Col xs={24} md={8}>
+          <div className="claim-card">
+            <h3 className="claim-section-h3">Found Item Information</h3>
+            <div className="claim-col claim-section">
+              <div className="fixed-photo-wrapper">
+                <div className="photo-wrap fixed-photo">
+                  {details?.foundItem?.photoUrl ? (
+                    <Image src={details.foundItem.photoUrl} preview />
+                  ) : (
+                    <p className="no-image-placeholder">No image submitted</p>
+                  )}
+                </div>
+              </div>
 
-      {/* Approve Modal */}
+              {details?.foundItem ? (
+                <Descriptions
+                  bordered
+                  column={1}
+                  size="middle"
+                  layout="horizontal"
+                  className="claim-descriptions"
+                >
+                  <Descriptions.Item label="TID">
+                    {details.foundItem.tid}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Title">
+                    {details.foundItem.title}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Category">
+                    {details.foundItem.category}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Key Item">
+                    {details.foundItem.keyItem}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Item Brand">
+                    {details.foundItem.itemBrand}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Location">
+                    {details.foundItem.location}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    {details.foundItem.status}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Date Found">
+                    {details.foundItem?.dateFound
+                      ? new Date(details.foundItem.dateFound).toLocaleDateString(
+                          "en-US",
+                          { month: "2-digit", day: "2-digit", year: "numeric" }
+                        )
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Reported By">
+                    {details.foundItem.reportedBy}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Approved By">
+                    {details.foundItem.approvedBy}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Date Reported">
+                    {details.foundItem.dateReported
+                      ? new Date(details.foundItem.dateReported)
+                          .toLocaleString("en-US", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                          .replace(",", "")
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Description">
+                    {details.foundItem.description}
+                  </Descriptions.Item>
+                </Descriptions>
+              ) : (
+                <p className="muted">No found item data.</p>
+              )}
+            </div>
+          </div>
+        </Col>
+
+        {/* Lost Item */}
+        <Col xs={24} md={8}>
+          <div className="claim-card">
+            <h3 className="claim-section-h3">Lost Item Reference</h3>
+            <div className="claim-col claim-section">
+              <div className="fixed-photo-wrapper">
+                <div className="photo-wrap fixed-photo">
+                  {details?.lostItem?.photoUrl ? (
+                    <Image src={details.lostItem.photoUrl} preview />
+                  ) : (
+                    <p className="no-image-placeholder">No image submitted</p>
+                  )}
+                </div>
+              </div>
+
+              {details?.lostItem ? (
+                <Descriptions
+                  bordered
+                  column={1}
+                  size="middle"
+                  layout="horizontal"
+                  className="claim-descriptions"
+                >
+                  <Descriptions.Item label="TID">
+                    {details.lostItem.tid}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Title">
+                    {details.lostItem.title}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Category">
+                    {details.lostItem.category}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Key Item">
+                    {details.lostItem.keyItem}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Item Brand">
+                    {details.lostItem.itemBrand}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Location">
+                    {details.lostItem.location}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    {details.lostItem.status}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Date Range">
+                    {details.lostItem.startDate && details.lostItem.endDate
+                      ? `${new Date(details.lostItem.startDate).toLocaleDateString(
+                          "en-US",
+                          { month: "2-digit", day: "2-digit", year: "numeric" }
+                        )} - ${new Date(details.lostItem.endDate).toLocaleDateString(
+                          "en-US",
+                          { month: "2-digit", day: "2-digit", year: "numeric" }
+                        )}`
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Reported By">
+                    {details.lostItem.reportedBy}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Approved By">
+                    {details.lostItem.approvedBy}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Date Reported">
+                    {details.lostItem.dateReported
+                      ? new Date(details.lostItem.dateReported)
+                          .toLocaleString("en-US", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                          .replace(",", "")
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Description">
+                    {details.lostItem.description}
+                  </Descriptions.Item>
+                </Descriptions>
+              ) : (
+                <p className="muted">No linked lost item found.</p>
+              )}
+            </div>
+          </div>
+        </Col>
+
+        {/* Claim Info */}
+        <Col xs={24} md={8}>
+          <div className="claim-card">
+            <h3 className="claim-section-h3">Claim Information</h3>
+            <div className="claim-col claim-section">
+              <div className="fixed-photo-wrapper">
+                <div className="photo-wrap fixed-photo">
+                  {details?.claim?.photoUrl ? (
+                    <Image src={details.claim.photoUrl} preview />
+                  ) : (
+                    <p className="no-image-placeholder">No image submitted</p>
+                  )}
+                </div>
+              </div>
+
+              {details?.claim ? (
+                <Descriptions
+                  bordered
+                  column={1}
+                  size="middle"
+                  layout="horizontal"
+                  className="claim-descriptions"
+                >
+                  <Descriptions.Item label="Claim ID">
+                    {details.claim.cid}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Claimer ID">
+                    {details.claim.claimerId}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Claim Status">
+                    {details.claim.claimStatus}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Admin Decision By">
+                    {details.claim.adminDecisionBy || "No actions yet."}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Date Reported">
+                    {details.claim.createdAt
+                      ? new Date(details.claim.createdAt)
+                          .toLocaleString("en-US", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                          .replace(",", "")
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Reason">
+                    {details.claim.reason}
+                  </Descriptions.Item>
+                </Descriptions>
+              ) : (
+                <p className="muted">No claim record found.</p>
+              )}
+            </div>
+          </div>
+        </Col>
+      </Row>
+    </div>
+  )}
+</Modal>
+
+
       <Modal
         title="Confirm Approval"
         open={approveModal}
@@ -430,7 +559,6 @@ export const AdminClaims = () => {
         <p>Are you sure you want to approve this claim?</p>
       </Modal>
 
-      {/* Deny Modal */}
       <Modal
         title="Confirm Denial"
         open={denyModal}
@@ -441,7 +569,6 @@ export const AdminClaims = () => {
         <p>Are you sure you want to deny this claim?</p>
       </Modal>
 
-      {/* ✅ Complete Modal */}
       <Modal
         title="Confirm Completion"
         open={completeModal}
@@ -471,13 +598,13 @@ export const AdminClaims = () => {
               const token = sessionStorage.getItem("User");
 
               try {
-                const result = await deleteClaims(token); // Call your API
+                const result = await deleteClaims(token);
                 setConfirmLoading(false);
                 setClearClaimsModalVisible(false);
 
                 if (result.success) {
-                  message.success(result.message); // Message from backend
-                  fetchData(); // Refresh the table
+                  message.success(result.message);
+                  fetchData();
                 } else {
                   message.error(result.message || "Failed to delete claims");
                 }

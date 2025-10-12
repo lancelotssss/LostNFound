@@ -241,72 +241,121 @@ const STATUS_COLORS = {
       </Table>
 
       
-      <Modal
-        title={selectedItem ? selectedItem.title : "Lost Item Details"}
-        open={isModalVisible}
-        onCancel={handleModalClose}
-        footer={null}
-        width={700}
-        maskClosable={false}
-      >
-        {selectedItem && (
-          <>
-            {selectedItem.photoUrl && (
-              <div style={{ textAlign: "center", marginBottom: 16 }}>
-                <Image src={selectedItem.photoUrl} width={250} />
-              </div>
-            )}
-            <Descriptions bordered column={1} size="middle">
-              <Descriptions.Item label="TID">
-                <Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.tid}</Text>
-                </Descriptions.Item>
-              <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
-              <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
-              <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
-              <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
-              <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
-              <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
-              <Descriptions.Item label="Date Range">
-              {selectedItem.startDate || selectedItem.endDate
-                ? `${selectedItem.startDate
-                    ? new Date(selectedItem.startDate).toLocaleDateString("en-US", {
-                        month: "2-digit",
-                        day: "2-digit",
-                        year: "numeric",
-                      })
-                    : "N/A"} - ${
-                    selectedItem.endDate
-                      ? new Date(selectedItem.endDate).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                        })
-                      : "N/A"
-                  }`
-                : "N/A"}
-            </Descriptions.Item>
-              <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
-              <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
-              
-              <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
-              <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
-            </Descriptions>
+<Modal
+  // title={selectedItem ? selectedItem.title : "Lost Item Details"}
+  title={selectedItem ? "Lost Item Details" : "Lost Item Details"}
+  open={isModalVisible}
+  onCancel={handleModalClose}
+  footer={[
+    <Button
+      key="approve"
+      type="primary"
+      onClick={handleApprove}
+      disabled={!(selectedItem?.status === "Reviewing" || selectedItem?.status === "Denied")}
+    >
+      Approve
+    </Button>,
+    <Button
+      key="find"
+      onClick={handleRowLostSeeSimilar}
+      disabled={normalizeStatus(selectedItem?.status) !== "listed"}
+    >
+      See similar items
+    </Button>,
+    <Button
+      key="deny"
+      danger
+      onClick={handleDeny}
+      disabled={!(selectedItem?.status === "Listed" || selectedItem?.status === "Reviewing")}
+    >
+      Deny
+    </Button>,
+    <Button key="cancel" onClick={handleModalClose}>
+      Cancel
+    </Button>,
+  ]}
+  width={700}
+  maskClosable={false}
+  centered
+  styles={{
+    header: { position: "sticky", top: 0, zIndex: 2, background: "#fff" },
+    body: {
+      padding: 16,
+      maxHeight: "calc(100vh - 180px)",
+      overflowY: "auto"
+    },
+    footer: { position: "sticky", bottom: 0, zIndex: 2, background: "#fff" }
+  }}
+>
+  {selectedItem && (
+    <>
+      <div style={{ textAlign: "center", marginBottom: 12 }}>
+        <div
+          style={{
+            display: "inline-flex",
+            width: 180,
+            height: 200,
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 10,
+            background: "#f6f6f6",
+            overflow: "hidden",
+            boxShadow: "0 0 5px 1px rgba(0,0,0,0.1)"
+          }}
+        >
+          {selectedItem.photoUrl ? (
+            <Image
+              src={selectedItem.photoUrl}
+              alt="Lost item"
+              preview
+              style={{ objectFit: "contain", maxWidth: "100%", maxHeight: "100%" }}
+            />
+          ) : (
+            <span style={{ color: "#999", fontStyle: "italic", fontSize: 14 }}>
+              No image submitted
+            </span>
+          )}
+        </div>
+      </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button type="primary" onClick={handleApprove}   disabled={!(selectedItem.status === "Reviewing" || selectedItem.status === "Denied")}>
-                Approve
-              </Button>
-              <Button key="find" onClick={handleRowLostSeeSimilar} disabled={normalizeStatus(selectedItem?.status) !== "listed"}>
-                See similar items
-              </Button>
-              <Button danger onClick={handleDeny}  disabled={!(selectedItem.status === "Listed" || selectedItem.status === "Reviewing")}>
-                Deny
-              </Button>
-              <Button onClick={handleModalClose}>Cancel</Button>
-            </div>
-          </>
-        )}
-      </Modal>
+      <Descriptions bordered column={1} size="small" layout="horizontal">
+        <Descriptions.Item label="TID">
+          <Text copyable style={{ fontFamily: "Poppins" }}>{selectedItem.tid}</Text>
+        </Descriptions.Item>
+        <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
+        <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
+        <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
+        <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
+        <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
+        <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
+        <Descriptions.Item label="Date Range">
+          {selectedItem.startDate || selectedItem.endDate
+            ? `${selectedItem.startDate
+                ? new Date(selectedItem.startDate).toLocaleDateString("en-US", {
+                    month: "2-digit",
+                    day: "2-digit",
+                    year: "numeric",
+                  })
+                : "N/A"} - ${
+                selectedItem.endDate
+                  ? new Date(selectedItem.endDate).toLocaleDateString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                    })
+                  : "N/A"
+              }`
+            : "N/A"}
+        </Descriptions.Item>
+        <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
+        <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
+        <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
+        <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
+      </Descriptions>
+    </>
+  )}
+</Modal>
+
 
       
       <Modal

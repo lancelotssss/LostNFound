@@ -164,7 +164,9 @@
 .modal-claim .claim-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* height: 100%; */
+  /* background-color: red; */
+  /* margin: 0 !important; */
 }
 .claim-section {
   width: 100% !important;
@@ -184,7 +186,11 @@
 
 .claim-col { 
   display: flex; flex-direction: column; 
+  margin: 0 !important;
+
 }
+
+
 
 .claim-descriptions,
 .claim-section .ant-descriptions { 
@@ -220,6 +226,9 @@
 .ant-descriptions-view { 
   background-color: #fff !important; 
 }
+
+
+
 .modal-claim .claim-card .claim-section { 
   flex: 1 1 auto; 
 }
@@ -267,9 +276,7 @@
   .ant-modal { 
     width: 95% !important; max-width: none !important; 
   }
-  .ant-modal-body { 
-    padding: 12px !important; overflow-x: hidden; 
-  }
+
 
   .claim-section { 
     max-width: none; 
@@ -319,3 +326,5 @@
     min-height: initial; 
   }
 }
+
+

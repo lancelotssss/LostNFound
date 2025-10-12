@@ -1,12 +1,29 @@
+// src/Pages/AdminFound.js
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag } from "antd";
+import {
+  Table,
+  Button,
+  Modal,
+  Descriptions,
+  Image,
+  message,
+  Input,
+  Select,
+  Typography,
+  Tag,
+  Grid,
+} from "antd";
 import { getFoundReport, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
 import "./styles/ant-input.css";
+// If you want to be 100% sure the placeholder styles are present on admin pages,
+// you can also import the same css used by Home (uncomment if needed):
+// import "./styles/Home.css";
+
 const { Column } = Table;
 const { Option } = Select;
 const { Text } = Typography;
-
+const { useBreakpoint } = Grid;
 
 export const AdminFound = () => {
   const [data, setData] = useState([]);
@@ -18,7 +35,10 @@ export const AdminFound = () => {
   const [user, setUser] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
- 
+
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
   useEffect(() => {
     const token = sessionStorage.getItem("User");
     if (token) {
@@ -27,29 +47,27 @@ export const AdminFound = () => {
     }
   }, []);
 
-
   const fetchData = async () => {
     try {
-      const token = sessionStorage.getItem("User"); 
-          if (!token) {
-            alert("You must be logged in");
-            return;
-          }
+      const token = sessionStorage.getItem("User");
+      if (!token) {
+        alert("You must be logged in");
+        return;
+      }
       const res = await getFoundReport(token);
       if (res && res.results) {
         const formattedData = res.results.map((item, index) => ({
-        key: item._id ? item._id.toString() : `row-${index}`,
-        _id: item._id ? item._id.toString() : null, 
-        ...item,
-        dateReported: item.dateReported
-          ? new Date(item.dateReported).toLocaleString()
-          : "N/A",
-        dateFound: item.dateFound
-          ? new Date(item.dateFound).toLocaleDateString()
-          : "N/A",
-          approvedBy: item.approvedBy ? item.approvedBy : "No actions yet"
-      }));
-      console.log("Formatted Data: ", formattedData)
+          key: item._id ? item._id.toString() : `row-${index}`,
+          _id: item._id ? item._id.toString() : null,
+          ...item,
+          dateReported: item.dateReported
+            ? new Date(item.dateReported).toLocaleString()
+            : "N/A",
+          dateFound: item.dateFound
+            ? new Date(item.dateFound).toLocaleDateString()
+            : "N/A",
+          approvedBy: item.approvedBy ? item.approvedBy : "No actions yet",
+        }));
         setData(formattedData);
       }
     } catch (err) {
@@ -75,38 +93,38 @@ export const AdminFound = () => {
   const handleDeny = () => setDenyModal(true);
 
   const confirmApprove = async () => {
-  setConfirmLoading(true);
-  const token = sessionStorage.getItem("User");
-  try {
-    await approveFound(selectedItem._id, "Listed", user.studentId, token);
-    message.success("Item approved successfully!");
-    setApproveModal(false);
-    setIsModalVisible(false);
-    fetchData();
-  } catch (err) {
-    console.error(err);
-    message.error("Failed to approve item.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+    setConfirmLoading(true);
+    const token = sessionStorage.getItem("User");
+    try {
+      await approveFound(selectedItem._id, "Listed", user.studentId, token);
+      message.success("Item approved successfully!");
+      setApproveModal(false);
+      setIsModalVisible(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to approve item.");
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
 
-const confirmDeny = async () => {
-  setConfirmLoading(true);
-  const token = sessionStorage.getItem("User");
-  try {
-    await approveFound(selectedItem._id, "Denied", user.studentId, token); 
-    message.success("Item denied successfully!");
-    setDenyModal(false);
-    setIsModalVisible(false);
-    fetchData();
-  } catch (err) {
-    console.error(err);
-    message.error("Failed to deny item.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+  const confirmDeny = async () => {
+    setConfirmLoading(true);
+    const token = sessionStorage.getItem("User");
+    try {
+      await approveFound(selectedItem._id, "Denied", user.studentId, token);
+      message.success("Item denied successfully!");
+      setDenyModal(false);
+      setIsModalVisible(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to deny item.");
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
 
   const filteredData = data.filter((item) => {
     const search = searchText.toLowerCase();
@@ -122,7 +140,7 @@ const confirmDeny = async () => {
     return matchesSearch && matchesStatus;
   });
 
-   const STATUS_COLORS = {
+  const STATUS_COLORS = {
     denied: "volcano",
     deleted: "volcano",
     disposed: "volcano",
@@ -144,17 +162,17 @@ const confirmDeny = async () => {
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
         Refresh
       </Button>
+
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-      <Input
-        className="poppins-input"
-        placeholder="Search by TID, Category, or Key Item"
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        style={{
-        width: 300}}
-        allowClear
-      />
-      {/* 🟩 Status Filter Dropdown */}
+        <Input
+          className="poppins-input"
+          placeholder="Search by TID, Category, or Key Item"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 300 }}
+          allowClear
+        />
+
         <Select
           placeholder="Filter by Status"
           value={statusFilter}
@@ -169,11 +187,11 @@ const confirmDeny = async () => {
           <Option value="Claim Approved">Claim Approved</Option>
           <Option value="Returned">Returned</Option>
           <Option value="Claim Rejected">Claim Rejected</Option>
-          <Option value="Claim Denied">Denied</Option>
+          <Option value="Denied">Denied</Option>
           <Option value="Deleted">Deleted</Option>
         </Select>
-  
-    </div>
+      </div>
+
       <Table
         dataSource={filteredData}
         onRow={(record) => ({
@@ -185,63 +203,123 @@ const confirmDeny = async () => {
         <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
         <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
         <Column title="LOCATION" dataIndex="location" key="location" />
-        <Column title="STATUS" dataIndex="status" key="status" render={(status) => {
-              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
-              return (
-                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
-                  {status ? status.toUpperCase() : "N/A"}
-                </Tag>
-              );
-            }}/>
+        <Column
+          title="STATUS"
+          dataIndex="status"
+          key="status"
+          render={(status) => {
+            const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+            return (
+              <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                {status ? status.toUpperCase() : "N/A"}
+              </Tag>
+            );
+          }}
+        />
         <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
         <Column title="DATE FOUND" dataIndex="dateFound" key="dateFound" />
       </Table>
 
-      {/* Main modal */}
-      <Modal
-        title={selectedItem ? selectedItem.title : "Lost Item Details"}
-        open={isModalVisible}
-        onCancel={handleModalClose}
-        footer={null}
-        width={700}
-        maskClosable={false}
-      >
-        {selectedItem && (
-          <>
-            {selectedItem.photoUrl && (
-              <div style={{ textAlign: "center", marginBottom: 16 }}>
-                <Image src={selectedItem.photoUrl} width={250} />
-              </div>
-            )}
-            <Descriptions bordered column={1} size="middle">
-              <Descriptions.Item label="TID">
-                <Text copyable style={{ fontFamily: "Poppins" }}>{selectedItem.tid}</Text>
-              </Descriptions.Item>
-              <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
-              <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
-              <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
-              <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
-              <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
-              <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
-              <Descriptions.Item label="Date Found">{selectedItem.dateFound}</Descriptions.Item>
-              <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
-              <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
-              <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
-              <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
-            </Descriptions>
+      {/* === Modal with image placeholder pattern (same as client) === */}
+<Modal
+  // title={selectedItem ? selectedItem.title : "Found Item Details"}
+  title={selectedItem ? "Found Item Details" : "Found Item Details"}
+  open={isModalVisible}
+  onCancel={handleModalClose}
+  footer={
+    selectedItem
+      ? [
+          <Button
+            key="approve"
+            type="primary"
+            onClick={handleApprove}
+            disabled={!(selectedItem?.status === "Reviewing" || selectedItem?.status === "Denied")}
+          >
+            Approve
+          </Button>,
+          <Button
+            key="deny"
+            danger
+            onClick={handleDeny}
+            disabled={!(selectedItem?.status === "Listed" || selectedItem?.status === "Reviewing")}
+          >
+            Deny
+          </Button>,
+          <Button key="close" onClick={handleModalClose}>
+            Close
+          </Button>,
+        ]
+      : null
+  }
+  width={isMobile ? "95%" : 700}
+  maskClosable={false}
+  centered
+  styles={{
+    header: { position: "sticky", top: 0, zIndex: 2, background: "#fff" },
+    body: {
+      padding: 16,
+      maxHeight: "calc(100vh - 180px)",
+      overflowY: "auto"
+    },
+    footer: { position: "sticky", bottom: 0, zIndex: 2, background: "#fff" }
+  }}
+>
+  {selectedItem && (
+    <>
+      <div style={{ textAlign: "center", marginBottom: 12 }}>
+        <div
+          style={{
+            display: "inline-flex",
+            width: 180,
+            height: 200,
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 10,
+            background: "#f6f6f6",
+            overflow: "hidden",
+            boxShadow: "0 0 5px 1px rgba(0,0,0,0.1)"
+          }}
+        >
+          {selectedItem.photoUrl ? (
+            <Image
+              src={selectedItem.photoUrl}
+              alt="Found item"
+              preview
+              style={{ objectFit: "contain", maxWidth: "100%", maxHeight: "100%" }}
+            />
+          ) : (
+            <span style={{ color: "#999", fontStyle: "italic", fontSize: 14 }}>
+              No image submitted
+            </span>
+          )}
+        </div>
+      </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-              <Button type="primary" onClick={handleApprove}   disabled={!(selectedItem.status === "Reviewing" || selectedItem.status === "Denied")}>
-                Approve
-              </Button>
-              <Button danger onClick={handleDeny}  disabled={!(selectedItem.status === "Listed" || selectedItem.status === "Reviewing")}>
-                Deny
-              </Button>
-              <Button onClick={handleModalClose}>Cancel</Button>
-            </div>
-          </>
-        )}
-      </Modal>
+      <Descriptions
+        bordered
+        column={1}
+        size="small"
+        layout={isMobile ? "vertical" : "horizontal"}
+      >
+        <Descriptions.Item label="TID">
+          <Text copyable style={{ fontFamily: "Poppins" }}>{selectedItem.tid}</Text>
+        </Descriptions.Item>
+        <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
+        <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
+        <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
+        <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
+        <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
+        <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
+        <Descriptions.Item label="Date Found">{selectedItem.dateFound || "N/A"}</Descriptions.Item>
+        <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
+        <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
+        <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
+        <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
+      </Descriptions>
+    </>
+  )}
+</Modal>
+
 
       {/* Approve Confirmation */}
       <Modal
@@ -267,3 +345,5 @@ const confirmDeny = async () => {
     </>
   );
 };
+
+export default AdminFound;
