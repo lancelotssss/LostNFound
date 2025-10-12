@@ -235,7 +235,7 @@ export const Home = () => {
   // LOST handlers
   const handleLostClick = (record) => {
     setSelectedLost(record);
-    setSelectedItem(record); // keep your selectedItem for shared actions
+    setSelectedItem(record); 
     setIsLostModalVisible(true);
   };
   const handleLostModalClose = () => {

@@ -227,13 +227,16 @@
   flex: 0 0 auto; 
 }
 .modal-claim .claim-card .claim-descriptions {
-  flex: 1 1 auto;
-  display: flex;
-  min-height: 0;
+  max-height: 280px;      
+  overflow-y: auto;         
+  overflow-x: hidden;      /*may binago si erick*/
+  padding-right: 6px;       
+  scrollbar-width: thin;
+  background: #fff;             
+  border: none; 
 }
 .modal-claim .claim-card .claim-descriptions .ant-descriptions-view {
-  flex: 1 1 auto;
-  height: 100%;
+  border-bottom: none !important;
 }
 .modal-claim .claim-3col .claim-card { 
   min-height: 640px; 

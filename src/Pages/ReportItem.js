@@ -307,7 +307,7 @@ export default function ReportItem() {
         {registerData.category !== "Identification Card" && (
           <Input
             name="itemBrand"
-            placeholder="ITEM NAME (required)"
+            placeholder="Item Name"
             value={registerData.itemBrand}
             onChange={handleChange}
             className="field-wide"
@@ -493,7 +493,9 @@ export default function ReportItem() {
               className="footer-buttons"
               type="primary"
               loading={submitting}
-              disabled={submitting}
+              disabled={submitting ||
+                !registerData.itemBrand?.trim() || !registerData.keyItem?.trim() 
+              }
               onClick={() => setIsConfirmModalVisible(true)}
             >
               {submitting ? "Submitting..." : "Confirm"}
