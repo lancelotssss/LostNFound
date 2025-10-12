@@ -17,8 +17,10 @@ export const AdminHistory = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [searchText, setSearchText] = useState("");
-const [statusFilter, setStatusFilter] = useState("");
-const [reportTypeFilter, setReportTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [reportTypeFilter, setReportTypeFilter] = useState("");
+  const [clearHistoryModalVisible, setClearHistoryModalVisible] = useState(false);
+
   
   useEffect(() => {
     const token = sessionStorage.getItem("User");
@@ -72,8 +74,8 @@ const [reportTypeFilter, setReportTypeFilter] = useState("");
     setSelectedItem(null);
   };
 
-  const handleApprove = () => setApproveModal(true);
-  const handleDeny = () => setDenyModal(true);
+  /*const handleApprove = () => setApproveModal(true);
+  const handleDeny = () => setDenyModal(true); */
 
   const handleDeleteAll = async () => {
     if (!window.confirm("Are you sure you want to delete all deleted items?")) return;
@@ -88,8 +90,7 @@ const [reportTypeFilter, setReportTypeFilter] = useState("");
   };
 
 
-
-  const confirmApprove = async () => {
+  /*const confirmApprove = async () => {
   setConfirmLoading(true);
   const token = sessionStorage.getItem("User");
   try {
@@ -122,6 +123,7 @@ const confirmDeny = async () => {
     setConfirmLoading(false);
   }
 };
+*/
 
 const filteredData = data.filter((item) => {
   const search = searchText.toLowerCase();
@@ -161,7 +163,18 @@ const STATUS_COLORS = {
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
         Refresh
       </Button>
-      <Button onClick={handleDeleteAll} style={{ marginBottom: 16 }}>Clear Deleted Reports</Button>
+      <Button onClick={() => {
+          const hasDeleted = data.some(item => item.status === "Deleted");
+          if (!hasDeleted) {
+            message.info("No deleted items are present!");
+            return;
+          }
+          setClearHistoryModalVisible(true);
+        }} 
+        style={{ marginBottom: 16 }}
+      >
+        Clear Deleted Reports
+      </Button>
 
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
   <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
@@ -324,8 +337,41 @@ const STATUS_COLORS = {
       </>
     )}
       </Modal>
-
-      
+        <Modal
+            title="Confirm Clear History"
+            open={clearHistoryModalVisible}
+            onCancel={() => setClearHistoryModalVisible(false)}
+            centered
+            maskClosable={false}
+            footer={[
+              <Button key="cancel" onClick={() => setClearHistoryModalVisible(false)}>
+                Cancel
+              </Button>,
+              <Button
+                key="confirm"
+                type="primary"
+                loading={confirmLoading}
+                onClick={async () => {
+                  setConfirmLoading(true);
+                  const token = sessionStorage.getItem("User");
+                  const result = await deleteHistory(token);
+                  setConfirmLoading(false);
+                  setClearHistoryModalVisible(false);
+                  if (result.success) {
+                    message.success("All deleted items deleted!");
+                    fetchData();
+                  } else {
+                    message.error(result.message);
+                  }
+                }}
+              >
+                Yes, Clear All
+              </Button>,
+      ]}
+    >
+      <p>Are you sure you want to delete all deleted reports? This action cannot be undone.</p>
+    </Modal>
+          
     </>
   );
 };

@@ -53,6 +53,7 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
 
   const [open, setOpen] = useState(false);
   const [claimLoading, setClaimLoading] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
   const [form] = Form.useForm();
   const [user, setUser] = useState(null);
 
@@ -254,15 +255,12 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
         className="result-modal"
         maskClosable={false}
         footer={[
-          <Button key="cancel" onClick={handleClose}>
-            Close
-          </Button>,
           <Button
             key="submit"
             type="primary"
             icon={<CheckCircleOutlined />}
             loading={claimLoading}
-            onClick={submitClaim}
+            onClick={() => setConfirmVisible(true)}  // ✅ show confirmation modal first
           >
             Submit claim
           </Button>,
@@ -373,6 +371,21 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
             </Upload>
           </Form.Item>
         </Form>
+      </Modal>
+      
+      {/*Confirm Modal*/}
+      <Modal
+        title="Confirm Claim Submission"
+        open={confirmVisible}
+        onOk={() => {
+          setConfirmVisible(false);
+          submitClaim(); 
+        }}
+        onCancel={() => setConfirmVisible(false)}
+        confirmLoading={claimLoading}
+        centered
+      >
+        <p>Are you sure you want to submit a claim for this item?</p>
       </Modal>
     </>
   );
