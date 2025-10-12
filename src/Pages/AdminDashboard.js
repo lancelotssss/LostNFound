@@ -123,7 +123,7 @@ return (
           <div className="stat-grid">
             <Statistic title="Found Reports" value={statusCounts?.listedFoundCount} />
             <Statistic title="Lost Reports" value={statusCounts?.listedLostCount} />
-            <Statistic title="Storage" value={statusCounts?.totalStorageCount} />
+            
           </div>
         </Card>
 
@@ -132,7 +132,7 @@ return (
           className="summary-card"
         >
           <div className="stat-grid">
-            <Statistic title="Reviewing" value={statusCounts?.reviewClaimsCount} />
+            <Statistic title="Approved Claims" value={statusCounts?.reviewClaimsCount} />
             <Statistic title="Returned" value={statusCounts?.claimReturnedCount} />
           </div>
         </Card>
@@ -175,11 +175,11 @@ return (
           </Card>
 
           <Card
-            title={<TitleWithIcon icon={PercentageOutlined} text="Lost and Found Ratio" />}
+            title={<TitleWithIcon icon={PercentageOutlined} text="Lost and Return Percentage" />}
             className="tile-card"
           >
             <div className="stat-grid stat-grid-1">
-              <Statistic title="Ratio" value={ratios?.lostToFoundRatio ?? ""} />
+              <Statistic title="Return Rate" value={ratios?.returnRate ?? ""} />
             </div>
           </Card>
 
@@ -188,7 +188,7 @@ return (
             className="tile-card"
           >
             <div className="stat-grid stat-grid-1">
-              <Statistic title="Location" value={mostCommon?.place ?? "—"} />
+              <Statistic title="Location" value={mostCommon?.place ?? "No data yet"} />
             </div>
           </Card>
 
@@ -197,7 +197,7 @@ return (
             className="tile-card"
           >
             <div className="stat-grid stat-grid-1">
-              <Statistic title="Key Item" value={mostCommon?.keyItem ?? "—"} />
+              <Statistic title="Key Item" value={mostCommon?.keyItem ?? "No data yet"} />
             </div>
 
 

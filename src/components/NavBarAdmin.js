@@ -19,11 +19,15 @@ const pageDataAdmin = [
   { key: "review-lost",    group: "review", name: "Review Lost Items",  path: "/main/lost-items" },
   { key: "review-claims",  group: "review", name: "Review Claims",      path: "/main/claim-items" },
 
+  
   { key: "report",    name: "Report Item",   path: "/main/report" },
+
   { key: "storage",   name: "Storage",       path: "/main/storage" },
   { key: "history",   name: "History",       path: "/main/history" },
-  { key: "users",     name: "Manage Users",  path: "/main/users" },
-  { key: "createadm", name: "Create Admin",  path: "/main/admin" },
+
+  { key: "users",     group: "accounts", name: "Accounts",     path: "/main/users" },
+  { key: "createadm", group: "accounts", name: "Create Admin", path: "/main/admin" },
+
   { key: "logs",      name: "Activity Logs", path: "/main/logs" },
   { key: "settings",  name: "User Settings", path: "/main/settings" },
 
@@ -49,6 +53,18 @@ export function NavBarAdmin() {
         })),
     []
   );
+  const accountChildren = useMemo(
+  () =>
+    pageDataAdmin
+      .filter((p) => p.group === "accounts")
+      .map((p) => ({
+        key: p.key,
+        icon: <MailOutlined />,
+        label: <Link to={p.path}>{p.name}</Link>,
+        path: p.path,
+      })),
+  []
+);
 
   const dashboardItem = useMemo(() => {
     const p = pageDataAdmin.find((x) => x.key === "dashboard");
@@ -74,24 +90,35 @@ export function NavBarAdmin() {
   );
 
   const items = useMemo(
-    () => [
-      dashboardItem,
-      {
-        key: "review",
-        icon: <SearchOutlined />,
-        label: "Review Items",
-        children: reviewChildren,
-      },
-      ...restTopPages,
-    ],
-    [dashboardItem, reviewChildren, restTopPages]
-  );
+  () => [
+    dashboardItem,
+    {
+      key: "review",
+      icon: <SearchOutlined />,
+      label: "Review Items",
+      children: reviewChildren,
+    },
+    {
+      key: "accounts",
+      icon: <MailOutlined />,
+      label: "Manage User",
+      children: accountChildren,
+    },
+    ...restTopPages.filter((p) => p.key !== "users" && p.key !== "createadm"), // exclude duplicates
+  ],
+  [dashboardItem, reviewChildren, accountChildren, restTopPages]
+);
 
   // Flatten for matching path -> ke
   const flatItems = useMemo(() => {
-    const flat = [dashboardItem, ...reviewChildren, ...restTopPages];
-    return flat.filter(Boolean);
-  }, [dashboardItem, reviewChildren, restTopPages]);
+  const flat = [
+    dashboardItem,
+    ...reviewChildren,
+    ...accountChildren,
+    ...restTopPages,
+  ];
+  return flat.filter(Boolean);
+}, [dashboardItem, reviewChildren, accountChildren, restTopPages]); 
 
   // Determine selected key by current URL (prefix match like client
   const selectedKeys = useMemo(() => {
@@ -122,12 +149,17 @@ export function NavBarAdmin() {
 
   // Controlled open state on desktop; auto-open review if a child is selecte
   const [openKeys, setOpenKeys] = useState(["review"]);
-  useEffect(() => {
-    if (!isNarrow) {
-      setOpenKeys(isReviewActive ? ["review"] : openKeys.includes("review") ? ["review"] : []);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReviewActive, isNarrow]);
+  const accountChildKeys = useMemo(() => accountChildren.map((c) => c.key), [accountChildren]);
+  const isAccountActive = accountChildKeys.includes(selectedKeys[0]);
+
+useEffect(() => {
+  if (!isNarrow) {
+    const newOpenKeys = [];
+    if (isReviewActive) newOpenKeys.push("review");
+    if (isAccountActive) newOpenKeys.push("accounts");
+    setOpenKeys(newOpenKeys);
+  }
+}, [isReviewActive, isAccountActive, isNarrow]);
 
   // --- Logout with confirm (same as client) --
   async function handleLogout() {

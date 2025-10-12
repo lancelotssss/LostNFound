@@ -39,21 +39,28 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       db
         .collection("lost_found_db")
         .countDocuments({ reportType: "Lost", status: "Listed" }),
-      db.collection("claims_db").countDocuments({ claimStatus: "Reviewing" }),
+      db.collection("claims_db").countDocuments({ claimStatus: "Claim Approved" }),
       db.collection("claims_db").countDocuments({ claimStatus: "Completed" }),
       db.collection("lost_found_db").countDocuments({ status: "Listed" }),
     ]);
 
     // --- RATIO LOST : FOUND ---
     const totalLost = await db
-      .collection("lost_found_db")
-      .countDocuments({ reportType: "Lost" });
-    const totalFound = await db
-      .collection("lost_found_db")
-      .countDocuments({ reportType: "Found" });
-    const lostToFoundRatio = totalFound
-      ? `${((totalLost / totalFound) * 100).toFixed(1)}%`
-      : "0%";
+  .collection("lost_found_db")
+  .countDocuments({ reportType: "Lost" });
+
+// Count how many of those LOST items were successfully RETURNED
+const totalReturned = await db
+  .collection("lost_found_db")
+  .countDocuments({
+    reportType: "Lost",
+    status: "Returned",
+  });
+
+// Compute return rate (%)
+const returnRate = totalLost
+  ? `${((totalReturned / totalLost) * 100).toFixed(1)}%`
+  : "0%";
 
     // --- MOST COMMON PLACE LOST ---
     const commonPlaceAgg = await db
@@ -137,7 +144,7 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
         claimReturnedCount,
         totalStorageCount,
       },
-      ratios: { lostToFoundRatio },
+      ratios: { returnRate },
       mostCommon: {
         place: mostCommonPlace,
         keyItem: mostCommonKeyItem,
@@ -195,7 +202,7 @@ adminRoutes.route("/found-items").get(verifyToken, async (req, res) => {
             },
           },
         },
-        { $sort: { claimStatus: 1, dateFound: 1 } },
+        { $sort: { claimStatus: 1, dateReported: -1 } },
         { $project: { claimStatus: 0 } },
       ])
       .toArray();
@@ -405,7 +412,7 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
             },
           },
         },
-        { $sort: { claimStatus: 1, dateLost: 1 } },
+        { $sort: { claimStatus: 1, dateReported: -1 } },
       ])
       .toArray();
 
@@ -419,15 +426,15 @@ adminRoutes.route("/lost-items").get(verifyToken, async (req, res) => {
 
 adminRoutes.route("/history").get(verifyToken, async (req, res) => {
   try {
-    let db = database.getDb();
+    const db = database.getDb();
 
+    
     const allReports = await db
       .collection("lost_found_db")
       .aggregate([
-        { $match: {} },
         {
           $addFields: {
-            claimStatus: {
+            claimStatusOrder: {
               $switch: {
                 branches: [
                   { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
@@ -442,13 +449,29 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
             },
           },
         },
-        { $sort: { claimStatus: 1, dateLost: 1 } },
+        { $sort: { claimStatusOrder: 1, dateLost: 1 } },
       ])
       .toArray();
 
-    res.json({ count: allReports.length, results: allReports });
+    // Fetch Claims
+    const allClaims = await db
+      .collection("claims_db")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json({
+      success: true,
+      reports: allReports,
+      claims: allClaims,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error fetching history:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch reports and claims",
+      error: err.message,
+    });
   }
 });
 
@@ -539,7 +562,7 @@ try {
 
       
       {
-        $sort: { claimOrder: 1, createdAtDate: -1 },
+        $sort: { claimOrder: 1, createdAt: -1 },
       },
     ])
     .toArray();
