@@ -206,9 +206,10 @@ useEffect(() => {
               <Descriptions.Item label="Email">{selectedItem.email}</Descriptions.Item>
               <Descriptions.Item label="Phone">{selectedItem.phone}</Descriptions.Item>
               <Descriptions.Item label="Last Logged In">
-                
                   {selectedItem.lastLogin
-                    ? new Date(selectedItem.lastLogin).toLocaleString(undefined, {
+                  ? isNaN(Date.parse(selectedItem.lastLogin))
+                    ? selectedItem.lastLogin // it's just a string, show as-is
+                    : new Date(selectedItem.lastLogin).toLocaleString(undefined, {
                         year: "numeric",
                         month: "2-digit",
                         day: "2-digit",
@@ -216,8 +217,7 @@ useEffect(() => {
                         minute: "2-digit",
                         second: "2-digit",
                       })
-                    : "N/A"}
-                
+                  : "N/A"}
               </Descriptions.Item>
 
               <Descriptions.Item label="Last Updated">

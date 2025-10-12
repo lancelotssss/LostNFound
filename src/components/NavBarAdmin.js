@@ -104,7 +104,7 @@ export function NavBarAdmin() {
       label: "Manage User",
       children: accountChildren,
     },
-    ...restTopPages.filter((p) => p.key !== "users" && p.key !== "createadm"), // exclude duplicates
+    ...restTopPages.filter((p) => p.key !== "users" && p.key !== "createadm"), 
   ],
   [dashboardItem, reviewChildren, accountChildren, restTopPages]
 );

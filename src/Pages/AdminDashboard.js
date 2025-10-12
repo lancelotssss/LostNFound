@@ -4,6 +4,8 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import "./styles/AdminDashboard.css";
+import CountUp from "react-countup";
+import { useNavigate } from "react-router-dom"
 
 import {
   SearchOutlined,
@@ -24,6 +26,12 @@ export const AdminDashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const token = sessionStorage.getItem("User");
+
+  const navigate = useNavigate();
+
+  const handleNavigate = (path) => {
+    navigate(path);
+  };
 
   useEffect(() => {
     if (token) {
@@ -104,41 +112,131 @@ return (
 
       
       <h2 className="overview-admin">SUMMARY</h2>
-      <div className="summary-row">
-        <Card
-          title={<TitleWithIcon icon={SearchOutlined} text="Review Summary" />}
-          className="summary-card"
-        >
-          <div className="stat-grid">
-            <Statistic title="Found Reports" value={statusCounts?.reviewFoundCount} />
-            <Statistic title="Lost Reports" value={statusCounts?.reviewLostCount} />
-            <Statistic title="Claims" value={statusCounts?.reviewClaimsCount} />
-          </div>
-        </Card>
+      
 
-        <Card
-          title={<TitleWithIcon icon={FolderOpenOutlined} text="Listed Summary" />}
-          className="summary-card"
-        >
-          <div className="stat-grid">
-            <Statistic title="Found Reports" value={statusCounts?.listedFoundCount} />
-            <Statistic title="Lost Reports" value={statusCounts?.listedLostCount} />
-            
-          </div>
-        </Card>
+        <div className="summary-row">
+          <Card
+            title={<TitleWithIcon icon={SearchOutlined} text="Total Report Summary" />}
+            className="summary-card"
+          >
+            <div className="stat-grid">
+              <div
+              className="summary-stat"
+              onClick={() => handleNavigate("/main/found-items")}
+            >
+              <Statistic
+                title="Total Found"
+                value={statusCounts?.totalFound || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
+            </div>
 
-        <Card
-          title={<TitleWithIcon icon={CheckCircleOutlined} text="Claims Summary" />}
-          className="summary-card"
-        >
-          <div className="stat-grid">
-            <Statistic title="Approved Claims" value={statusCounts?.reviewClaimsCount} />
-            <Statistic title="Returned" value={statusCounts?.claimReturnedCount} />
-          </div>
-        </Card>
+            <div
+              className="summary-stat"
+              onClick={() => handleNavigate("/main/lost-items")}
+            >
+              <Statistic
+                title="Total Lost"
+                value={statusCounts?.totalAllLost || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
+            </div>
 
+            <div
+              className="summary-stat"
+              onClick={() => handleNavigate("/main/claim-items")}
+            >
+              <Statistic
+                title="Total Claim"
+                value={statusCounts?.totalClaims || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
+            </div>
+            </div>
+          </Card>
 
-      </div>
+          <Card
+            title={<TitleWithIcon icon={FolderOpenOutlined} text="Review Report Summary" />}
+            className="summary-card"
+          >
+            <div className="stat-grid">
+              <div
+              className="summary-stat"
+              onClick={() => handleNavigate("/main/found-items")}
+            >
+              <Statistic
+                title="Review Found"
+                value={statusCounts?.reviewFoundCount || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
+              </div>
+              <div
+              className="summary-stat"
+              onClick={() => handleNavigate("/main/lost-items")}
+            >
+              <Statistic
+                title="Review Lost"
+                value={statusCounts?.reviewLostCount || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
+              </div>
+              <div
+              className="summary-stat"
+              onClick={() => handleNavigate("/main/claim-items")}
+            >
+              <Statistic
+                title="Review Claims"
+                value={statusCounts?.reviewClaimsCount || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
+              </div>
+            </div>
+          </Card>
+
+          <Card
+            title={<TitleWithIcon icon={CheckCircleOutlined} text="Claims Summary" />}
+            className="summary-card"
+          >
+            <div className="stat-grid">
+              <div
+              className="summary-stat"
+              onClick={() => handleNavigate("/main/claim-items")}
+            >
+              <Statistic
+                title="Approved Claims"
+                value={statusCounts?.reviewClaimsCount || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
+              </div>
+              <div
+              className="summary-stat"
+              onClick={() => handleNavigate("/main/claim-items")}
+            >
+              <Statistic
+                title="Returned"
+                value={statusCounts?.claimReturnedCount || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
+              </div>
+            </div>
+          </Card>
+        </div>
 
 
 
@@ -169,8 +267,20 @@ return (
 
 
             <div className="stat-grid stat-grid-2">
-              <Statistic title="Returned Items" value={weeklyReport?.returnedItems} />
-              <Statistic title="Found Items" value={weeklyReport?.receivedFoundItems} />
+              <Statistic
+                title="Returned Items"
+                value={weeklyReport?.returnedItems || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
+              <Statistic
+                title="Found Items"
+                value={weeklyReport?.receivedFoundItems || 0}
+                formatter={(value) => (
+                  <CountUp end={Number(value)} duration={1.5} separator="," />
+                )}
+              />
             </div>
           </Card>
 
@@ -179,7 +289,18 @@ return (
             className="tile-card"
           >
             <div className="stat-grid stat-grid-1">
-              <Statistic title="Return Rate" value={ratios?.returnRate ?? ""} />
+              <Statistic
+        title="Return Rate"
+        value={parseFloat(ratios?.returnRate) || 0}
+        formatter={(value) => (
+          <CountUp
+            end={Number(value)}
+            duration={1.8}
+            decimals={1}
+            suffix="%"
+          />
+        )}
+      />
             </div>
           </Card>
 
@@ -244,6 +365,10 @@ return (
 
       <div className="today-activity">
       {/* LEFT: Reports Filed Today */}
+      <div
+        className="today-stat"
+        onClick={() => handleNavigate("/main/history")}
+      >
       <Card
         title="Reports Filed Today"
         className="tile-card"
@@ -274,8 +399,13 @@ return (
           />
         </Table>
       </Card>
+      </div>
 
       {/* RIGHT: Audit Logs */}
+      <div
+        className="today-stat"
+        onClick={() => handleNavigate("/main/logs")}
+      >
       <Card
         title="Your Audit Logs"
         className="tile-card"
@@ -310,6 +440,7 @@ return (
           <Table.Column title="DETAILS" dataIndex="details" key="details" />
         </Table>
       </Card>
+      </div>
     </div>
 
 
