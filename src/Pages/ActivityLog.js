@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Space, Table, Button, Select, Input } from "antd";
 import { getAuditLogs } from "../api";
 import "./styles/ant-input.css";
+import "./styles/AdminHistory.css";
+import { ReloadOutlined, SyncOutlined } from "@ant-design/icons";
 
 const { Column } = Table;
 const { Search } = Input;
@@ -95,51 +97,95 @@ export const ActivityLog = () => {
     "SUSPEND_USER",
   ];
 
- return (
-    <>
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Button
-          onClick={() => {
-            setSelectedAction("");
-            setSearchText("");
-            fetchData();
-          }}
-        >
-          Refresh
-        </Button>
+return (
+  <>
 
-        <Select
-          placeholder="Filter by Action"
-          allowClear
-          style={{ width: 220 }}
-          value={selectedAction || undefined}
-          onChange={(value) => setSelectedAction(value || "")}
-          options={actionOptions.map((action) => ({
-            label: action,
-            value: action,
-          }))}
-        />
 
-        <Search
-          className="poppins-input"
-          placeholder="Search Performed By"
-          allowClear
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ width: 220 }}
-        />
-      </Space>
 
-      <Table
-        dataSource={filteredData}
-        pagination={{ pageSize: 8 }}
-        rowKey="key"
-      >
-        <Column title="ACTION" dataIndex="action" key="action" />
-        <Column title="PERFORMED BY" dataIndex="performedBy" key="performedBy" />
-        <Column title="TIME" dataIndex="timestamp" key="timestamp" />
-        <Column title="DETAILS" dataIndex="details" key="details" />
-      </Table>
-    </>
-  );
+
+
+    
+    <div className="table-controls">
+
+
+
+
+
+      {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- LEFT SIDE 'TO =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+      <div className="panel panel--filters">
+        <div className="panel-title">Search Filters</div>
+        <div className="panel-body">
+          <Select
+            placeholder="Filter by Action"
+            allowClear
+            value={selectedAction || undefined}
+            onChange={(value) => setSelectedAction(value || "")}
+            options={actionOptions.map((action) => ({
+              label: action,
+              value: action,
+            }))}
+
+            style={{ flex: "0 0 240px", minWidth: 200 }}
+          />
+
+          <Search
+            className="poppins-input"
+            placeholder="Search Performed By"
+            allowClear
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+
+            style={{ flex: "1 1 320px", minWidth: 240 }}
+          />
+        </div>
+      </div>
+
+
+
+
+
+
+      {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- RIGHT SIDE 'TO =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+      <div className="panel panel--actions">
+        <div className="panel-title">Actions</div>
+        <div className="panel-body panel-actions-row">
+          <div style={{ marginRight: "auto" }} />
+          <Button
+            onClick={() => {
+              setSelectedAction("");
+              setSearchText("");
+              fetchData();
+            }}
+            className="btn-with-icons"
+          >
+            <ReloadOutlined />
+            <span>Refresh</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+    {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- LEFTTABLE =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+    <Table
+      dataSource={filteredData}
+      pagination={{ pageSize: 8 }}
+      rowKey="key"
+    >
+      <Column title="ACTION" dataIndex="action" key="action" />
+      <Column title="PERFORMED BY" dataIndex="performedBy" key="performedBy" />
+      <Column title="TIME" dataIndex="timestamp" key="timestamp" />
+      <Column title="DETAILS" dataIndex="details" key="details" />
+    </Table>
+  </>
+);
+
+
+
+
+
 };

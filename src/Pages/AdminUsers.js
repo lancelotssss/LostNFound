@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Typography, Tag } from "antd";
+import {
+  Table,
+  Button,
+  Modal,
+  Descriptions,
+  message,
+  Input,
+  Typography,
+  Tag,
+  Segmented,
+} from "antd";
 import { getUsers, updateUser } from "../api";
 import { jwtDecode } from "jwt-decode";
 import "./styles/ant-input.css";
+import "./styles/AdminHistory.css";
+import { ReloadOutlined, SyncOutlined } from "@ant-design/icons";
 
 const { Column } = Table;
 const { Text } = Typography;
@@ -16,7 +28,7 @@ export const AdminUsers = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [searchText, setSearchText] = useState("");
-  const [viewRole, setViewRole] = useState("student"); 
+  const [viewRole, setViewRole] = useState("student"); // "student" | "admin"
 
   useEffect(() => {
     const token = sessionStorage.getItem("User");
@@ -26,28 +38,29 @@ export const AdminUsers = () => {
     }
   }, []);
 
-const fetchData = async (role = viewRole) => {
-  try {
-    const token = sessionStorage.getItem("User");
-    if (!token) {
-      alert("You must be logged in");
-      return;
-    }
+  const fetchData = async (role = viewRole) => {
+    try {
+      const token = sessionStorage.getItem("User");
+      if (!token) {
+        alert("You must be logged in");
+        return;
+      }
 
-    const res = await getUsers(token, role);
-    if (res && Array.isArray(res.results)) {
-      setData(res.results);
-    } else {
-      setData([]);
+      const res = await getUsers(token, role);
+      if (res && Array.isArray(res.results)) {
+        setData(res.results);
+      } else {
+        setData([]);
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
     }
-  } catch (err) {
-    console.error("Error fetching users:", err);
-  }
-};
+  };
 
-useEffect(() => {
-  fetchData(viewRole);
-}, [viewRole]);
+  useEffect(() => {
+    fetchData(viewRole);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewRole]);
 
   const handleRowClick = (record) => {
     setSelectedItem(record);
@@ -96,56 +109,78 @@ useEffect(() => {
     }
   };
 
-  
- const filteredData = data
-  .filter((item) => item.role?.toLowerCase() === viewRole)
-  .filter((item) => {
-    const search = searchText.toLowerCase();
-    return (
-      item.sid?.toLowerCase().includes(search) ||
-      item.name?.toLowerCase().includes(search) ||
-      item.studentId?.toLowerCase().includes(search)
-    );
-  });
+  const filteredData = data
+    .filter((item) => item.role?.toLowerCase() === viewRole)
+    .filter((item) => {
+      const search = searchText.toLowerCase();
+      return (
+        item.sid?.toLowerCase().includes(search) ||
+        item.name?.toLowerCase().includes(search) ||
+        item.studentId?.toLowerCase().includes(search)
+      );
+    });
 
   const STATUS_COLORS = {
     suspended: "volcano",
-    active: "green"
+    active: "green",
   };
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button
-            type={viewRole === "student" ? "primary" : "default"}
-            disabled={viewRole === "student"}
-            onClick={() => setViewRole("student")}
-          >
-            Students
-          </Button>
-          <Button
-            type={viewRole === "admin" ? "primary" : "default"}
-            disabled={viewRole === "admin"}
-            onClick={() => setViewRole("admin")}
-          >
-            Admins
-          </Button>
+
+
+
+
+
+
+      <div className="table-controls">
+        {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- LEFT SIDE 'TO =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+        <div className="panel panel--filters">
+          <div className="panel-title">Search Filters</div>
+          <div className="panel-body">
+            <Input
+              className="poppins-input"
+              placeholder="Search by ID or name"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              style={{ flex: "1 1 320px", minWidth: 240 }}
+            />
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
-          <Input
-            className="poppins-input"
-            placeholder="Search by ID or name"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 250 }}
-            allowClear
-          />
-          <Button onClick={() => fetchData(viewRole)}>Refresh</Button>
+
+
+
+
+
+        {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- RIGHT SIDE 'TO =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+        <div className="panel panel--actions">
+          <div className="panel-title">Actions</div>
+          <div className="panel-body panel-actions-row">
+            <Segmented
+              options={[
+                { label: "Students", value: "student" },
+                { label: "Admins", value: "admin" },
+              ]}
+              value={viewRole}
+              onChange={(val) => setViewRole(val)}
+            />
+
+            <Button onClick={() => fetchData(viewRole)} className="btn-with-icons">
+              <ReloadOutlined />
+              <span>Refresh</span>
+            </Button>
+          </div>
         </div>
       </div>
 
+
+
+
+
+
+      {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- TABLEZZZ =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
       <Table
         dataSource={filteredData}
         onRow={(record) => ({
@@ -167,37 +202,47 @@ useEffect(() => {
           dataIndex="status"
           key="status"
           render={(status) => {
-              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
-              return (
-                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
-                  {status ? status.toUpperCase() : "N/A"}
-                </Tag>
-              );
-            }}
+            const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+            return (
+              <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                {status ? status.toUpperCase() : "N/A"}
+              </Tag>
+            );
+          }}
         />
         <Column
           title="ROLE"
           dataIndex="role"
           key="role"
-          render={(role) =>
-            role ? role.charAt(0).toUpperCase() + role.slice(1) : ""
-          }
+          render={(role) => (role ? role.charAt(0).toUpperCase() + role.slice(1) : "")}
         />
       </Table>
 
-      {/* (modals unchanged) */}
+
+
+
+      {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- MGA MODAL =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
       <Modal
-        title={selectedItem ? selectedItem.title : "User Details"}
+        title={selectedItem ? "User Details" : "User Details"}
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={null}
-        width={700}
-        maskClosable={false}
+        centered
+        width={800}
+        styles={{
+          header: { position: "sticky", top: 0, zIndex: 2, background: "#fff" },
+          body: { padding: 16, maxHeight: "85vh", overflowY: "auto" },
+          footer: { position: "sticky", bottom: 0, zIndex: 2, background: "#fff" },
+        }}
       >
         {selectedItem && (
           <>
-            <Descriptions bordered column={1} size="middle">
-              <Descriptions.Item label="SID"><Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.sid}</Text></Descriptions.Item>
+            <Descriptions bordered column={1} size="small" layout="horizontal">
+              <Descriptions.Item label="SID">
+                <Text copyable style={{ fontFamily: "Poppins" }}>
+                  {selectedItem.sid}
+                </Text>
+              </Descriptions.Item>
               <Descriptions.Item label={viewRole === "student" ? "Student ID" : "Employee ID"}>
                 {selectedItem.studentId}
               </Descriptions.Item>
@@ -206,48 +251,40 @@ useEffect(() => {
               <Descriptions.Item label="Email">{selectedItem.email}</Descriptions.Item>
               <Descriptions.Item label="Phone">{selectedItem.phone}</Descriptions.Item>
               <Descriptions.Item label="Last Logged In">
-                
-                  {selectedItem.lastLogin
-                    ? new Date(selectedItem.lastLogin).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })
-                    : "N/A"}
-                
+                {selectedItem.lastLogin
+                  ? new Date(selectedItem.lastLogin).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })
+                  : "N/A"}
               </Descriptions.Item>
-
               <Descriptions.Item label="Last Updated">
-                
-                  {selectedItem.updatedAt
-                    ? new Date(selectedItem.updatedAt).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })
-                    : "N/A"}
-              
+                {selectedItem.updatedAt
+                  ? new Date(selectedItem.updatedAt).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })
+                  : "N/A"}
               </Descriptions.Item>
-
               <Descriptions.Item label="Created At">
-                
-                  {selectedItem.createdAt
-                    ? new Date(selectedItem.createdAt).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })
-                    : "N/A"}
-              
+                {selectedItem.createdAt
+                  ? new Date(selectedItem.createdAt).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })
+                  : "N/A"}
               </Descriptions.Item>
             </Descriptions>
 
@@ -262,7 +299,10 @@ useEffect(() => {
               <Button
                 danger
                 onClick={handleDeny}
-                disabled={selectedItem.role?.toLowerCase() === "admin" || selectedItem.status?.toLowerCase() === "suspended"}
+                disabled={
+                  selectedItem.role?.toLowerCase() === "admin" ||
+                  selectedItem.status?.toLowerCase() === "suspended"
+                }
               >
                 Suspend
               </Button>
@@ -272,7 +312,7 @@ useEffect(() => {
         )}
       </Modal>
 
-      {/* Confirm Modals (unchanged) */}
+      {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- MODAL CONFIRM =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
       <Modal
         title="Confirm Approval"
         open={approveModal}

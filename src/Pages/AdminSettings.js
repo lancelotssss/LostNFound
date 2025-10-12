@@ -2,6 +2,54 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { editAdmin, editPasswordAdmin } from "../api";
+import {
+  Card,
+  Row,
+  Col,
+  Typography,
+  Descriptions,
+  Tag,
+  Avatar,
+  Space,
+  Input,
+  Button,
+  Divider,
+  Modal,
+} from "antd";
+import { UserOutlined, LockOutlined } from "@ant-design/icons";
+import "./styles/UserSettings.css";
+
+
+
+
+
+// GET INITIALS -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+const getInitials = (name = "") => {
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
+
+const { Title, Text } = Typography;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function AdminSettings() {
   const [user, setUser] = useState({});
@@ -41,44 +89,52 @@ export function AdminSettings() {
       const decodedUser = jwtDecode(token);
       setUser(decodedUser);
 
-      
-      setFormData({
-        ...formData,
+      setFormData((prev) => ({
+        ...prev,
         studentId: decodedUser.studentId || "",
         email: decodedUser.email || "",
         name: decodedUser.name || "",
         status: decodedUser.status || "",
         createdAt: decodedUser.createdAt || "",
         phone: decodedUser.phone || "",
-      });
+      }));
     }
     loadUserData();
-    
   }, []);
 
   async function handleSave(e) {
     e.preventDefault();
+
+    if (formData.phone === user.phone) {
+      Modal.info({
+        title: "No Changes",
+        content: "No changes detected in phone number.",
+      });
+      return;
+    }
+
     try {
-      if (formData.phone === user.phone) {
-        alert("No changes detected in phone number.");
+      const token = sessionStorage.getItem("User");
+      if (!token) {
+        Modal.error({ title: "Not authorized", content: "Please sign in again." });
         return;
       }
-
-      const token = sessionStorage.getItem("User");
-      if (!token) return;
 
       const response = await editAdmin({ phone: formData.phone }, token);
 
       if (!response.success) {
-        alert("Phone number could not be updated.");
+        Modal.error({
+          title: "Update Failed",
+          content: response.message || "Phone number could not be updated.",
+        });
       } else {
-        alert("Phone number updated successfully!");
+        Modal.success({ title: "Success", content: "Phone number updated successfully!" });
         setUser({ ...user, phone: formData.phone });
         setIsEditing(false);
       }
     } catch (err) {
       console.error("Error updating phone:", err);
-      alert("Error updating phone");
+      Modal.error({ title: "Error", content: "Error updating phone." });
     }
   }
 
@@ -87,152 +143,204 @@ export function AdminSettings() {
     const { oldPassword, newPassword, confirmPassword } = passwordForm;
 
     if (!oldPassword || !newPassword || !confirmPassword) {
-      alert("All password fields are required.");
+      Modal.warning({ title: "Missing fields", content: "All password fields are required." });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert("New passwords do not match.");
+      Modal.error({ title: "Password Mismatch", content: "New passwords do not match." });
       return;
     }
 
-    try {
-      const token = sessionStorage.getItem("User");
-      if (!token) return;
+    Modal.confirm({
+      title: "Confirm Password Change",
+      content: "Are you sure you want to update your password?",
+      okText: "Yes",
+      cancelText: "No",
+      async onOk() {
+        try {
+          const token = sessionStorage.getItem("User");
+          if (!token) {
+            Modal.error({ title: "Not authorized", content: "Please sign in again." });
+            return;
+          }
 
-      const response = await editPasswordAdmin(passwordForm, token);
+          const response = await editPasswordAdmin(passwordForm, token);
 
-      if (!response.success) {
-        alert("Password could not be updated.");
-      } else {
-        alert("Password updated successfully!");
-        setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
-        setIsPasswordEditing(false);
-      }
-    } catch (err) {
-      console.error("Error updating password:", err);
-      alert("Error updating password");
-    }
+          if (!response.success) {
+            Modal.error({
+              title: "Update Failed",
+              content: response.message || "Password could not be updated.",
+            });
+          } else {
+            Modal.success({ title: "Success", content: "Password updated successfully!" });
+            setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+            setIsPasswordEditing(false);
+          }
+        } catch (err) {
+          console.error("Error updating password:", err);
+          Modal.error({ title: "Error", content: "Error updating password." });
+        }
+      },
+    });
   }
 
+  const joined = user?.createdAt
+    ? new Date(user.createdAt)
+        .toLocaleString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+          timeZone: "Asia/Manila",
+        })
+        .replace(",", "")
+    : "—";
+
+  const statusColor =
+    (user?.status || "").toLowerCase() === "active"
+      ? "green"
+      : (user?.status || "").toLowerCase() === "pending"
+      ? "orange"
+      : "default";
+
   return (
-    <>
-      <form onSubmit={handleSave}>
-        <p>Employee ID: </p>
-        <p>{user.studentId}</p>
+    <div className="settings-wrap">
+      <Row gutter={[16, 16]}>
+        {/* LEFT: Account Info -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */}
+        <Col xs={24} md={12}>
+          <Card className="settings-card" bordered>
+            <Space align="center" size={16} className="settings-header">
+              {user?.name ? (
+                <Avatar size={64} style={{ backgroundColor: "#014F86" }}>
+                  {getInitials(user.name)}
+                </Avatar>
+              ) : (
+                <Avatar size={64} icon={<UserOutlined />} />
+              )}
+              <div>
+                <Title level={4} style={{ margin: 0 }}>
+                  {user?.name || "—"}
+                </Title>
+                <Text type="secondary">{user?.email || "—"}</Text>
+                <div>
+                  <Tag color={statusColor} style={{ marginTop: 6 }}>
+                    {user?.status
+                      ? user.status.charAt(0).toUpperCase() + user.status.slice(1)
+                      : "—"}
+                  </Tag>
+                </div>
+              </div>
+            </Space>
 
-        <p>Email: </p>
-        <p>{user.email}</p>
+            <Divider />
 
-        <p>Name: </p>
-        <p>{user.name}</p>
+            <Descriptions column={1} size="middle" labelStyle={{ width: 140 }}>
+              <Descriptions.Item label="Employee ID">
+                {user?.studentId || "—"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Phone Number">
+                {user?.phone || "—"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Joined">{joined}</Descriptions.Item>
+            </Descriptions>
 
-        <p>Status: </p>
-        <p>{user.status}</p>
+            <Divider />
 
-        <p>Joined: {new Date(user.createdAt).toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: "Asia/Manila"
-      }).replace(",", "")}</p>
+          </Card>
+        </Col>
 
-        <p>Phone: </p>
-        <input
-          type="text"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-          placeholder="Phone Number"
-          readOnly={!isEditing}
-        />
 
-        {isEditing ? (
-          <>
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({ ...formData, phone: user.phone });
-                setIsEditing(false);
-              }}
-              className="bg-gray-400 text-white px-4 py-2 rounded"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
-            Edit Phone
-          </button>
-        )}
-      </form>
+        {/* RIGHT: Security / Password -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */}
+        <Col xs={24} md={12}>
+          <Card className="settings-card" bordered>
+            <Space align="center" size={12} className="settings-header">
+              <LockOutlined style={{ fontSize: 22 }} />
+              <Title level={4} style={{ margin: 0 }}>
+                Security
+              </Title>
+            </Space>
 
-      <div className="mt-6">
-        {isPasswordEditing ? (
-          <form onSubmit={handlePasswordSave}>
-            <p>Change Password:</p>
-            <input
-              type="password"
-              name="oldPassword"
-              value={passwordForm.oldPassword}
-              onChange={handlePasswordChange}
-              placeholder="Old Password"
-              className="border p-2 w-full"
-            />
-            <input
-              type="password"
-              name="newPassword"
-              value={passwordForm.newPassword}
-              onChange={handlePasswordChange}
-              placeholder="New Password"
-              className="border p-2 w-full"
-            />
-            <input
-              type="password"
-              name="confirmPassword"
-              value={passwordForm.confirmPassword}
-              onChange={handlePasswordChange}
-              placeholder="Confirm New Password"
-              className="border p-2 w-full"
-            />
+            <Divider />
 
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
-            >
-              Save Password
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsPasswordEditing(false)}
-              className="bg-gray-400 text-white px-4 py-2 rounded mt-2"
-            >
-              Cancel
-            </button>
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsPasswordEditing(true)}
-            className="bg-yellow-500 text-white px-4 py-2 rounded"
-          >
-            Change Password
-          </button>
-        )}
-      </div>
-    </>
+            <form onSubmit={handlePasswordSave} className="settings-form">
+              <label className="settings-label" htmlFor="oldPassword">
+                Old Password
+              </label>
+              <Input.Password
+                id="oldPassword"
+                name="oldPassword"
+                value={passwordForm.oldPassword}
+                onChange={handlePasswordChange}
+                placeholder="Old Password"
+                disabled={!isPasswordEditing}
+                className="settings-input"
+                style={{ fontFamily: "Poppins" }}
+              />
+
+              <label className="settings-label" htmlFor="newPassword">
+                New Password
+              </label>
+              <Input.Password
+                id="newPassword"
+                name="newPassword"
+                value={passwordForm.newPassword}
+                onChange={handlePasswordChange}
+                placeholder="New Password"
+                disabled={!isPasswordEditing}
+                className="settings-input"
+                style={{ fontFamily: "Poppins" }}
+              />
+
+              <label className="settings-label" htmlFor="confirmPassword">
+                Confirm New Password
+              </label>
+              <Input.Password
+                id="confirmPassword"
+                name="confirmPassword"
+                value={passwordForm.confirmPassword}
+                onChange={handlePasswordChange}
+                placeholder="Confirm New Password"
+                disabled={!isPasswordEditing}
+                className="settings-input"
+                style={{ fontFamily: "Poppins" }}
+              />
+
+              <div className="settings-actions">
+                {!isPasswordEditing ? (
+                  <>
+                    <Button type="default" onClick={() => setIsPasswordEditing(true)}>
+                      Edit
+                    </Button>
+                    <Button type="primary" disabled>
+                      Apply
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="default"
+                      onClick={() => {
+                        setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+                        setIsPasswordEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button htmlType="submit" type="primary">
+                      Apply
+                    </Button>
+                  </>
+                )}
+              </div>
+            </form>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 }
+
+export default AdminSettings;
