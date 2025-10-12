@@ -12,10 +12,14 @@ import {
   Modal,
   Spin,
   Alert,
-  DatePicker
+  DatePicker,
+  Row,       // ← add
+  Col,       // ← add
+  Divider    // ← add
 } from "antd";
+
 import { LoadingOutlined } from "@ant-design/icons";
-import "./styles/RegisterPage.css";
+import "./styles/AdminCreate.css";
 import {jwtDecode}  from "jwt-decode";
 import dayjs from "dayjs";
 
@@ -177,233 +181,350 @@ export const  AdminCreate = () => {
   }
 
   const disableAll = submitting || successPulse;
+return (
 
-  return (
-    <div className="register-container">
-      {contextHolder}
 
-      <Card className={`register-card ${successPulse ? "card-success-pulse" : ""}`}>
-        <div className="register-header">
-          <Image src="/assets/kit.png" alt="Toolbox" width={55} preview={false} className="register-header__icon" />
-          <Title level={5} className="register-header__title">CREATE A NEW ADMIN</Title>
-          <p className="register-header__desc">
-            Register your FoundHub Admin account to monitor lost and found reports, manage users, and ensure smooth platform operations.
-          </p>
-        </div>
 
-        {errors.general && (
-          <Alert className="general-alert" type="error" showIcon message="Registration error" description={errors.general} />
-        )}
 
-        <form className="reg-form" onSubmit={handleSubmit} noValidate>
-          <h2 className="reg-form-headers" id="firstHeader">PERSONAL INFORMATION</h2>
 
-          <div className="form-grid two">
-            <div className="field">
-              <label>First Name</label>
-              <Input name="fname" placeholder="First Name" value={registerData.fname}
-                     onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.fname ? "has-error" : ""} aria-invalid={!!errors.fname}
-                     style={{fontFamily:"Poppins"}} />
-              <div className="field-error">{errors.fname || ""}</div>
-            </div>
+  <div className="settings-wrap">
+    {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- HEADERRRRRRR =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+    <div style={{ marginBottom: 8 }}> 
+      <Typography.Title level={4} style={{ margin: 0 }}> 
+        Create a new admin 
+      </Typography.Title> 
+      <Typography.Text type="secondary"> 
+        Register an administrator to manage reports and users. 
+        </Typography.Text> 
+    </div>
 
-            <div className="field">
-              <label>Middle Name</label>
-              <Input name="mname" placeholder="Middle Name" value={registerData.mname}
-                     onChange={handleChange} size="large" disabled={disableAll} 
-                     style={{fontFamily:"Poppins"}}/>
-              <div className="field-error"></div>
-            </div>
 
-            <div className="field">
-              <label>Last Name</label>
-              <Input name="lname" placeholder="Last Name" value={registerData.lname}
-                     onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.lname ? "has-error" : ""} aria-invalid={!!errors.lname} 
-                     style={{fontFamily:"Poppins"}}/>
-              <div className="field-error">{errors.lname || ""}</div>
-            </div>
+    {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- FORMZ =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+    <form className="reg-form" onSubmit={handleSubmit} noValidate>
+              {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- PERSONAL INFORMATION =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24}>
+          <Card className="settings-card" bordered>
+            <Title level={4} style={{ margin: 0 }}>Personal Information</Title>
+            <Divider />
 
-            <div className="field">
-              <label>Suffix</label>
-              <Input name="suffix" placeholder="Jr., Sr., III" value={registerData.suffix}
-                     onChange={handleChange} size="large" disabled={disableAll} 
-                     style={{fontFamily:"Poppins"}}/>
-              <div className="field-error"></div>
-            </div>
-          </div>
-
-          <h2 className="reg-form-headers" id="secondHeader">ACCOUNT INFORMATION</h2>
-
-          <div className="form-grid two">
-            <div className="field">
-              <label>Email</label>
-              <Input name="email" type="email" placeholder="email@example.com" value={registerData.email}
-                     onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.email ? "has-error" : ""} aria-invalid={!!errors.email} autoComplete="email" 
-                     style={{fontFamily:"Poppins"}}/>
-              <div className="field-error">{errors.email || ""}</div>
-            </div>
-
-            <div className="field">
-              <label>Phone</label>
-              <Input name="phone" placeholder="09xxxxxxxxx or +639xxxxxxxxx" value={registerData.phone}
-                     onChange={handlePhoneChange} size="large" disabled={disableAll}
-                     className={errors.phone ? "has-error" : ""} aria-invalid={!!errors.phone} inputMode="numeric" 
-                     style={{fontFamily:"Poppins"}}/>
-              <div className="field-error">{errors.phone || ""}</div>
-            </div>
-
-            <div className="field">
-              <label>Employee ID</label>
-              <Input name="studentId" placeholder="Employee ID" value={registerData.studentId}
-                     onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.studentId ? "has-error" : ""} aria-invalid={!!errors.studentId} 
-                     style={{fontFamily:"Poppins"}}/>
-              <div className="field-error">{errors.studentId || ""}</div>
-            </div>
-
-            <div className="field">
-              <label>Birthdate</label>
-              <DatePicker
-                name="birthday"
-                value={registerData.birthday ? dayjs(registerData.birthday) : null}
-                onChange={(date) =>
-                  handleChange({
-                    target: {
-                      name: "birthday",
-                      value: date ? date.format("YYYY-MM-DD") : "",
-                    },
-                  })
-                }
-                size="large"
-                disabled={disableAll}
-                className={errors.birthday ? "has-error" : ""}
-                aria-invalid={!!errors.birthday}
-                style={{ width: "100%", fontFamily: "Poppins" }}
-                placeholder="Select your birthdate"
-                format="YYYY-MM-DD"
-                
-                disabledDate={(current) => current && current.isAfter(dayjs())}
-                showToday={false}
-                defaultPickerValue={dayjs("2005-01-01")}
+            {errors.general && (
+              <Alert
+                className="general-alert"
+                type="error"
+                showIcon
+                message="Registration error"
+                description={errors.general}
               />
-              <div className="field-error" style={{ fontFamily: "Poppins" }}>
-                {errors.birthday || ""}
+            )}
+
+            <div className="form-grid two">
+              <div className="field">
+                <label>First Name</label>
+                <Input
+                  name="fname"
+                  placeholder="First Name"
+                  value={registerData.fname}
+                  onChange={handleChange}
+                  size="large"
+                  disabled={disableAll}
+                  className={errors.fname ? "has-error" : ""}
+                  aria-invalid={!!errors.fname}
+                  style={{ fontFamily: "Poppins" }}
+                />
+                <div className="field-error">{errors.fname || ""}</div>
+              </div>
+
+              <div className="field">
+                <label>Middle Name</label>
+                <Input
+                  name="mname"
+                  placeholder="Middle Name"
+                  value={registerData.mname}
+                  onChange={handleChange}
+                  size="large"
+                  disabled={disableAll}
+                  style={{ fontFamily: "Poppins" }}
+                />
+                <div className="field-error" />
+              </div>
+
+              <div className="field">
+                <label>Last Name</label>
+                <Input
+                  name="lname"
+                  placeholder="Last Name"
+                  value={registerData.lname}
+                  onChange={handleChange}
+                  size="large"
+                  disabled={disableAll}
+                  className={errors.lname ? "has-error" : ""}
+                  aria-invalid={!!errors.lname}
+                  style={{ fontFamily: "Poppins" }}
+                />
+                <div className="field-error">{errors.lname || ""}</div>
+              </div>
+
+              <div className="field">
+                <label>Suffix</label>
+                <Input
+                  name="suffix"
+                  placeholder="Jr., Sr., III"
+                  value={registerData.suffix}
+                  onChange={handleChange}
+                  size="large"
+                  disabled={disableAll}
+                  style={{ fontFamily: "Poppins" }}
+                />
+                <div className="field-error" />
               </div>
             </div>
-          </div>
+          </Card>
+        </Col>
 
-          <div className="field mt-25">
-            <label>Gender</label>
-            <Select
-              size="large"
-              placeholder="Select Gender"
-              value={registerData.gender || undefined}
-              onChange={(value) => {
-                setRegisterData((p) => ({ ...p, gender: value }));
-                if (errors.gender) setErrors((prev) => ({ ...prev, gender: "" }));
-                if (errors.general) clearGeneral();
-              }}
-              disabled={disableAll}
-              className={`fullwidth ${errors.gender ? "has-error-select" : ""}`}
-              options={[
-                { value: "", label: "Select Gender" },
-                { value: "Male", label: "Male" },
-                { value: "Female", label: "Female" },
-                { value: "Rather not say", label: "Rather not say" },
-              ]}
-            />
-            <div className="field-error">{errors.gender || ""}</div>
-          </div>
 
-          <h2 className="reg-form-headers" id="thirdHeader">SECURITY</h2>
 
-          <div className="form-grid two">
-            <div className="field">
-              <label>Password</label>
-              <Input.Password name="password" placeholder="Password" value={registerData.password}
-                              onChange={handleChange} size="large" disabled={disableAll}
-                              className={errors.password ? "has-error" : ""} aria-invalid={!!errors.password}
-                              autoComplete="new-password" style={{fontFamily:"Poppins"}}/>
-              <div className="field-error">{errors.password || ""}</div>
+
+
+
+              {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- ACCOUNT INFORMATION =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+        <Col xs={24}>
+          <Card className="settings-card" bordered>
+            <Title level={4} style={{ margin: 0 }}>Account Information</Title>
+            <Divider />
+
+            <div className="form-grid two">
+              <div className="field">
+                <label>Email</label>
+                <Input
+                  name="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  value={registerData.email}
+                  onChange={handleChange}
+                  size="large"
+                  disabled={disableAll}
+                  className={errors.email ? "has-error" : ""}
+                  aria-invalid={!!errors.email}
+                  autoComplete="email"
+                  style={{ fontFamily: "Poppins" }}
+                />
+                <div className="field-error">{errors.email || ""}</div>
+              </div>
+
+              <div className="field">
+                <label>Phone</label>
+                <Input
+                  name="phone"
+                  placeholder="09xxxxxxxxx or +639xxxxxxxxx"
+                  value={registerData.phone}
+                  onChange={handlePhoneChange}
+                  size="large"
+                  disabled={disableAll}
+                  className={errors.phone ? "has-error" : ""}
+                  aria-invalid={!!errors.phone}
+                  inputMode="numeric"
+                  style={{ fontFamily: "Poppins" }}
+                />
+                <div className="field-error">{errors.phone || ""}</div>
+              </div>
+
+              <div className="field">
+                <label>Employee ID</label>
+                <Input
+                  name="studentId"
+                  placeholder="Employee ID"
+                  value={registerData.studentId}
+                  onChange={handleChange}
+                  size="large"
+                  disabled={disableAll}
+                  className={errors.studentId ? "has-error" : ""}
+                  aria-invalid={!!errors.studentId}
+                  style={{ fontFamily: "Poppins" }}
+                />
+                <div className="field-error">{errors.studentId || ""}</div>
+              </div>
+
+              <div className="field">
+                <label>Birthdate</label>
+                <DatePicker
+                  name="birthday"
+                  value={registerData.birthday ? dayjs(registerData.birthday, "YYYY-MM-DD") : null}
+                  onChange={(date) =>
+                    handleChange({
+                      target: {
+                        name: "birthday",
+                        value: date ? date.format("YYYY-MM-DD") : "",
+                      },
+                    })
+                  }
+                  size="large"
+                  allowClear
+                  inputReadOnly
+                  disabled={disableAll}
+                  status={errors.birthday ? "error" : undefined}
+                  style={{ width: "100%", fontFamily: "Poppins" }}
+                  placeholder="Select your birthdate"
+                  format="YYYY-MM-DD"
+                  disabledDate={(current) => current && current > dayjs().endOf("day")}
+                  showToday={false}
+                  defaultPickerValue={dayjs("2005-01-01")}
+                  getPopupContainer={(trigger) => trigger.parentElement}
+                />
+                <div className="field-error" style={{ fontFamily: "Poppins" }}>
+                  {errors.birthday || ""}
+                </div>
+              </div>
+
+
+              <div className="field" style={{ gridColumn: "1 / -1" }}>
+                <label>Gender</label>
+                <Select
+                  size="large"
+                  placeholder="Select Gender"
+                  value={registerData.gender || undefined}
+                  onChange={(value) => {
+                    setRegisterData((p) => ({ ...p, gender: value }));
+                    if (errors.gender) setErrors((prev) => ({ ...prev, gender: "" }));
+                    if (errors.general) setErrors((prev) => ({ ...prev, general: "" }));
+                  }}
+                  disabled={disableAll}
+                  className={`fullwidth ${errors.gender ? "has-error-select" : ""}`}
+                  options={[
+                    { value: "", label: "Select Gender" },
+                    { value: "Male", label: "Male" },
+                    { value: "Female", label: "Female" },
+                    { value: "Rather not say", label: "Rather not say" },
+                  ]}
+                />
+                <div className="field-error">{errors.gender || ""}</div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+
+
+
+
+
+
+              {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- SECURITY =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+        <Col xs={24}>
+          <Card className="settings-card" bordered>
+            <Title level={4} style={{ margin: 0 }}>Security</Title>
+            <Divider />
+
+            <div className="form-grid two">
+              <div className="field">
+                <label>Password</label>
+                <Input.Password
+                  name="password"
+                  placeholder="Password"
+                  value={registerData.password}
+                  onChange={handleChange}
+                  size="large"
+                  disabled={disableAll}
+                  className={errors.password ? "has-error" : ""}
+                  aria-invalid={!!errors.password}
+                  autoComplete="new-password"
+                  style={{ fontFamily: "Poppins" }}
+                />
+                <div className="field-error">{errors.password || ""}</div>
+              </div>
+
+              <div className="field">
+                <label>Confirm Password</label>
+                <Input.Password
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={registerData.confirmPassword}
+                  onChange={handleChange}
+                  size="large"
+                  disabled={disableAll}
+                  className={errors.confirmPassword ? "has-error" : ""}
+                  aria-invalid={!!errors.confirmPassword}
+                  autoComplete="new-password"
+                  style={{ fontFamily: "Poppins" }}
+                />
+                <div className="field-error">{errors.confirmPassword || ""}</div>
+              </div>
             </div>
 
-            <div className="field">
-              <label>Confirm Password</label>
-              <Input.Password name="confirmPassword" placeholder="Confirm Password"
-                              value={registerData.confirmPassword} onChange={handleChange} size="large"
-                              disabled={disableAll} className={errors.confirmPassword ? "has-error" : ""}
-                              aria-invalid={!!errors.confirmPassword} autoComplete="new-password" />
-              <div className="field-error">{errors.confirmPassword || ""}</div>
+            <div className="settings-actions" style={{ marginTop: 12 }}>
+              <Button
+                id="registerBtn"
+                type="primary"
+                size="large"
+                htmlType="submit"
+                className={`register-btn ${successPulse ? "success-pulse" : ""}`}
+                loading={submitting}
+                disabled={submitting || successPulse}
+              >
+                {successPulse ? "WELCOME!" : "REGISTER"}
+              </Button>
             </div>
-          </div>
 
-          <Button
-            id="registerBtn"
-            type="primary"
-            size="large"
-            htmlType="submit"
-            className={`register-btn ${successPulse ? "success-pulse" : ""}`}
-            loading={submitting}
-            disabled={submitting || successPulse}
-          >
-            {successPulse ? "WELCOME!" : "REGISTER"}
-          </Button>
+            <Divider />
 
-          <div className="register-footer">
-            <p className="register-legal">
+            <p className="register-legal" style={{ marginBottom: 0 }}>
               By registering, you confirm that the information provided is accurate and complete.
               You agree to comply with FoundHub’s{" "}
               <a onClick={() => setIsTermsVisible(true)}>Terms &amp; Conditions</a> and acknowledge our{" "}
               <a onClick={() => setIsPrivacyVisible(true)}>Privacy Policy</a>.
             </p>
+          </Card>
+        </Col>
+      </Row>
+    </form>
 
-            
-          </div>
-        </form>
-      </Card>
 
-      <Modal
-        title="Terms and Conditions"
-        open={isTermsVisible}
-        onCancel={() => setIsTermsVisible(false)}
-        footer={null}
-        width={800}
-        centered
-        bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
-      >
-        <p><strong>Effective Date:</strong> October 6, 2025</p>
-        <p>Welcome to FoundHub. By using our Lost and Found service, you agree to these Terms...</p>
-        <ul>
-          <li>Use the service responsibly and provide accurate information.</li>
-          <li>Do not upload illegal, offensive, or false content.</li>
-          <li>Claims are verified by administrators before approval.</li>
-          <li>We are not responsible for lost, damaged, or stolen items.</li>
-        </ul>
-        <p>For questions, contact <b>support@foundhub.com</b>.</p>
-      </Modal>
 
-      <Modal
-        title="Privacy Policy"
-        open={isPrivacyVisible}
-        onCancel={() => setIsPrivacyVisible(false)}
-        footer={null}
-        width={800}
-        centered
-        bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
-      >
-        <p><strong>Effective Date:</strong> October 6, 2025</p>
-        <p>FoundHub values your privacy. This policy explains how we collect, use, and protect your data.</p>
-        <ul>
-          <li>We collect name, contact details, and item information.</li>
-          <li>We use this data to process lost and found reports securely.</li>
-          <li>We do not sell or rent personal information to third parties.</li>
-          <li>You can request data deletion anytime by contacting privacy@foundhub.com.</li>
-        </ul>
-        <p>Your continued use of FoundHub constitutes acceptance of this Privacy Policy.</p>
-      </Modal>
-    </div>
-  );
+
+
+
+                  {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- MGA MODAL =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+    <Modal
+      title="Terms and Conditions"
+      open={isTermsVisible}
+      onCancel={() => setIsTermsVisible(false)}
+      footer={null}
+      width={800}
+      centered
+      bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+    >
+      <p><strong>Effective Date:</strong> October 6, 2025</p>
+      <p>Welcome to FoundHub. By using our Lost and Found service, you agree to these Terms...</p>
+      <ul>
+        <li>Use the service responsibly and provide accurate information.</li>
+        <li>Do not upload illegal, offensive, or false content.</li>
+        <li>Claims are verified by administrators before approval.</li>
+        <li>We are not responsible for lost, damaged, or stolen items.</li>
+      </ul>
+      <p>For questions, contact <b>support@foundhub.com</b>.</p>
+    </Modal>
+
+    <Modal
+      title="Privacy Policy"
+      open={isPrivacyVisible}
+      onCancel={() => setIsPrivacyVisible(false)}
+      footer={null}
+      width={800}
+      centered
+      bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+    >
+      <p><strong>Effective Date:</strong> October 6, 2025</p>
+      <p>FoundHub values your privacy. This policy explains how we collect, use, and protect your data.</p>
+      <ul>
+        <li>We collect name, contact details, and item information.</li>
+        <li>We use this data to process lost and found reports securely.</li>
+        <li>We do not sell or rent personal information to third parties.</li>
+        <li>You can request data deletion anytime by contacting privacy@foundhub.com.</li>
+      </ul>
+      <p>Your continued use of FoundHub constitutes acceptance of this Privacy Policy.</p>
+    </Modal>
+  </div>
+);
+
+
+
 }

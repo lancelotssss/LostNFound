@@ -1,0 +1,61 @@
+/* Make AdminCreate follow the same container rhythm as UserSettings */
+.settings-wrap {
+  width: 100%;
+}
+
+/* Card look & feel reused from settings pages */
+.settings-card {
+  box-shadow: 0 0 5px 1px rgba(0,0,0,0.06);
+  border-radius: 12px;
+}
+
+/* 2-col grid inside a card, responsive to 1-col on small screens */
+.ac-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin-top: 8px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  color: rgba(0,0,0,0.55);
+  margin-bottom: 6px;
+}
+
+.field-error {
+  min-height: 16px;
+  font-size: 12px;
+  color: #cf1322;
+  margin-top: 4px;
+}
+
+.fullwidth { width: 100%; }
+
+/* Reuse the actions alignment from settings */
+.settings-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ac-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .settings-actions {
+    justify-content: stretch;
+  }
+}
+
+/* Optional subtle success pulse you already use */
+.success-pulse {
+  animation: pulse 1s ease-in-out 2;
+}
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
