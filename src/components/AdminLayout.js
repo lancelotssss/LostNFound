@@ -14,13 +14,11 @@ import { Link } from "react-router-dom";
 const { Header, Sider, Content } = AntLayout;
 const { Title } = Typography;
 
-const initials = (name) =>
-  (name || "")
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+const getInitials = (fname = "", lname = "") => {
+      const first = fname?.trim()?.charAt(0) || "";
+      const last = lname?.trim()?.charAt(0) || "";
+      return (first + last).toUpperCase();
+    };
 
 
 
@@ -64,7 +62,7 @@ return (
 
       <Space size="middle" align="center">
         <Title className="goodday" level={5} style={{ margin: 0, textTransform: "uppercase" }}>
-          GOOD DAY, {user?.name || "Admin"}!
+          GOOD DAY, {user?.fname || "Admin"}!
         </Title>
 
         {user?.name ? (
@@ -74,7 +72,7 @@ return (
             onClick={() => navigate("/main/settings")}
             title="Go to Settings"
           >
-            {initials(user.name)}
+            {getInitials(user.fname, user.lname)}
           </Avatar>
         ) : (
           <Avatar

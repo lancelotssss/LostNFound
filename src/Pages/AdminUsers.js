@@ -142,7 +142,7 @@ useEffect(() => {
             style={{ width: 250 }}
             allowClear
           />
-          <Button onClick={fetchData}>Refresh</Button>
+          <Button onClick={() => fetchData(viewRole)}>Refresh</Button>
         </div>
       </div>
 
