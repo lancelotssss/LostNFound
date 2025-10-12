@@ -78,8 +78,54 @@
     grid-template-columns: repeat(2, minmax(120px, 1fr)); 
 }
 
+/* ANIMATION SA STAT */
+.summary-stat {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-radius: 10px;          
+  overflow: hidden;           
+  display: block;              
+}
 
+.summary-stat:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 12px rgba(14, 10, 10, 0.12);
+}
 
+.summary-stat:active {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.18);
+}
+
+.summary-stat:hover .ant-statistic-content-value {
+  transform: scale(1.10); 
+  transition: transform 0.3s ease;
+}
+
+.today-stat {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-radius: 10px;          
+  overflow: visible;           
+  display: block;              
+}
+
+.today-stat:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 12px rgba(14, 10, 10, 0.12);
+}
+
+.today-stat:active {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.18);
+}
+.today-stat .ant-card {
+  overflow: visible !important; 
+}
+
+.today-stat .ant-card-body {
+  overflow: visible !important;
+}
 
 
 

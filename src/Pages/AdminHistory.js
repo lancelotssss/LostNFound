@@ -56,41 +56,40 @@ export const AdminHistory = () => {
 
       const res = await getHistory(token);
       if (res && res.success) {
-        // Format reports
         const formattedReports = (res.reports || [])
-        .filter((item) => item.status?.toLowerCase() !== "deleted")
-        .map((item, index) => ({
-          key: item._id ? item._id.toString() : `r-${index}`,
-          _id: item._id ? item._id.toString() : null,
-          ...item,
-          dateReported: item.dateReported
-            ? new Date(item.dateReported).toLocaleString()
-            : "N/A",
-          dateFound: item.dateFound
-            ? new Date(item.dateFound).toLocaleDateString()
-            : "N/A",
-          approvedBy: item.approvedBy || "No actions yet",
-        }));
+          .filter((item) => item.status?.toLowerCase() !== "deleted")
+          .map((item, index) => ({
+            key: item._id ? item._id.toString() : `r-${index}`,
+            _id: item._id ? item._id.toString() : null,
+            ...item,
+            dateReported: item.dateReported
+              ? new Date(item.dateReported).toLocaleString()
+              : "N/A",
+            dateFound: item.dateFound
+              ? new Date(item.dateFound).toLocaleDateString()
+              : "N/A",
+            approvedBy: item.approvedBy || "No actions yet",
+          }));
 
-        // Format claims
         const formattedClaims = (res.claims || [])
-        .filter((item) => item.claimStatus?.toLowerCase() !== "deleted")
-        .map((item, index) => ({
-          key: item._id ? item._id.toString() : `c-${index}`,
-          _id: item._id ? item._id.toString() : null,
-          ...item,
-          createdAt: item.createdAt
-            ? new Date(item.createdAt).toLocaleString()
-            : "N/A",
-          reviewedAt: item.reviewedAt
-            ? new Date(item.reviewedAt).toLocaleString()
-            : "N/A",
-        }));
+          .filter((item) => item.claimStatus?.toLowerCase() !== "deleted")
+          .map((item, index) => ({
+            key: item._id ? item._id.toString() : `c-${index}`,
+            _id: item._id ? item._id.toString() : null,
+            ...item,
+            createdAt: item.createdAt
+              ? new Date(item.createdAt).toLocaleString()
+              : "No actions yet",
+            reviewedAt: item.reviewedAt
+              ? new Date(item.reviewedAt).toLocaleString()
+              : "No actions yet",
+          }));
 
         setReports(formattedReports);
         setClaims(formattedClaims);
-        setData(formattedReports); // default view
+        setData(view === "Reports" ? formattedReports : formattedClaims);
       }
+      
     } catch (err) {
       console.error("Error fetching history:", err);
     }

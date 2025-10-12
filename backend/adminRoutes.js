@@ -17,22 +17,25 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
 
-    // --- COUNTING BASIC REPORTS ---
+    
     const [
-      reviewFoundCount,
-      reviewLostCount,
-      listedFoundCount,
-      listedLostCount,
+      totalFound,         //lahat ng  found
+      totalAllLost,       //lahat ng  lost
+      listedFoundCount,   //lahat ng found review
+      listedLostCount,    //lahat ng lost review
       reviewClaimsCount,
       claimReturnedCount,
-      totalStorageCount, // all "Listed"
+      totalStorageCount, 
+      totalClaims,
+      reviewLostCount,
+      reviewFoundCount,
     ] = await Promise.all([
       db
         .collection("lost_found_db")
-        .countDocuments({ reportType: "Found", status: "Reviewing" }),
+        .countDocuments({ reportType: "Found", status: { $nin: ["Claim Rejected", "Denied", "Deleted"] }}),
       db
         .collection("lost_found_db")
-        .countDocuments({ reportType: "Lost", status: "Reviewing" }),
+        .countDocuments({ reportType: "Lost", status: { $nin: ["Claim Rejected", "Denied", "Deleted"] } }),
       db
         .collection("lost_found_db")
         .countDocuments({ reportType: "Found", status: "Listed" }),
@@ -42,14 +45,17 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       db.collection("claims_db").countDocuments({ claimStatus: "Claim Approved" }),
       db.collection("claims_db").countDocuments({ claimStatus: "Completed" }),
       db.collection("lost_found_db").countDocuments({ status: "Listed" }),
-    ]);
+      db.collection("claims_db").countDocuments({claimStatus: { $nin: ["Claim Rejected", "Claim Cancelled", "Claim Deleted"]}}),
+      db.collection("lost_found_db").countDocuments({ reportType: "Lost", status: "Reviewing"}),
+      db.collection("lost_found_db").countDocuments({ reportType: "Found", status: "Reviewing"})
+    ])
 
-    // --- RATIO LOST : FOUND ---
+    
     const totalLost = await db
   .collection("lost_found_db")
   .countDocuments({ reportType: "Lost" });
 
-// Count how many of those LOST items were successfully RETURNED
+
 const totalReturned = await db
   .collection("lost_found_db")
   .countDocuments({
@@ -57,12 +63,12 @@ const totalReturned = await db
     status: "Returned",
   });
 
-// Compute return rate (%)
+
 const returnRate = totalLost
   ? `${((totalReturned / totalLost) * 100).toFixed(1)}%`
   : "0%";
 
-    // --- MOST COMMON PLACE LOST ---
+  
     const commonPlaceAgg = await db
       .collection("lost_found_db")
       .aggregate([
@@ -75,7 +81,7 @@ const returnRate = totalLost
     const mostCommonPlace =
       commonPlaceAgg.length > 0 ? commonPlaceAgg[0]._id : "N/A";
 
-    // --- MOST COMMON KEY ITEM LOST ---
+    
     const commonKeyItemAgg = await db
       .collection("lost_found_db")
       .aggregate([
@@ -88,13 +94,13 @@ const returnRate = totalLost
     const mostCommonKeyItem =
       commonKeyItemAgg.length > 0 ? commonKeyItemAgg[0]._id : "N/A";
 
-    // --- WEEKLY REPORT (LAST 7 DAYS) ---
+  
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
     const [returnedThisWeek, receivedFoundThisWeek] = await Promise.all([
-      db.collection("claims_db").countDocuments({
-        claimStatus: "Completed",
+      db.collection("lost_found_db").countDocuments({
+        status: "Returned", reportType: "Found",
         updatedAt: { $gte: oneWeekAgo },
       }),
       db.collection("lost_found_db").countDocuments({
@@ -103,7 +109,7 @@ const returnRate = totalLost
       }),
     ]);
 
-    // --- PIE CHART DATA ---
+    
     const pieData = [
       { name: "Listed Found", value: listedFoundCount },
       { name: "Listed Lost", value: listedLostCount },
@@ -131,18 +137,21 @@ const returnRate = totalLost
     .limit(10)
     .toArray();
 
-    // --- RESPONSE ---
+    
     res.json({
       success: true,
       message: "Dashboard data fetched successfully.",
       statusCounts: {
-        reviewFoundCount,
+        totalFound,
         listedFoundCount,
-        reviewLostCount,
+        totalAllLost,
         listedLostCount,
         reviewClaimsCount,
         claimReturnedCount,
         totalStorageCount,
+        totalClaims,
+        reviewLostCount,
+        reviewFoundCount
       },
       ratios: { returnRate },
       mostCommon: {
@@ -155,12 +164,16 @@ const returnRate = totalLost
       },
       pieChart: pieData,
       totalReports:
-        reviewFoundCount +
-        reviewLostCount +
+        totalFound +
+        totalAllLost +
         listedFoundCount +
         listedLostCount +
         reviewClaimsCount +
+        totalClaims +
+        reviewLostCount +
+        reviewFoundCount +
         claimReturnedCount,
+        
       reportsToday,
       auditLogs,
     });
@@ -439,8 +452,8 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
                 branches: [
                   { case: { $eq: ["$status", "Reviewing"] }, then: 1 },
                   { case: { $eq: ["$status", "Listed"] }, then: 2 },
-                  { case: { $eq: ["$status", "Denied"] }, then: 3 },
-                  { case: { $eq: ["$status", "Returned"] }, then: 4 },
+                  { case: { $eq: ["$status", "Returned"] }, then: 3 },
+                  { case: { $eq: ["$status", "Denied"] }, then: 4 },
                   { case: { $eq: ["$status", "Reviewing Claim"] }, then: 5 },
                   { case: { $eq: ["$status", "Deleted"] }, then: 6 },
                 ],
@@ -449,16 +462,51 @@ adminRoutes.route("/history").get(verifyToken, async (req, res) => {
             },
           },
         },
-        { $sort: { claimStatusOrder: 1, dateLost: 1 } },
+        { $sort: { claimStatusOrder: 1, dateReported: -1 } },
       ])
       .toArray();
 
     // Fetch Claims
     const allClaims = await db
-      .collection("claims_db")
-      .find({})
-      .sort({ createdAt: -1 })
-      .toArray();
+    .collection("claims_db")
+    .aggregate([
+
+      {
+        $addFields: {
+          claimOrder: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$claimStatus", "Reviewing Claim"] }, then: 1 },
+                { case: { $eq: ["$claimStatus", "Claim Approved"] }, then: 2 },
+                { case: { $eq: ["$claimStatus", "Completed"] }, then: 3 },
+                { case: { $eq: ["$claimStatus", "Claim Rejected"] }, then: 4 },
+                { case: { $eq: ["$claimStatus", "Claim Cancelled"] }, then: 5 },
+                { case: { $eq: ["$claimStatus", "Claim Deleted"] }, then: 6 },
+              ],
+              default: 999,
+            },
+          },
+        },
+      },
+
+      {
+        $addFields: {
+          createdAtDate: {
+            $cond: {
+              if: { $eq: [{ $type: "$createdAt" }, "string"] },
+              then: { $toDate: "$createdAt" },
+              else: "$createdAt",
+            },
+          },
+        },
+      },
+
+      
+      {
+        $sort: { claimOrder: 1, createdAt: -1 },
+      },
+    ])
+    .toArray();
 
     res.json({
       success: true,
@@ -851,7 +899,7 @@ adminRoutes.route("/storage").get(verifyToken, async (req, res) => {
 
     const foundReports = await db.collection("lost_found_db")
       .find({ reportType: "Found", status: "Listed" }) 
-      .sort({ dateFound: -1 }) 
+      .sort({ dateReported: -1 }) 
       .toArray();
 
     res.json({ count: foundReports.length, results: foundReports });
