@@ -311,6 +311,7 @@ export default function ReportItem() {
             onChange={handleChange}
             className="field-wide"
             autoComplete="off"
+            style={{fontFamily:"Poppins"}}
           />
         )}
       </div>
@@ -398,6 +399,7 @@ export default function ReportItem() {
           value={registerData.description}
           onChange={handleChange}
           className="field-wide"
+          style={{fontFamily:"Poppins"}}
         />
 
         <Upload

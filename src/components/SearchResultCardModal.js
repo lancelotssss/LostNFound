@@ -343,6 +343,7 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
             <TextArea
               rows={4}
               placeholder="Explain why this matches your lost item..."
+              style={{fontFamily:"Poppins"}}
             />
           </Form.Item>
 

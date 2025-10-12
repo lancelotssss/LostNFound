@@ -53,7 +53,7 @@ function LoginForm() {
         if (response.role === "student") {
           navigate("/cli/home");
         } else if (response.role === "admin") {
-          navigate("/main/found-items");
+          navigate("/main/dashboard");
         }
         else {
           setErrors({ general: "Unknown user role." });
@@ -93,6 +93,7 @@ function LoginForm() {
               name="email"
               value={loginData.email}
               onChange={handleChange}
+              style={{fontFamily:"Poppins"}}
             />
             {errors.email && (
               <div style={{ color: "red", marginTop: 4 }}>{errors.email}</div>
@@ -107,6 +108,7 @@ function LoginForm() {
               name="password"
               value={loginData.password}
               onChange={handleChange}
+              
             />
             {errors.password && (
               <div style={{ color: "red", marginTop: 4 }}>{errors.password}</div>

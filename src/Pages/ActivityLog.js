@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Space, Table, Button, Select, Input } from "antd";
 import { getAuditLogs } from "../api";
+import "./styles/ant-input.css";
 
 const { Column } = Table;
 const { Search } = Input;
@@ -120,6 +121,7 @@ export const ActivityLog = () => {
         />
 
         <Search
+          className="poppins-input"
           placeholder="Search Performed By"
           allowClear
           value={searchText}
@@ -133,10 +135,10 @@ export const ActivityLog = () => {
         pagination={{ pageSize: 8 }}
         rowKey="key"
       >
-        <Column title="Action" dataIndex="action" key="action" />
-        <Column title="Performed By" dataIndex="performedBy" key="performedBy" />
-        <Column title="Timestamp" dataIndex="timestamp" key="timestamp" />
-        <Column title="Details" dataIndex="details" key="details" />
+        <Column title="ACTION" dataIndex="action" key="action" />
+        <Column title="PERFORMED BY" dataIndex="performedBy" key="performedBy" />
+        <Column title="TIME" dataIndex="timestamp" key="timestamp" />
+        <Column title="DETAILS" dataIndex="details" key="details" />
       </Table>
     </>
   );

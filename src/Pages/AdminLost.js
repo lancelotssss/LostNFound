@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography } from "antd";
 import { getLostReport, approveLost } from "../api";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
+
+import "./styles/ant-input.css";
+
 const { Column } = Table;
 const { Option } = Select;
+const { Text } = Typography;
 
 export const AdminLost = () => {
   const [data, setData] = useState([]);
@@ -149,6 +153,7 @@ export const AdminLost = () => {
 
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
       <Input
+        className="poppins-input"
         placeholder="Search by TID, Category, or Key Item"
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
@@ -228,7 +233,9 @@ export const AdminLost = () => {
               </div>
             )}
             <Descriptions bordered column={1} size="middle">
-              <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+              <Descriptions.Item label="TID">
+                <Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.tid}</Text>
+                </Descriptions.Item>
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
@@ -267,7 +274,7 @@ export const AdminLost = () => {
               </Button>
               <Button key="find" onClick={handleRowLostSeeSimilar} disabled={normalizeStatus(selectedItem?.status) !== "listed"}>
                 See similar items
-              </Button>,
+              </Button>
               <Button danger onClick={handleDeny}  disabled={!(selectedItem.status === "Listed" || selectedItem.status === "Reviewing")}>
                 Deny
               </Button>

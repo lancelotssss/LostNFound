@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography } from "antd";
 import { jwtDecode } from "jwt-decode";
 import { getClaimReport, getClaimDetails, approveClaim, completeTransaction } from "../api";
-
+import "./styles/ant-input.css";
 const { Column } = Table;
 const { Option } = Select;
+const { Text } = Typography;
 
 export const AdminClaims = () => {
 
@@ -154,6 +155,7 @@ export const AdminClaims = () => {
        {/* 🔍 Filters (Search + Status Select) */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
         <Input
+          className="poppins-input"
           placeholder="Search by Claim ID or Claimer ID"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
@@ -212,7 +214,9 @@ export const AdminClaims = () => {
               )}
               {details.foundItem ? (
                 <Descriptions bordered column={1} size="middle">
-                  <Descriptions.Item label="TID">{details.foundItem.tid}</Descriptions.Item>
+                  <Descriptions.Item label="TID">
+                   <Text copyable style={{fontFamily:"Poppins"}}> {details.foundItem.tid} </Text>
+                    </Descriptions.Item>
                   <Descriptions.Item label="Title">{details.foundItem.title}</Descriptions.Item>
                   <Descriptions.Item label="Category">{details.foundItem.category}</Descriptions.Item>
                   <Descriptions.Item label="Key Item">{details.foundItem.keyItem}</Descriptions.Item>
@@ -249,7 +253,9 @@ export const AdminClaims = () => {
               )}
               {details.lostItem ? (
                 <Descriptions bordered column={1} size="middle">
-                  <Descriptions.Item label="TID">{details.lostItem.tid}</Descriptions.Item>
+                  <Descriptions.Item label="TID">
+                    <Text copyable style={{fontFamily: "Poppins"}}>{details.lostItem.tid}</Text>
+                    </Descriptions.Item>
                   <Descriptions.Item label="Title">{details.lostItem.title}</Descriptions.Item>
                   <Descriptions.Item label="Category">{details.lostItem.category}</Descriptions.Item>
                   <Descriptions.Item label="Key Item">{details.lostItem.keyItem}</Descriptions.Item>
@@ -305,7 +311,9 @@ export const AdminClaims = () => {
                     </div>
                   )}
                   <Descriptions bordered column={1} size="middle">
-                    <Descriptions.Item label="Claim ID">{details.claim.cid}</Descriptions.Item>
+                    <Descriptions.Item label="Claim ID">
+                      <Text copyable style={{fontFamily:"Poppins"}}>{details.claim.cid}</Text>
+                      </Descriptions.Item>
                     <Descriptions.Item label="Claimer ID">{details.claim.claimerId}</Descriptions.Item>
                     <Descriptions.Item label="Claim Status">{details.claim.claimStatus}</Descriptions.Item>
                     <Descriptions.Item label="Reason">{details.claim.reason}</Descriptions.Item>

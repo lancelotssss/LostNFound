@@ -169,11 +169,11 @@ return (
           </Card>
 
           <Card
-            title={<TitleWithIcon icon={EnvironmentOutlined} text="Most Common Lost Place" />}
+            title={<TitleWithIcon icon={EnvironmentOutlined} text="Most Common Lost Location" />}
             className="tile-card"
           >
             <div className="stat-grid stat-grid-1">
-              <Statistic title="Place" value={mostCommon?.place ?? "—"} />
+              <Statistic title="Location" value={mostCommon?.place ?? "—"} />
             </div>
           </Card>
 

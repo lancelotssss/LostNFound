@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { deleteUser, editPasswordClient } from "../api";
+import {editPasswordClient } from "../api";
 
 import {
   Card,
@@ -134,6 +134,7 @@ const loadUserFromToken = () => {
   }
 };
 
+/*
   const handleDeleteUser = async () => {
     if (!window.confirm("Are you sure you want to delete your account?")) return;
  
@@ -155,7 +156,7 @@ const loadUserFromToken = () => {
       alert("Error deleting user");
     }
   };
-
+*/
   const joined = user?.createdAt
     ? new Date(user.createdAt)
         .toLocaleString("en-US", {
@@ -207,9 +208,7 @@ const loadUserFromToken = () => {
             </Space>
 
             <Divider />
-              <Button type="default" onClick={handleDeleteUser}>
-                Delete Account
-            </Button>
+              
             
             <Descriptions column={1} size="middle" labelStyle={{ width: 140 }}>
               <Descriptions.Item label="Student ID">
@@ -251,6 +250,7 @@ const loadUserFromToken = () => {
                 placeholder="Old Password"
                 disabled={!isPasswordEditing}
                 className="settings-input"
+                style={{fontFamily:"Poppins"}}
               />
 
               <label className="settings-label" htmlFor="newPassword">
@@ -264,6 +264,7 @@ const loadUserFromToken = () => {
                 placeholder="New Password"
                 disabled={!isPasswordEditing}
                 className="settings-input"
+                style={{fontFamily:"Poppins"}}
               />
 
               <label className="settings-label" htmlFor="confirmPassword">
@@ -277,6 +278,7 @@ const loadUserFromToken = () => {
                 placeholder="Confirm New Password"
                 disabled={!isPasswordEditing}
                 className="settings-input"
+                style={{fontFamily:"Poppins"}}
               />
 
               <div className="settings-actions">
