@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select   } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography  } from "antd";
 import { getHistory, deleteHistory, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
+import "./styles/ant-input.css";
 
 const { Column } = Table;
 const { Option } = Select;
+const { Text } = Typography;
 
 export const AdminHistory = () => {
   const [data, setData] = useState([]);
@@ -149,6 +151,7 @@ const filteredData = data.filter((item) => {
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
   <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
   <Input
+    className="poppins-input"
     placeholder="Search by TID, Category, or Key Item"
     value={searchText}
     onChange={(e) => setSearchText(e.target.value)}
@@ -243,7 +246,8 @@ const filteredData = data.filter((item) => {
         {selectedItem.reportType === "Found" ? (
           
           <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+            <Descriptions.Item label="TID">
+              <Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.tid}</Text></Descriptions.Item>
             <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
             <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
             <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
@@ -259,7 +263,7 @@ const filteredData = data.filter((item) => {
         ) : (
           
           <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+            <Descriptions.Item label="TID"><Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.tid}</Text></Descriptions.Item>
             <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
             <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
             <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>

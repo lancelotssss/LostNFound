@@ -1166,7 +1166,7 @@ adminRoutes.route("/admin").post(async (req, res) => {
     const hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
 
     const mongoObject = {
-      sid: `A-${Date.now()}`,
+      sid: `S-${Date.now()}`,
       role: "admin",
       name: req.body.name || "Unknown",
       email: req.body.email || "unknown@example.com",

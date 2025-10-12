@@ -81,8 +81,17 @@ html, body, #root {
   font-size: 12px; color: #ff4d4f; line-height: 16px;
 }
 
+input::placeholder {
+  font-family: "Poppins", sans-serif;
+}
+
+.ant-input,
+.ant-input-password input {
+  font-family: "Poppins", sans-serif !important;
+}
 /* _________________________ VALIDATION NG MGA ERRORZZZZ_________________________ */
 .has-error{ border-color: #ff4d4f !important; box-shadow: 0 0 0 2px rgba(255,77,79,0.1) !important; }
+
 .has-error-select .ant-select-selector{ border-color: #ff4d4f !important; box-shadow: 0 0 0 2px rgba(255,77,79,0.1) !important; }
 
 /* /* _________________________ BUTTON _________________________ */ */

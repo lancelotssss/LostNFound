@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Form, Upload } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Form, Upload, Typography } from "antd";
 import { getStorage, approveFound, approveStorage } from "../api";
 import { jwtDecode } from "jwt-decode";
 import { UploadOutlined } from "@ant-design/icons";
+import "./styles/ant-input.css";
 
 const { TextArea } = Input;
 const { Column } = Table;
+const { Text } = Typography;
 
 export const AdminStorage = () => {
   const [data, setData] = useState([]);
@@ -155,6 +157,7 @@ export const AdminStorage = () => {
 
         
         <Input
+          className="poppins-input"
           placeholder="Search by TID, Key Item, or Brand"
           allowClear
           style={{ width: 300 }}
@@ -198,7 +201,9 @@ export const AdminStorage = () => {
               </div>
             )}
             <Descriptions bordered column={1} size="middle">
-              <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+              <Descriptions.Item label="TID">
+                <Text copyable style={{fontFamily:"Poppins"}}>{selectedItem.tid}</Text>
+                </Descriptions.Item>  
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>

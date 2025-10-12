@@ -317,6 +317,7 @@ export const AdminReport = () => {
             onChange={handleChange}
             className="field-wide"
             autoComplete="off"
+            style={{fontFamily:"Poppins"}}
           />
         )}
       </div>
@@ -404,6 +405,7 @@ const StepFive = (
         value={registerData.description}
         onChange={handleChange}
         className="field-wide"
+        style={{fontFamily:"Poppins"}}
       />
 
       <Upload
