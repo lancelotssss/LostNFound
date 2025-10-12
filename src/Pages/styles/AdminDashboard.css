@@ -145,14 +145,6 @@
 }
 
 
-
-
-
-
-
-
-
-
 /* ICONS <--------- */
 .stat-title{
   display: inline-flex;
@@ -167,4 +159,29 @@
 .ant-card-head-title{
   display: flex;
   align-items: center;
+}
+
+/* TABLE <----------- */
+.today-activity {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .today-activity {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.today-activity .tile-card {
+  border-top: 8px solid #ffff0079 !important;
+  box-shadow: 0 0 5px 1px rgba(0, 0, 0, 0.1);
+  height: auto;
+}
+
+.today-activity .ant-card-body {
+  padding: 16px;
 }

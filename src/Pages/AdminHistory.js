@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography  } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag  } from "antd";
 import { getHistory, deleteHistory, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
 import "./styles/ant-input.css";
@@ -139,7 +139,22 @@ const filteredData = data.filter((item) => {
 });
 
 
-
+const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    "claim approved": "blue",
+    completed: "green",
+  };
 
   return (
     <>
@@ -201,7 +216,14 @@ const filteredData = data.filter((item) => {
       >
         <Column title="TITLE" dataIndex="title" key="title" />
         <Column title="REPORT TYPE" dataIndex="reportType" key="reportType" />
-        <Column title="STATUS" dataIndex="status" key="status" />
+        <Column title="STATUS" dataIndex="status" key="status" render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}/>
         <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
         <Column title="APPROVED BY" dataIndex="approvedBy" key="approvedBy" />
         <Column

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag } from "antd";
 import { getLostReport, approveLost } from "../api";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -145,6 +145,23 @@ export const AdminLost = () => {
     return matchesSearch && matchesStatus;
   });
 
+const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    "claim approved": "blue",
+    completed: "green",
+  };
+
   return (
     <>
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
@@ -191,7 +208,14 @@ export const AdminLost = () => {
         <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
         <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
         <Column title="LOCATION" dataIndex="location" key="location" />
-        <Column title="Status" dataIndex="status" key="status" />
+        <Column title="Status" dataIndex="status" key="status" render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}/>
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
         <Column
           title="DATE RANGE"

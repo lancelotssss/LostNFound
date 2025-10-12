@@ -102,6 +102,28 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       { name: "Listed Lost", value: listedLostCount },
     ];
 
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const reportsToday = await db.collection("lost_found_db").find({
+      dateReported: { $gte: startOfDay, $lte: endOfDay },
+    })
+    .sort({ dateReported: -1 })
+    .toArray();
+
+    
+    const currentAdmin = req.user?.studentId || req.user?.email || req.user?.name;
+
+    const auditLogs = await db.collection("audit_db").find({
+      performedBy: currentAdmin,
+    })
+    .sort({ timestamp: -1 })
+    .limit(10)
+    .toArray();
+
     // --- RESPONSE ---
     res.json({
       success: true,
@@ -115,9 +137,7 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
         claimReturnedCount,
         totalStorageCount,
       },
-      ratios: {
-        lostToFoundRatio,
-      },
+      ratios: { lostToFoundRatio },
       mostCommon: {
         place: mostCommonPlace,
         keyItem: mostCommonKeyItem,
@@ -134,6 +154,8 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
         listedLostCount +
         reviewClaimsCount +
         claimReturnedCount,
+      reportsToday,
+      auditLogs,
     });
   } catch (err) {
     console.error("Error fetching dashboard data:", err);

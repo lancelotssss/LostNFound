@@ -1,6 +1,5 @@
-// src/Pages/AdminDashboard.js
-import React, { useEffect, useState } from "react";
-import { Card, message, Statistic, Divider, Typography, Spin } from "antd";
+import { useEffect, useState } from "react";
+import { Card, message, Statistic, Divider, Tag, Spin, Table } from "antd";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -69,7 +68,23 @@ export const AdminDashboard = () => {
 
 
 
-
+const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    // 🟢 NEW CLAIM STATUS COLORS
+    "claim approved": "blue",
+    completed: "green",
+  };
 
 return (
   <>
@@ -224,6 +239,81 @@ return (
 
 
       </div> {/* END NG DASH COL 2 ---------------------------------------------------------------------------------------------- */}
+      <Divider />
+      <h2 className="overview-admin">TODAY’S ACTIVITY</h2>
+
+      <div className="today-activity">
+      {/* LEFT: Reports Filed Today */}
+      <Card
+        title="Reports Filed Today"
+        className="tile-card"
+        style={{ flex: 1, marginRight: "10px" }}
+      >
+        <Table
+          dataSource={data.reportsToday || []}
+          rowKey={(record, index) => index}
+          pagination={false}
+          bordered
+          size="small"
+          scroll={{ y: 250 }}
+        >
+          <Table.Column title="TITLE" dataIndex="title" key="title" />
+          <Table.Column title="TYPE" dataIndex="reportType" key="reportType" />
+          <Table.Column
+            title="STATUS"
+            dataIndex="status"
+            key="status"
+            render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}
+          />
+        </Table>
+      </Card>
+
+      {/* RIGHT: Audit Logs */}
+      <Card
+        title="Your Audit Logs"
+        className="tile-card"
+        style={{ flex: 1, marginLeft: "10px" }}
+      >
+        <Table
+          dataSource={data.auditLogs || []}
+          rowKey={(record, index) => index}
+          pagination={false}
+          bordered
+          size="small"
+          scroll={{ y: 250 }}
+        >
+          <Table.Column title="ACTION" dataIndex="action" key="action" />
+          <Table.Column
+            title="TIMESTAMP"
+            dataIndex="timestamp"
+            key="timestamp"
+            render={(value) => {
+              if (!value) return "—";
+              const date = new Date(value);
+              return date.toLocaleString(undefined, {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              });
+            }}
+          />
+          <Table.Column title="DETAILS" dataIndex="details" key="details" />
+        </Table>
+      </Card>
+    </div>
+
+
+
     </div> {/* END NG card-container ---------------------------------------------------------------------------------------------- */}
   </>
 );

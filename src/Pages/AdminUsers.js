@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Typography } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Typography, Tag } from "antd";
 import { getUsers, updateUser } from "../api";
 import { jwtDecode } from "jwt-decode";
 import "./styles/ant-input.css";
@@ -108,6 +108,11 @@ useEffect(() => {
     );
   });
 
+  const STATUS_COLORS = {
+    suspended: "volcano",
+    active: "green"
+  };
+
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
@@ -161,9 +166,14 @@ useEffect(() => {
           title="STATUS"
           dataIndex="status"
           key="status"
-          render={(status) =>
-            status ? status.charAt(0).toUpperCase() + status.slice(1) : ""
-          }
+          render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}
         />
         <Column
           title="ROLE"

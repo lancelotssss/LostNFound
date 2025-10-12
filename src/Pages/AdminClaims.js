@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag } from "antd";
 import { jwtDecode } from "jwt-decode";
 import { getClaimReport, getClaimDetails, approveClaim, completeTransaction } from "../api";
 import "./styles/ant-input.css";
@@ -145,6 +145,23 @@ export const AdminClaims = () => {
     return matchSearch && matchStatus;
   });
 
+  const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    "claim approved": "blue",
+    completed: "green",
+  };
+
   //-----------------------------------DO NOT DELETE-------------------------------
 
   return (
@@ -187,7 +204,14 @@ export const AdminClaims = () => {
       >
         <Column title="CLAIM ID" dataIndex="cid" key="cid" />
         <Column title="CLAIMER ID" dataIndex="claimerId" key="claimerId" />
-        <Column title="CLAIM STATUS" dataIndex="claimStatus" key="claimStatus" />
+        <Column title="CLAIM STATUS" dataIndex="claimStatus" key="claimStatus" render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}/>
         <Column title="CREATED AT" dataIndex="createdAt" key="createdAt" />
         <Column title="ADMIN DECISION BY" dataIndex="adminDecisionBy" key="adminDecisionBy" />
       </Table>

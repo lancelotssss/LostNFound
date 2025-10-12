@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Form, Upload, Typography } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Form, Upload, Typography, Tag } from "antd";
 import { getStorage, approveFound, approveStorage } from "../api";
 import { jwtDecode } from "jwt-decode";
 import { UploadOutlined } from "@ant-design/icons";
@@ -150,6 +150,23 @@ export const AdminStorage = () => {
     }
   };
 
+  const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    "claim approved": "blue",
+    completed: "green",
+  };
+
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
@@ -178,7 +195,14 @@ export const AdminStorage = () => {
         <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
         <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
         <Column title="LOCATION" dataIndex="location" key="location" />
-        <Column title="STATUS" dataIndex="status" key="status" />
+        <Column title="STATUS" dataIndex="status" key="status" render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}/>
         <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
         <Column title="DATE FOUND" dataIndex="dateFound" key="dateFound" />
       </Table>

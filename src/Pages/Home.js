@@ -96,7 +96,6 @@ export const Home = () => {
     returned: "green",
     "reviewing claim": "orange",
     "claim rejected": "volcano",
-    // 🟢 NEW CLAIM STATUS COLORS
     "claim approved": "blue",
     completed: "green",
   };
@@ -578,7 +577,14 @@ const handleCancel = async (id, type) => {
             title="STATUS"
             dataIndex="status"
             key="status"
-            render={(status) => <StatusTag status={status} />}
+            render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}
           />
           <Column
             title="DATE REPORTED"
@@ -620,7 +626,14 @@ const handleCancel = async (id, type) => {
             title="STATUS"
             dataIndex="status"
             key="status"
-            render={(status) => <StatusTag status={status} />}
+            render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}
           />
           <Column
             title="DATE REPORTED"
@@ -656,7 +669,14 @@ const handleCancel = async (id, type) => {
             title="CLAIM STATUS"
             dataIndex="claimStatus"
             key="claimStatus"
-            render={(status) => <StatusTag status={status} />}
+            render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}
           />
           <Column
             title="UPDATED AT"
