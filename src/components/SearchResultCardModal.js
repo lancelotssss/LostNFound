@@ -1,4 +1,3 @@
-// src/components/SearchResultCardModal.jsx
 import { useEffect, useState } from "react";
 import {
   Card,
