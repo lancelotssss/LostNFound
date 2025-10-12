@@ -1,38 +1,32 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import {
-  AppstoreOutlined,
-  MailOutlined,
-  LogoutOutlined,
-  SearchOutlined,
-  FileSearchOutlined,
-} from "@ant-design/icons";
+import { AppstoreOutlined, MailOutlined, LogoutOutlined, SearchOutlined, FileSearchOutlined, HistoryOutlined, DatabaseOutlined, FormOutlined, InboxOutlined,
+  DashboardOutlined, FileProtectOutlined, TeamOutlined, UserAddOutlined, FileTextOutlined, SettingOutlined } from "@ant-design/icons";
 import { Menu, Button, Modal } from "antd";
 import { logOutUser } from "../api";
 import "../../src/Pages/styles/NavBar.css";
 
 const pageDataAdmin = [
-  { key: "dashboard", name: "Dashboard", path: "/main/dashboard", icon: <AppstoreOutlined /> },
+  { key: "dashboard", name: "Dashboard", path: "/main/dashboard", icon: <DashboardOutlined /> },
 
-  // MGA CHILDREN
-  { key: "review-found",   group: "review", name: "Review Found Items", path: "/main/found-items" },
-  { key: "review-lost",    group: "review", name: "Review Lost Items",  path: "/main/lost-items" },
-  { key: "review-claims",  group: "review", name: "Review Claims",      path: "/main/claim-items" },
+  // MGA CHILDREN TO
+  { key: "review-found",  group: "review", name: "Review Found Items", path: "/main/found-items", icon: <InboxOutlined /> },
+  { key: "review-lost",   group: "review", name: "Review Lost Items",  path: "/main/lost-items", icon: <SearchOutlined /> },
+  { key: "review-claims", group: "review", name: "Review Claims",      path: "/main/claim-items", icon: <FileProtectOutlined /> },
 
-  
-  { key: "report",    name: "Report Item",   path: "/main/report" },
+  // Main
+  { key: "report",   name: "Report Item",  path: "/main/report",  icon: <FormOutlined /> },
+  { key: "storage",  name: "Storage",      path: "/main/storage", icon: <DatabaseOutlined /> },
+  { key: "history",  name: "History",      path: "/main/history", icon: <HistoryOutlined /> },
 
-  { key: "storage",   name: "Storage",       path: "/main/storage" },
-  { key: "history",   name: "History",       path: "/main/history" },
+  // Accounts group
+  { key: "users",     group: "accounts", name: "Accounts",     path: "/main/users", icon: <TeamOutlined /> },
+  { key: "createadm", group: "accounts", name: "Create Admin", path: "/main/admin", icon: <UserAddOutlined /> },
 
-  { key: "users",     group: "accounts", name: "Accounts",     path: "/main/users" },
-  { key: "createadm", group: "accounts", name: "Create Admin", path: "/main/admin" },
+  { key: "logs",     name: "Activity Logs", path: "/main/logs", icon: <FileTextOutlined /> },
+  { key: "settings", name: "User Settings", path: "/main/settings", icon: <SettingOutlined /> },
 
-  { key: "logs",      name: "Activity Logs", path: "/main/logs" },
-  { key: "settings",  name: "User Settings", path: "/main/settings" },
-
-  // LOGOUT aaaaa
-  { key: "logout",    name: "Logout" }, 
+  { key: "logout",   name: "Logout", icon: <LogoutOutlined /> },
 ];
 
 export function NavBarAdmin() {
@@ -42,24 +36,26 @@ export function NavBarAdmin() {
 
 
   const reviewChildren = useMemo(
-    () =>
-      pageDataAdmin
-        .filter((p) => p.group === "review")
-        .map((p) => ({
-          key: p.key,
-          icon: <FileSearchOutlined />,
-          label: <Link to={p.path}>{p.name}</Link>,
-          path: p.path,
-        })),
-    []
-  );
-  const accountChildren = useMemo(
+  () =>
+    pageDataAdmin
+      .filter((p) => p.group === "review")
+      .map((p) => ({
+        key: p.key,
+        icon: p.icon, 
+        label: <Link to={p.path}>{p.name}</Link>,
+        path: p.path,
+      })),
+  []
+);
+
+// --- ACCOUNT SUBMENU ---
+const accountChildren = useMemo(
   () =>
     pageDataAdmin
       .filter((p) => p.group === "accounts")
       .map((p) => ({
         key: p.key,
-        icon: <MailOutlined />,
+        icon: p.icon, 
         label: <Link to={p.path}>{p.name}</Link>,
         path: p.path,
       })),
