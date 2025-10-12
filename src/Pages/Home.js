@@ -55,6 +55,8 @@ export const Home = () => {
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [isClaimModalVisible, setIsClaimModalVisible] = useState(false);
   const [claimDetails, setClaimDetails] = useState(null);
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+
 
   // SORT ORDERS (friend’s logic)
   const foundStatusOrder = [
@@ -96,7 +98,6 @@ export const Home = () => {
     returned: "green",
     "reviewing claim": "orange",
     "claim rejected": "volcano",
-    // 🟢 NEW CLAIM STATUS COLORS
     "claim approved": "blue",
     completed: "green",
   };
@@ -578,7 +579,14 @@ const handleCancel = async (id, type) => {
             title="STATUS"
             dataIndex="status"
             key="status"
-            render={(status) => <StatusTag status={status} />}
+            render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}
           />
           <Column
             title="DATE REPORTED"
@@ -620,7 +628,14 @@ const handleCancel = async (id, type) => {
             title="STATUS"
             dataIndex="status"
             key="status"
-            render={(status) => <StatusTag status={status} />}
+            render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}
           />
           <Column
             title="DATE REPORTED"
@@ -656,7 +671,14 @@ const handleCancel = async (id, type) => {
             title="CLAIM STATUS"
             dataIndex="claimStatus"
             key="claimStatus"
-            render={(status) => <StatusTag status={status} />}
+            render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}
           />
           <Column
             title="UPDATED AT"
@@ -918,43 +940,62 @@ const handleCancel = async (id, type) => {
         open={isClaimModalVisible}
         onCancel={handleClaimModalClose}
         footer={[<Button key="close" onClick={handleClaimModalClose}>Close</Button>, 
-        <Button key="delete" danger
-                onClick={() => selectedClaim?._id && handleDeleted(selectedClaim._id)}
-                disabled={normalizeStatus(selectedClaim?.claimStatus) === "completed" || normalizeStatus(selectedClaim?.claimStatus) === "claim approved"}>
-        Delete</Button>, <Button
-  type="primary"
-  danger
-  disabled={
-    selectedClaim?.claimStatus?.toLowerCase() === "completed" ||
-    selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled" ||
-    selectedClaim?.claimStatus?.toLowerCase() === "claim rejected"
-  }
-  onClick={() => handleCancel(selectedClaim?._id)}
->
-  {selectedClaim?.claimStatus?.toLowerCase() === "completed" 
-    ? "Completed"
-    : selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled"
-    ? "Cancelled"
-    : "Cancel Claim"}
-</Button>]}
-        
-        width={isMobile ? "95%" : 1200}
-        maskClosable={false}
-        className="modal-claim"
-        closable={false}
-        styles={{ body: { padding: 16 } }}
-      >
-{claimDetails ? (
-  <div className="claim-details-grid">
-    {/* ======= Transaction No. (FULL WIDTH, ON TOP) ======= */}
-    <div className="h1h2container">
-      <h1 className="claim-details-grid-h1">CLAIM TRANSACTION NO.</h1>
-      <h2 className="claim-details-grid-h2">
-        <Text className="claim-details-grid-h2-Text" copyable>
-          {claimDetails.claim.cid}
-        </Text>
-      </h2>
-    </div>
+        <Popconfirm
+            key="delete-confirm"
+            title="Are you sure you want to delete this claim?"
+            okText="Yes, delete"
+            cancelText="Cancel"
+            onConfirm={() =>
+              selectedClaim?._id && handleDeleted(selectedClaim._id)
+            }
+            placement="topRight"
+          >
+            <Button
+              key="delete"
+              danger
+              disabled={
+                normalizeStatus(selectedClaim?.claimStatus) === "completed" ||
+                normalizeStatus(selectedClaim?.claimStatus) === "claim approved"
+              }
+            >
+              Delete
+            </Button>
+          </Popconfirm>, 
+        <Button
+            type="primary"
+            danger
+            key="cancel"
+            disabled={
+              selectedClaim?.claimStatus?.toLowerCase() === "completed" ||
+              selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled" ||
+              selectedClaim?.claimStatus?.toLowerCase() === "claim rejected"
+            }
+            onClick={() => setIsCancelModalVisible(true)}
+          >
+            {selectedClaim?.claimStatus?.toLowerCase() === "completed"
+              ? "Completed"
+              : selectedClaim?.claimStatus?.toLowerCase() === "claim cancelled"
+              ? "Cancelled"
+              : "Cancel Claim"}
+          </Button>]}
+                
+                width={isMobile ? "95%" : 1200}
+                maskClosable={false}
+                className="modal-claim"
+                closable={false}
+                styles={{ body: { padding: 16 } }}
+          >
+        {claimDetails ? (
+          <div className="claim-details-grid">
+            {/* ======= Transaction No. (FULL WIDTH, ON TOP) ======= */}
+            <div className="h1h2container">
+              <h1 className="claim-details-grid-h1">CLAIM TRANSACTION NO.</h1>
+              <h2 className="claim-details-grid-h2">
+                <Text className="claim-details-grid-h2-Text" copyable>
+                  {claimDetails.claim.cid}
+                </Text>
+              </h2>
+            </div>
 
     {/* ======= Three columns below (Found | Lost | Claim Info) ======= */}
     <Row gutter={[16, 16]} className="claim-3col" wrap>
@@ -1191,9 +1232,35 @@ const handleCancel = async (id, type) => {
 ) : (
   <p className="muted">No claim details available.</p>
 )}
-
       </Modal>
 
+      <Modal
+          title="Confirm Cancellation"
+          open={isCancelModalVisible}
+          onCancel={() => setIsCancelModalVisible(false)}
+          footer={[
+            <Button key="no" onClick={() => setIsCancelModalVisible(false)}>
+              No, keep claim
+            </Button>,
+            <Button
+              key="yes"
+              type="primary"
+              danger
+              onClick={async () => {
+                if (selectedClaim?._id) {
+                  await handleCancel(selectedClaim._id);
+                }
+                setIsCancelModalVisible(false);
+              }}
+            >
+              Yes, cancel claim
+            </Button>,
+          ]}
+          centered
+          maskClosable={false}
+        >
+          <p>Are you sure you want to cancel this claim? This action cannot be undone.</p>
+        </Modal>
     </div>
   );
 };

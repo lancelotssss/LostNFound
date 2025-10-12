@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Form, Upload } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Form, Upload, Typography, Tag } from "antd";
 import { getStorage, approveFound, approveStorage } from "../api";
 import { jwtDecode } from "jwt-decode";
 import { UploadOutlined } from "@ant-design/icons";
+import "./styles/ant-input.css";
 
 const { TextArea } = Input;
 const { Column } = Table;
+const { Text } = Typography;
 
 export const AdminStorage = () => {
   const [data, setData] = useState([]);
@@ -148,6 +150,23 @@ export const AdminStorage = () => {
     }
   };
 
+  const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    "claim approved": "blue",
+    completed: "green",
+  };
+
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
@@ -155,6 +174,7 @@ export const AdminStorage = () => {
 
         
         <Input
+          className="poppins-input"
           placeholder="Search by TID, Key Item, or Brand"
           allowClear
           style={{ width: 300 }}
@@ -175,7 +195,14 @@ export const AdminStorage = () => {
         <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
         <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
         <Column title="LOCATION" dataIndex="location" key="location" />
-        <Column title="STATUS" dataIndex="status" key="status" />
+        <Column title="STATUS" dataIndex="status" key="status" render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}/>
         <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
         <Column title="DATE FOUND" dataIndex="dateFound" key="dateFound" />
       </Table>
@@ -198,7 +225,9 @@ export const AdminStorage = () => {
               </div>
             )}
             <Descriptions bordered column={1} size="middle">
-              <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+              <Descriptions.Item label="TID">
+                <Text copyable style={{fontFamily:"Poppins"}}>{selectedItem.tid}</Text>
+                </Descriptions.Item>  
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createAdmin } from "../api";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   Input,
@@ -12,10 +12,12 @@ import {
   Modal,
   Spin,
   Alert,
+  DatePicker
 } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import "./styles/RegisterPage.css";
 import {jwtDecode}  from "jwt-decode";
+import dayjs from "dayjs";
 
 const { Title } = Typography;
 
@@ -183,9 +185,9 @@ export const  AdminCreate = () => {
       <Card className={`register-card ${successPulse ? "card-success-pulse" : ""}`}>
         <div className="register-header">
           <Image src="/assets/kit.png" alt="Toolbox" width={55} preview={false} className="register-header__icon" />
-          <Title level={5} className="register-header__title">CREATE YOUR ACCOUNT</Title>
+          <Title level={5} className="register-header__title">CREATE A NEW ADMIN</Title>
           <p className="register-header__desc">
-            Create your FoundHub account to report lost items, post found items, and claim matches.
+            Register your FoundHub Admin account to monitor lost and found reports, manage users, and ensure smooth platform operations.
           </p>
         </div>
 
@@ -201,14 +203,16 @@ export const  AdminCreate = () => {
               <label>First Name</label>
               <Input name="fname" placeholder="First Name" value={registerData.fname}
                      onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.fname ? "has-error" : ""} aria-invalid={!!errors.fname} />
+                     className={errors.fname ? "has-error" : ""} aria-invalid={!!errors.fname}
+                     style={{fontFamily:"Poppins"}} />
               <div className="field-error">{errors.fname || ""}</div>
             </div>
 
             <div className="field">
               <label>Middle Name</label>
               <Input name="mname" placeholder="Middle Name" value={registerData.mname}
-                     onChange={handleChange} size="large" disabled={disableAll} />
+                     onChange={handleChange} size="large" disabled={disableAll} 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error"></div>
             </div>
 
@@ -216,14 +220,16 @@ export const  AdminCreate = () => {
               <label>Last Name</label>
               <Input name="lname" placeholder="Last Name" value={registerData.lname}
                      onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.lname ? "has-error" : ""} aria-invalid={!!errors.lname} />
+                     className={errors.lname ? "has-error" : ""} aria-invalid={!!errors.lname} 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error">{errors.lname || ""}</div>
             </div>
 
             <div className="field">
               <label>Suffix</label>
               <Input name="suffix" placeholder="Jr., Sr., III" value={registerData.suffix}
-                     onChange={handleChange} size="large" disabled={disableAll} />
+                     onChange={handleChange} size="large" disabled={disableAll} 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error"></div>
             </div>
           </div>
@@ -235,7 +241,8 @@ export const  AdminCreate = () => {
               <label>Email</label>
               <Input name="email" type="email" placeholder="email@example.com" value={registerData.email}
                      onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.email ? "has-error" : ""} aria-invalid={!!errors.email} autoComplete="email" />
+                     className={errors.email ? "has-error" : ""} aria-invalid={!!errors.email} autoComplete="email" 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error">{errors.email || ""}</div>
             </div>
 
@@ -243,7 +250,8 @@ export const  AdminCreate = () => {
               <label>Phone</label>
               <Input name="phone" placeholder="09xxxxxxxxx or +639xxxxxxxxx" value={registerData.phone}
                      onChange={handlePhoneChange} size="large" disabled={disableAll}
-                     className={errors.phone ? "has-error" : ""} aria-invalid={!!errors.phone} inputMode="numeric" />
+                     className={errors.phone ? "has-error" : ""} aria-invalid={!!errors.phone} inputMode="numeric" 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error">{errors.phone || ""}</div>
             </div>
 
@@ -251,16 +259,39 @@ export const  AdminCreate = () => {
               <label>Employee ID</label>
               <Input name="studentId" placeholder="Employee ID" value={registerData.studentId}
                      onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.studentId ? "has-error" : ""} aria-invalid={!!errors.studentId} />
+                     className={errors.studentId ? "has-error" : ""} aria-invalid={!!errors.studentId} 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error">{errors.studentId || ""}</div>
             </div>
 
             <div className="field">
-              <label>Birthday</label>
-              <Input name="birthday" type="date" value={registerData.birthday}
-                     onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.birthday ? "has-error" : ""} aria-invalid={!!errors.birthday} />
-              <div className="field-error">{errors.birthday || ""}</div>
+              <label>Birthdate</label>
+              <DatePicker
+                name="birthday"
+                value={registerData.birthday ? dayjs(registerData.birthday) : null}
+                onChange={(date) =>
+                  handleChange({
+                    target: {
+                      name: "birthday",
+                      value: date ? date.format("YYYY-MM-DD") : "",
+                    },
+                  })
+                }
+                size="large"
+                disabled={disableAll}
+                className={errors.birthday ? "has-error" : ""}
+                aria-invalid={!!errors.birthday}
+                style={{ width: "100%", fontFamily: "Poppins" }}
+                placeholder="Select your birthdate"
+                format="YYYY-MM-DD"
+                
+                disabledDate={(current) => current && current.isAfter(dayjs())}
+                showToday={false}
+                defaultPickerValue={dayjs("2005-01-01")}
+              />
+              <div className="field-error" style={{ fontFamily: "Poppins" }}>
+                {errors.birthday || ""}
+              </div>
             </div>
           </div>
 
@@ -295,7 +326,7 @@ export const  AdminCreate = () => {
               <Input.Password name="password" placeholder="Password" value={registerData.password}
                               onChange={handleChange} size="large" disabled={disableAll}
                               className={errors.password ? "has-error" : ""} aria-invalid={!!errors.password}
-                              autoComplete="new-password" />
+                              autoComplete="new-password" style={{fontFamily:"Poppins"}}/>
               <div className="field-error">{errors.password || ""}</div>
             </div>
 

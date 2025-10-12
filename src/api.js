@@ -72,17 +72,6 @@ export async function deleteReport(id, token) {
   }
 }
 
-export async function deleteHistory(token) {
-  try {
-    const response = await axios.delete(`${URL}/main/history/delete`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error deleting report:", error);
-    return { success: false };
-  }
-}
 
 export async function getClaimDetailsClient(token, itemId) {
   const response = await axios.get(`${URL}/cli/claim-items/${itemId}`, {
@@ -163,6 +152,21 @@ export async function getSearchReport(report, token) {
   }
 }
   
+export async function getAdminSearchReport(report, token) {
+  try {
+    const response = await axios.post(`${URL}/main/search/item`, report, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error fetching search: ", err.response?.data || err.message);
+    return { success: false, results: [] };
+  }
+}
+
 
 export async function createClaim(formData, token) {
   try {
@@ -301,6 +305,18 @@ export async function getHistory(token) {
   }
 }
 
+export async function deleteHistory(token) {
+  try {
+    const response = await axios.delete(`${URL}/main/history/delete`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting report:", error);
+    return { success: false };
+  }
+}
+
 export async function editAdmin(data, token) {
   try {
     const response = await axios.put(`${URL}/main/settings/edit`, data, {
@@ -385,6 +401,18 @@ export async function completeTransaction(token, claimId, status, approvedBy) {
     return response.data;
   } catch (err) {
     console.error("Error approving claim:", err);
+    return { success: false };
+  }
+}
+
+export async function deleteClaims(token) {
+  try {
+    const response = await axios.delete(`${URL}/main/claim-items/delete`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting report:", error);
     return { success: false };
   }
 }

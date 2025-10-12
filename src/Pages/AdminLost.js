@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag } from "antd";
 import { getLostReport, approveLost } from "../api";
 import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
+
+
+import "./styles/ant-input.css";
 
 const { Column } = Table;
 const { Option } = Select;
+const { Text } = Typography;
 
 export const AdminLost = () => {
   const [data, setData] = useState([]);
@@ -16,6 +21,8 @@ export const AdminLost = () => {
   const [user, setUser] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+
+  const navigate = useNavigate();
 
   
   useEffect(() => {
@@ -76,6 +83,19 @@ export const AdminLost = () => {
   const handleApprove = () => setApproveModal(true);
   const handleDeny = () => setDenyModal(true);
 
+  const handleRowLostSeeSimilar = () => {
+    if (!selectedItem?._id) return;
+    // store the Mongo _id in localStorage
+    localStorage.setItem("selectedItem", selectedItem._id);
+
+    // keep your existing navigation payload
+    navigate("/main/search/result", { state: { selectedItem } });
+  };
+
+  const normalizeStatus = (s) =>
+    String(s || "").toLowerCase().replace(/[-_]/g, " ").trim();
+
+
   const confirmApprove = async () => {
     setConfirmLoading(true);
     const token = sessionStorage.getItem("User");
@@ -125,6 +145,23 @@ export const AdminLost = () => {
     return matchesSearch && matchesStatus;
   });
 
+const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    "claim approved": "blue",
+    completed: "green",
+  };
+
   return (
     <>
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
@@ -133,6 +170,7 @@ export const AdminLost = () => {
 
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
       <Input
+        className="poppins-input"
         placeholder="Search by TID, Category, or Key Item"
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
@@ -170,7 +208,14 @@ export const AdminLost = () => {
         <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
         <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
         <Column title="LOCATION" dataIndex="location" key="location" />
-        <Column title="Status" dataIndex="status" key="status" />
+        <Column title="Status" dataIndex="status" key="status" render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}/>
         <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
         <Column
           title="DATE RANGE"
@@ -212,7 +257,9 @@ export const AdminLost = () => {
               </div>
             )}
             <Descriptions bordered column={1} size="middle">
-              <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+              <Descriptions.Item label="TID">
+                <Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.tid}</Text>
+                </Descriptions.Item>
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
@@ -249,6 +296,9 @@ export const AdminLost = () => {
               <Button type="primary" onClick={handleApprove}   disabled={!(selectedItem.status === "Reviewing" || selectedItem.status === "Denied")}>
                 Approve
               </Button>
+              <Button key="find" onClick={handleRowLostSeeSimilar} disabled={normalizeStatus(selectedItem?.status) !== "listed"}>
+                See similar items
+              </Button>
               <Button danger onClick={handleDeny}  disabled={!(selectedItem.status === "Listed" || selectedItem.status === "Reviewing")}>
                 Deny
               </Button>
@@ -268,6 +318,8 @@ export const AdminLost = () => {
       >
         <p>Are you sure you want to approve this lost report?</p>
       </Modal>
+
+      
 
       
       <Modal

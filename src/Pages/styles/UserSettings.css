@@ -29,12 +29,18 @@
   height: 40px;
 }
 
+.settings-input input {
+  font-family: "Poppins", sans-serif !important;
+}
+
 .settings-actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
   margin-top: 8px;
 }
+
+
 
 @media (max-width: 768px) {
   .settings-actions {

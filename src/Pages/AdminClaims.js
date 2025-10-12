@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag } from "antd";
 import { jwtDecode } from "jwt-decode";
-import { getClaimReport, getClaimDetails, approveClaim, completeTransaction } from "../api";
-
+import { getClaimReport, getClaimDetails, approveClaim, completeTransaction, deleteClaims} from "../api";
+import "./styles/ant-input.css";
 const { Column } = Table;
 const { Option } = Select;
+const { Text } = Typography;
 
 export const AdminClaims = () => {
 
-    //-----------------------------------DO NOT DELETE-------------------------------
+  //-----------------------------------DO NOT DELETE-------------------------------
 
   const [data, setData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -16,19 +17,20 @@ export const AdminClaims = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [approveModal, setApproveModal] = useState(false);
   const [denyModal, setDenyModal] = useState(false);
+  const [completeModal, setCompleteModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [completeLoading, setCompleteLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [clearClaimsModalVisible, setClearClaimsModalVisible] = useState(false);
 
-  
+
   useEffect(() => {
     const token = sessionStorage.getItem("User");
     if (token) setUser(jwtDecode(token));
   }, []);
 
-  
   const fetchData = async () => {
     const token = sessionStorage.getItem("User");
     if (!token) return message.error("Not authorized");
@@ -51,7 +53,7 @@ export const AdminClaims = () => {
     fetchData();
   }, []);
 
-    //-----------------------------------DO NOT DELETE-------------------------------
+  //-----------------------------------DO NOT DELETE-------------------------------
 
   const handleRowClick = async (record) => {
     setSelectedItem(record);
@@ -70,6 +72,8 @@ export const AdminClaims = () => {
 
   const handleApprove = () => setApproveModal(true);
   const handleDeny = () => setDenyModal(true);
+  const handleComplete = () => setCompleteModal(true);
+
   //-----------------------------------DO NOT DELETE-------------------------------
 
   const confirmApprove = async () => {
@@ -114,27 +118,40 @@ export const AdminClaims = () => {
     setConfirmLoading(false);
   };
 
+   const handleDeleteAll = async () => {
+      if (!window.confirm("Are you sure you want to delete all deleted items?")) return;
+      const token = sessionStorage.getItem("User");
+      const result = await deleteClaims(token);
+      if (result.success) {
+        message.success("All deleted items deleted!");
+        fetchData();
+      } else {
+        message.error(result.message);
+      }
+    };
 
-  //-----------------------------------DO NOT DELETE-------------------------------
+  //-----------------------------------NEW COMPLETE MODAL HANDLING-------------------------------
 
-  const handleComplete = async () => {
-  setCompleteLoading(true);
-  const token = sessionStorage.getItem("User");
-  
-  try {
-    await completeTransaction(token, selectedItem._id, "Completed" ,user?.studentId);
-    message.success("Transaction completed successfully!");
-    setIsModalVisible(false);
-    fetchData();
-  } catch (err) {
-    console.error("Error completing transaction:", err);
-    message.error("Failed to complete transaction.");
-  }
-  
-  setCompleteLoading(false);
-};
+  const confirmComplete = async () => {
+    setCompleteLoading(true);
+    const token = sessionStorage.getItem("User");
 
- // ✅ Filtering Logic
+    try {
+      await completeTransaction(token, selectedItem._id, "Completed", user?.studentId);
+      message.success("Transaction completed successfully!");
+      setCompleteModal(false);
+      setIsModalVisible(false);
+      fetchData();
+    } catch (err) {
+      console.error("Error completing transaction:", err);
+      message.error("Failed to complete transaction.");
+    }
+
+    setCompleteLoading(false);
+  };
+
+  //-----------------------------------FILTERING LOGIC-------------------------------
+
   const filteredData = data.filter((item) => {
     const search = searchText.toLowerCase();
     const matchSearch =
@@ -144,6 +161,23 @@ export const AdminClaims = () => {
     return matchSearch && matchStatus;
   });
 
+  const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    "claim approved": "blue",
+    completed: "green",
+  };
+
   //-----------------------------------DO NOT DELETE-------------------------------
 
   return (
@@ -151,9 +185,26 @@ export const AdminClaims = () => {
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
         Refresh
       </Button>
-       {/* 🔍 Filters (Search + Status Select) */}
+      <Button
+          onClick={() => {
+            // Check if there are any deleted claims
+            const hasDeleted = data.some(item => item.claimStatus === "Deleted");
+            if (!hasDeleted) {
+              message.info("No deleted items are present!");
+              return;
+            }
+            setClearClaimsModalVisible(true); // Show modal if there are deleted items
+          }}
+          style={{ marginBottom: 16 }}
+        >
+          Clear Deleted Claims
+        </Button>
+
+
+      {/* 🔍 Filters */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
         <Input
+          className="poppins-input"
           placeholder="Search by Claim ID or Claimer ID"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
@@ -176,6 +227,7 @@ export const AdminClaims = () => {
           <Option value="Claim Deleted">Claim Deleted</Option>
         </Select>
       </div>
+
       <Table
         dataSource={filteredData}
         onRow={(record) => ({
@@ -185,12 +237,19 @@ export const AdminClaims = () => {
       >
         <Column title="CLAIM ID" dataIndex="cid" key="cid" />
         <Column title="CLAIMER ID" dataIndex="claimerId" key="claimerId" />
-        <Column title="CLAIM STATUS" dataIndex="claimStatus" key="claimStatus" />
+        <Column title="CLAIM STATUS" dataIndex="claimStatus" key="claimStatus" render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}/>
         <Column title="CREATED AT" dataIndex="createdAt" key="createdAt" />
         <Column title="ADMIN DECISION BY" dataIndex="adminDecisionBy" key="adminDecisionBy" />
       </Table>
 
-      {/* Details Modal */}
+      {/* DETAILS MODAL */}
       <Modal
         title={selectedItem ? "Claim Details" : "Item Details"}
         open={isModalVisible}
@@ -212,7 +271,9 @@ export const AdminClaims = () => {
               )}
               {details.foundItem ? (
                 <Descriptions bordered column={1} size="middle">
-                  <Descriptions.Item label="TID">{details.foundItem.tid}</Descriptions.Item>
+                  <Descriptions.Item label="TID">
+                    <Text copyable style={{ fontFamily: "Poppins" }}>{details.foundItem.tid}</Text>
+                  </Descriptions.Item>
                   <Descriptions.Item label="Title">{details.foundItem.title}</Descriptions.Item>
                   <Descriptions.Item label="Category">{details.foundItem.category}</Descriptions.Item>
                   <Descriptions.Item label="Key Item">{details.foundItem.keyItem}</Descriptions.Item>
@@ -249,7 +310,9 @@ export const AdminClaims = () => {
               )}
               {details.lostItem ? (
                 <Descriptions bordered column={1} size="middle">
-                  <Descriptions.Item label="TID">{details.lostItem.tid}</Descriptions.Item>
+                  <Descriptions.Item label="TID">
+                    <Text copyable style={{ fontFamily: "Poppins" }}>{details.lostItem.tid}</Text>
+                  </Descriptions.Item>
                   <Descriptions.Item label="Title">{details.lostItem.title}</Descriptions.Item>
                   <Descriptions.Item label="Category">{details.lostItem.category}</Descriptions.Item>
                   <Descriptions.Item label="Key Item">{details.lostItem.keyItem}</Descriptions.Item>
@@ -305,7 +368,9 @@ export const AdminClaims = () => {
                     </div>
                   )}
                   <Descriptions bordered column={1} size="middle">
-                    <Descriptions.Item label="Claim ID">{details.claim.cid}</Descriptions.Item>
+                    <Descriptions.Item label="Claim ID">
+                      <Text copyable style={{ fontFamily: "Poppins" }}>{details.claim.cid}</Text>
+                    </Descriptions.Item>
                     <Descriptions.Item label="Claimer ID">{details.claim.claimerId}</Descriptions.Item>
                     <Descriptions.Item label="Claim Status">{details.claim.claimStatus}</Descriptions.Item>
                     <Descriptions.Item label="Reason">{details.claim.reason}</Descriptions.Item>
@@ -321,36 +386,36 @@ export const AdminClaims = () => {
         )}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
-   <Button
-  type="default"
-  onClick={handleComplete}
-  disabled={selectedItem?.claimStatus !== "Claim Approved"}
-  loading={completeLoading}
->
-  Complete
-</Button>
+          <Button
+            type="default"
+            onClick={handleComplete}
+            disabled={selectedItem?.claimStatus !== "Claim Approved"}
+            loading={completeLoading}
+          >
+            Complete
+          </Button>
 
-<Button
-  type="primary"
-  onClick={handleApprove}
-  disabled={
-    !(selectedItem?.claimStatus === "Reviewing Claim" || selectedItem?.claimStatus === "Claim Rejected")
-  }
->
-  Approve
-</Button>
+          <Button
+            type="primary"
+            onClick={handleApprove}
+            disabled={
+              !(selectedItem?.claimStatus === "Reviewing Claim" || selectedItem?.claimStatus === "Claim Rejected")
+            }
+          >
+            Approve
+          </Button>
 
-<Button
-  danger
-  onClick={handleDeny}
-  disabled={
-    !(selectedItem?.claimStatus === "Reviewing Claim" || selectedItem?.claimStatus === "Claim Approved")
-  }
->
-  Deny
-</Button>
+          <Button
+            danger
+            onClick={handleDeny}
+            disabled={
+              !(selectedItem?.claimStatus === "Reviewing Claim" || selectedItem?.claimStatus === "Claim Approved")
+            }
+          >
+            Deny
+          </Button>
 
-<Button onClick={handleModalClose}>Close</Button>
+          <Button onClick={handleModalClose}>Close</Button>
         </div>
       </Modal>
 
@@ -374,6 +439,61 @@ export const AdminClaims = () => {
         onCancel={() => setDenyModal(false)}
       >
         <p>Are you sure you want to deny this claim?</p>
+      </Modal>
+
+      {/* ✅ Complete Modal */}
+      <Modal
+        title="Confirm Completion"
+        open={completeModal}
+        onOk={confirmComplete}
+        confirmLoading={completeLoading}
+        onCancel={() => setCompleteModal(false)}
+      >
+        <p>Are you sure you want to mark this claim as completed?</p>
+      </Modal>
+
+      <Modal
+        title="Confirm Clear Deleted Claims"
+        open={clearClaimsModalVisible}
+        onCancel={() => setClearClaimsModalVisible(false)}
+        centered
+        maskClosable={false}
+        footer={[
+          <Button key="cancel" onClick={() => setClearClaimsModalVisible(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            loading={confirmLoading}
+            onClick={async () => {
+              setConfirmLoading(true);
+              const token = sessionStorage.getItem("User");
+
+              try {
+                const result = await deleteClaims(token); // Call your API
+                setConfirmLoading(false);
+                setClearClaimsModalVisible(false);
+
+                if (result.success) {
+                  message.success(result.message); // Message from backend
+                  fetchData(); // Refresh the table
+                } else {
+                  message.error(result.message || "Failed to delete claims");
+                }
+              } catch (err) {
+                console.error(err);
+                message.error("An error occurred while deleting claims");
+                setConfirmLoading(false);
+                setClearClaimsModalVisible(false);
+              }
+            }}
+          >
+            Yes, Clear All
+          </Button>,
+        ]}
+      >
+        <p>Are you sure you want to delete all deleted claims? This action cannot be undone.</p>
       </Modal>
     </>
   );

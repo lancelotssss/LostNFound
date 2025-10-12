@@ -27,6 +27,7 @@ import { AdminDashboard } from "./Pages/AdminDashboard";
 import { AdminReport } from "./Pages/AdminReport";
 import { AdminUsers } from "./Pages/AdminUsers";
 import { AdminCreate }from "./Pages/AdminCreate";
+import {AdminSearchResults} from "./Pages/AdminSearchResults";
 
 function App() {
   useEffect(() => {
@@ -119,9 +120,13 @@ function App() {
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminDashboard />
                 </ProtectedRoute>} />
-            <Route path="/main/found-items" element={
+              <Route path="/main/found-items" element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminFound />
+              </ProtectedRoute>} />
+              <Route path="/main/search/result" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminSearchResults />
               </ProtectedRoute>} />
             <Route path="/main/claim-items" element={<ProtectedRoute allowedRoles={["admin"]}>
               <AdminClaims /> 

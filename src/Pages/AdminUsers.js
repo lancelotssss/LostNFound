@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Typography, Tag } from "antd";
 import { getUsers, updateUser } from "../api";
 import { jwtDecode } from "jwt-decode";
+import "./styles/ant-input.css";
 
 const { Column } = Table;
+const { Text } = Typography;
 
 export const AdminUsers = () => {
   const [data, setData] = useState([]);
@@ -106,6 +108,11 @@ useEffect(() => {
     );
   });
 
+  const STATUS_COLORS = {
+    suspended: "volcano",
+    active: "green"
+  };
+
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
@@ -128,13 +135,14 @@ useEffect(() => {
 
         <div style={{ display: "flex", gap: 8 }}>
           <Input
+            className="poppins-input"
             placeholder="Search by ID or name"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}
             allowClear
           />
-          <Button onClick={fetchData}>Refresh</Button>
+          <Button onClick={() => fetchData(viewRole)}>Refresh</Button>
         </div>
       </div>
 
@@ -146,16 +154,34 @@ useEffect(() => {
         })}
         rowKey="_id"
       >
-        <Column title="Name" dataIndex="name" key="name" />
-        <Column title="Student ID" dataIndex="studentId" key="studentId" />
-        <Column title="Email" dataIndex="email" key="email" />
-        <Column title="Phone" dataIndex="phone" key="phone" />
-        <Column title="Status" dataIndex="status" key="status" render={(status) => status.charAt(0).toUpperCase() + status.slice(1)}/>
+        <Column title="NAME" dataIndex="name" key="name" />
         <Column
-          title="Role"
+          title={viewRole === "student" ? "STUDENT ID" : "EMPLOYEE ID"}
+          dataIndex="studentId"
+          key="studentId"
+        />
+        <Column title="EMAIL" dataIndex="email" key="email" />
+        <Column title="PHONE" dataIndex="phone" key="phone" />
+        <Column
+          title="STATUS"
+          dataIndex="status"
+          key="status"
+          render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}
+        />
+        <Column
+          title="ROLE"
           dataIndex="role"
           key="role"
-          render={(role) => role.charAt(0).toUpperCase() + role.slice(1)}
+          render={(role) =>
+            role ? role.charAt(0).toUpperCase() + role.slice(1) : ""
+          }
         />
       </Table>
 
@@ -171,14 +197,58 @@ useEffect(() => {
         {selectedItem && (
           <>
             <Descriptions bordered column={1} size="middle">
-              <Descriptions.Item label="SID">{selectedItem.sid}</Descriptions.Item>
-              <Descriptions.Item label="Student ID">{selectedItem.studentId}</Descriptions.Item>
+              <Descriptions.Item label="SID"><Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.sid}</Text></Descriptions.Item>
+              <Descriptions.Item label={viewRole === "student" ? "Student ID" : "Employee ID"}>
+                {selectedItem.studentId}
+              </Descriptions.Item>
+              <Descriptions.Item label="Name">{selectedItem.name}</Descriptions.Item>
               <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
               <Descriptions.Item label="Email">{selectedItem.email}</Descriptions.Item>
               <Descriptions.Item label="Phone">{selectedItem.phone}</Descriptions.Item>
-              <Descriptions.Item label="Last Logged In">{selectedItem.lastLogin}</Descriptions.Item>
-              <Descriptions.Item label="Last Updated">{selectedItem.updatedAt}</Descriptions.Item>
-              <Descriptions.Item label="Created At">{selectedItem.createdAt}</Descriptions.Item>
+              <Descriptions.Item label="Last Logged In">
+                
+                  {selectedItem.lastLogin
+                    ? new Date(selectedItem.lastLogin).toLocaleString(undefined, {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })
+                    : "N/A"}
+                
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Last Updated">
+                
+                  {selectedItem.updatedAt
+                    ? new Date(selectedItem.updatedAt).toLocaleString(undefined, {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })
+                    : "N/A"}
+              
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Created At">
+                
+                  {selectedItem.createdAt
+                    ? new Date(selectedItem.createdAt).toLocaleString(undefined, {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })
+                    : "N/A"}
+              
+              </Descriptions.Item>
             </Descriptions>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>

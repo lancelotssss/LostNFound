@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag } from "antd";
 import { getFoundReport, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
-
+import "./styles/ant-input.css";
 const { Column } = Table;
 const { Option } = Select;
+const { Text } = Typography;
+
 
 export const AdminFound = () => {
   const [data, setData] = useState([]);
@@ -120,6 +122,22 @@ const confirmDeny = async () => {
     return matchesSearch && matchesStatus;
   });
 
+   const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    "claim approved": "blue",
+    completed: "green",
+  };
 
   return (
     <>
@@ -128,10 +146,12 @@ const confirmDeny = async () => {
       </Button>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
       <Input
+        className="poppins-input"
         placeholder="Search by TID, Category, or Key Item"
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
-        style={{ width: 300 }}
+        style={{
+        width: 300}}
         allowClear
       />
       {/* 🟩 Status Filter Dropdown */}
@@ -165,7 +185,14 @@ const confirmDeny = async () => {
         <Column title="ITEM NAME" dataIndex="keyItem" key="keyItem" />
         <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
         <Column title="LOCATION" dataIndex="location" key="location" />
-        <Column title="STATUS" dataIndex="status" key="status" />
+        <Column title="STATUS" dataIndex="status" key="status" render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}/>
         <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
         <Column title="DATE FOUND" dataIndex="dateFound" key="dateFound" />
       </Table>
@@ -187,7 +214,9 @@ const confirmDeny = async () => {
               </div>
             )}
             <Descriptions bordered column={1} size="middle">
-              <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+              <Descriptions.Item label="TID">
+                <Text copyable style={{ fontFamily: "Poppins" }}>{selectedItem.tid}</Text>
+              </Descriptions.Item>
               <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
               <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
               <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>

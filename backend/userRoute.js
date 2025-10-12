@@ -62,7 +62,7 @@ userRoutes.route("/register").post(async (req, res) => {
     const hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
 
     const mongoObject = {
-      sid: `A-${Date.now()}`,
+      sid: `S-${Date.now()}`,
       role: "student",
       name: req.body.name || "Unknown",
       fname: req.body.fname || "Unknown",
@@ -117,7 +117,7 @@ userRoutes.route("/users/logout").post(verifyToken, async (req, res) => {
     aid: `A-${Date.now()}`,
     action: "LOGOUT",
     targetUser: user.studentId,
-    performedBy: "System",
+    performedBy: user.studentId,
     timestamp: new Date(),
     ticketId: "",
     details: `User ${user.studentId} logged out successfully.`,
@@ -176,7 +176,7 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 aid: `A-${Date.now()}`,
                 action: "LOGIN",
                 targetUser: user.studentId,
-                performedBy: "System",
+                performedBy: user.studentId,
                 timestamp: new Date(),
                 ticketId: "",
                 details: `User ${user.studentId} logged in successfully.`,
@@ -772,7 +772,8 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
 
       photoUrl = publicUrlData.publicUrl;
     }
-
+    
+    
     // Create claim record
     const mongoClaim = {
       cid: `C-${Date.now()}`,

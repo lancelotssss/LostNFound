@@ -102,6 +102,28 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       { name: "Listed Lost", value: listedLostCount },
     ];
 
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const reportsToday = await db.collection("lost_found_db").find({
+      dateReported: { $gte: startOfDay, $lte: endOfDay },
+    })
+    .sort({ dateReported: -1 })
+    .toArray();
+
+    
+    const currentAdmin = req.user?.studentId || req.user?.email || req.user?.name;
+
+    const auditLogs = await db.collection("audit_db").find({
+      performedBy: currentAdmin,
+    })
+    .sort({ timestamp: -1 })
+    .limit(10)
+    .toArray();
+
     // --- RESPONSE ---
     res.json({
       success: true,
@@ -115,9 +137,7 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
         claimReturnedCount,
         totalStorageCount,
       },
-      ratios: {
-        lostToFoundRatio,
-      },
+      ratios: { lostToFoundRatio },
       mostCommon: {
         place: mostCommonPlace,
         keyItem: mostCommonKeyItem,
@@ -134,6 +154,8 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
         listedLostCount +
         reviewClaimsCount +
         claimReturnedCount,
+      reportsToday,
+      auditLogs,
     });
   } catch (err) {
     console.error("Error fetching dashboard data:", err);
@@ -754,6 +776,50 @@ adminRoutes.put("/claim-items/complete", verifyToken, async (req, res) => {
   }
 });
 
+adminRoutes.route("/claim-items/delete").delete(verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+
+    const deletedReports = await db
+      .collection("claims_db")
+      .find({ claimStatus: "Deleted" })
+      .project({ cid: 1 })
+      .toArray();
+
+    const result = await db.collection("claims_db").deleteMany({
+      claimStatus: "Deleted"
+    });
+
+    if (deletedReports.length > 0) {
+      const audit = {
+        aid: `A-${Date.now()}`,
+        action: "DELETE_CLAIM",
+        targetUser: "",
+        performedBy: studentId,
+        timestamp: new Date(),
+        ticketId: deletedReports.map(r => r.cid).join(", "), 
+        details: `${studentId} deleted ${deletedReports.length} report(s): ${deletedReports.map(r => r.cid).join(", ")}`,
+      };
+      await db.collection("audit_db").insertOne(audit);
+    }
+
+    res.json({
+      success: true,
+      message: `${result.deletedCount} deleted claim record(s) removed.`,
+      deletedReports: deletedReports.map(r => r.cid)
+    });
+
+  } catch (err) {
+    console.error("Error deleting history:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete history.",
+      error: err.message
+    });
+  }
+});
+
 
 //---------------------------------------------------------------------------STORAGE---------------------------------------------------------------------------
 adminRoutes.route("/storage").get(verifyToken, async (req, res) => {
@@ -1166,7 +1232,7 @@ adminRoutes.route("/admin").post(async (req, res) => {
     const hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
 
     const mongoObject = {
-      sid: `A-${Date.now()}`,
+      sid: `S-${Date.now()}`,
       role: "admin",
       name: req.body.name || "Unknown",
       email: req.body.email || "unknown@example.com",
@@ -1226,6 +1292,54 @@ function verifyToken(request, response, next) {
             mapupunta siya sa next() which is itutuloy niya ung function  */
   });
 }
+
+
+adminRoutes.post("/similar-items", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+
+    const { selectedItemId, category, keyItem, location, startDate, endDate } = req.body;
+
+    if (!selectedItemId || !category) {
+      return res.status(400).json({ success: false, message: "Missing item info" });
+    }
+
+    let start, end;
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      end = new Date(endDate);
+
+      if (isNaN(start) || isNaN(end)) {
+        return res.status(400).json({ success: false, message: "Invalid date format" });
+      }
+
+      start.setUTCHours(0, 0, 0, 0);
+      end.setUTCHours(23, 59, 59, 999);
+    }
+
+    // Build query
+    const query = {
+      reportType: "Found",
+      status: "Listed",
+      _id: { $ne: new ObjectId(selectedItemId) },
+      //reportedBy: studentId ,
+      category,
+    };
+
+    if (keyItem) query.keyItem = { $regex: keyItem, $options: "i" };
+    if (location) query.location = { $regex: location, $options: "i" };
+    if (start && end) query.dateFound = { $gte: start, $lte: end };
+    //Item Brand (optional)
+
+    const similarFound = await db.collection("lost_found_db").find(query).toArray();
+
+    res.json({ success: true, similarFound });
+  } catch (err) {
+    console.error("Error fetching similar items:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 
 

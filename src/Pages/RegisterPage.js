@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createUser } from "../api";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -12,11 +12,14 @@ import {
   Modal,
   Spin,
   Alert,
+  DatePicker
 } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import "./styles/RegisterPage.css";
+import dayjs from "dayjs";    
 
 const { Title } = Typography;
+
 
 const isValidEmail = (s) => /^\S+@\S+\.\S+$/.test(String(s || "").trim());
 const isValidPHPhone = (s) => /^(09\d{9}|\+639\d{9})$/.test(String(s || "").trim());
@@ -177,14 +180,16 @@ export default function RegisterPage2() {
               <label>First Name</label>
               <Input name="fname" placeholder="First Name" value={registerData.fname}
                      onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.fname ? "has-error" : ""} aria-invalid={!!errors.fname} />
+                     className={errors.fname ? "has-error" : ""} aria-invalid={!!errors.fname} 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error">{errors.fname || ""}</div>
             </div>
 
             <div className="field">
               <label>Middle Name</label>
               <Input name="mname" placeholder="Middle Name" value={registerData.mname}
-                     onChange={handleChange} size="large" disabled={disableAll} />
+                     onChange={handleChange} size="large" disabled={disableAll} 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error"></div>
             </div>
 
@@ -192,14 +197,16 @@ export default function RegisterPage2() {
               <label>Last Name</label>
               <Input name="lname" placeholder="Last Name" value={registerData.lname}
                      onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.lname ? "has-error" : ""} aria-invalid={!!errors.lname} />
+                     className={errors.lname ? "has-error" : ""} aria-invalid={!!errors.lname} 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error">{errors.lname || ""}</div>
             </div>
 
             <div className="field">
               <label>Suffix</label>
               <Input name="suffix" placeholder="Jr., Sr., III" value={registerData.suffix}
-                     onChange={handleChange} size="large" disabled={disableAll} />
+                     onChange={handleChange} size="large" disabled={disableAll} 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error"></div>
             </div>
           </div>
@@ -211,7 +218,8 @@ export default function RegisterPage2() {
               <label>Email</label>
               <Input name="email" type="email" placeholder="email@example.com" value={registerData.email}
                      onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.email ? "has-error" : ""} aria-invalid={!!errors.email} autoComplete="email" />
+                     className={errors.email ? "has-error" : ""} aria-invalid={!!errors.email} autoComplete="email" 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error">{errors.email || ""}</div>
             </div>
 
@@ -219,7 +227,8 @@ export default function RegisterPage2() {
               <label>Phone</label>
               <Input name="phone" placeholder="09xxxxxxxxx or +639xxxxxxxxx" value={registerData.phone}
                      onChange={handlePhoneChange} size="large" disabled={disableAll}
-                     className={errors.phone ? "has-error" : ""} aria-invalid={!!errors.phone} inputMode="numeric" />
+                     className={errors.phone ? "has-error" : ""} aria-invalid={!!errors.phone} inputMode="numeric" 
+                     style={{fontFamily:"Poppins"}}/>
               <div className="field-error">{errors.phone || ""}</div>
             </div>
 
@@ -227,16 +236,39 @@ export default function RegisterPage2() {
               <label>Student ID</label>
               <Input name="studentId" placeholder="Student ID" value={registerData.studentId}
                      onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.studentId ? "has-error" : ""} aria-invalid={!!errors.studentId} />
+                     className={errors.studentId ? "has-error" : ""} aria-invalid={!!errors.studentId}
+                     style={{fontFamily:"Poppins"}} />
               <div className="field-error">{errors.studentId || ""}</div>
             </div>
 
             <div className="field">
-              <label>Birthday</label>
-              <Input name="birthday" type="date" value={registerData.birthday}
-                     onChange={handleChange} size="large" disabled={disableAll}
-                     className={errors.birthday ? "has-error" : ""} aria-invalid={!!errors.birthday} />
-              <div className="field-error">{errors.birthday || ""}</div>
+              <label>Birthdate</label>
+              <DatePicker
+                name="birthday"
+                value={registerData.birthday ? dayjs(registerData.birthday) : null}
+                onChange={(date) =>
+                  handleChange({
+                    target: {
+                      name: "birthday",
+                      value: date ? date.format("YYYY-MM-DD") : "",
+                    },
+                  })
+                }
+                size="large"
+                disabled={disableAll}
+                className={errors.birthday ? "has-error" : ""}
+                aria-invalid={!!errors.birthday}
+                style={{ width: "100%", fontFamily: "Poppins" }}
+                placeholder="Select your birthdate"
+                format="YYYY-MM-DD"
+                
+                disabledDate={(current) => current && current.isAfter(dayjs())}
+                showToday={false}
+                defaultPickerValue={dayjs("2005-01-01")}
+              />
+              <div className="field-error" style={{ fontFamily: "Poppins" }}>
+                {errors.birthday || ""}
+              </div>
             </div>
           </div>
 

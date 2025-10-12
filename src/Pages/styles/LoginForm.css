@@ -57,6 +57,9 @@
 .login-inputs {
   border-radius: 10px !important;
 }
+.login-inputs input {
+  font-family: "Poppins", sans-serif !important;
+}
 
 .login-inputs.has-error {
   border-color: #ff4d4f !important;

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select   } from "antd";
+import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag  } from "antd";
 import { getHistory, deleteHistory, approveFound } from "../api";
 import { jwtDecode } from "jwt-decode";
+import "./styles/ant-input.css";
 
 const { Column } = Table;
 const { Option } = Select;
+const { Text } = Typography;
 
 export const AdminHistory = () => {
   const [data, setData] = useState([]);
@@ -15,8 +17,10 @@ export const AdminHistory = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [searchText, setSearchText] = useState("");
-const [statusFilter, setStatusFilter] = useState("");
-const [reportTypeFilter, setReportTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [reportTypeFilter, setReportTypeFilter] = useState("");
+  const [clearHistoryModalVisible, setClearHistoryModalVisible] = useState(false);
+
   
   useEffect(() => {
     const token = sessionStorage.getItem("User");
@@ -70,8 +74,8 @@ const [reportTypeFilter, setReportTypeFilter] = useState("");
     setSelectedItem(null);
   };
 
-  const handleApprove = () => setApproveModal(true);
-  const handleDeny = () => setDenyModal(true);
+  /*const handleApprove = () => setApproveModal(true);
+  const handleDeny = () => setDenyModal(true); */
 
   const handleDeleteAll = async () => {
     if (!window.confirm("Are you sure you want to delete all deleted items?")) return;
@@ -86,8 +90,7 @@ const [reportTypeFilter, setReportTypeFilter] = useState("");
   };
 
 
-
-  const confirmApprove = async () => {
+  /*const confirmApprove = async () => {
   setConfirmLoading(true);
   const token = sessionStorage.getItem("User");
   try {
@@ -120,6 +123,7 @@ const confirmDeny = async () => {
     setConfirmLoading(false);
   }
 };
+*/
 
 const filteredData = data.filter((item) => {
   const search = searchText.toLowerCase();
@@ -137,18 +141,45 @@ const filteredData = data.filter((item) => {
 });
 
 
-
+const STATUS_COLORS = {
+    denied: "volcano",
+    deleted: "volcano",
+    disposed: "volcano",
+    pending: "orange",
+    "pending claimed": "orange",
+    active: "blue",
+    claimed: "green",
+    listed: "blue",
+    reviewing: "orange",
+    returned: "green",
+    "reviewing claim": "orange",
+    "claim rejected": "volcano",
+    "claim approved": "blue",
+    completed: "green",
+  };
 
   return (
     <>
       <Button onClick={fetchData} style={{ marginBottom: 16 }}>
         Refresh
       </Button>
-      <Button onClick={handleDeleteAll} style={{ marginBottom: 16 }}>Clear Deleted Reports</Button>
+      <Button onClick={() => {
+          const hasDeleted = data.some(item => item.status === "Deleted");
+          if (!hasDeleted) {
+            message.info("No deleted items are present!");
+            return;
+          }
+          setClearHistoryModalVisible(true);
+        }} 
+        style={{ marginBottom: 16 }}
+      >
+        Clear Deleted Reports
+      </Button>
 
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
   <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
   <Input
+    className="poppins-input"
     placeholder="Search by TID, Category, or Key Item"
     value={searchText}
     onChange={(e) => setSearchText(e.target.value)}
@@ -198,7 +229,14 @@ const filteredData = data.filter((item) => {
       >
         <Column title="TITLE" dataIndex="title" key="title" />
         <Column title="REPORT TYPE" dataIndex="reportType" key="reportType" />
-        <Column title="STATUS" dataIndex="status" key="status" />
+        <Column title="STATUS" dataIndex="status" key="status" render={(status) => {
+              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+              return (
+                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
+                  {status ? status.toUpperCase() : "N/A"}
+                </Tag>
+              );
+            }}/>
         <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
         <Column title="APPROVED BY" dataIndex="approvedBy" key="approvedBy" />
         <Column
@@ -243,7 +281,8 @@ const filteredData = data.filter((item) => {
         {selectedItem.reportType === "Found" ? (
           
           <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+            <Descriptions.Item label="TID">
+              <Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.tid}</Text></Descriptions.Item>
             <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
             <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
             <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
@@ -259,7 +298,7 @@ const filteredData = data.filter((item) => {
         ) : (
           
           <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="TID">{selectedItem.tid}</Descriptions.Item>
+            <Descriptions.Item label="TID"><Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.tid}</Text></Descriptions.Item>
             <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
             <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
             <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
@@ -298,8 +337,41 @@ const filteredData = data.filter((item) => {
       </>
     )}
       </Modal>
-
-      
+        <Modal
+            title="Confirm Clear History"
+            open={clearHistoryModalVisible}
+            onCancel={() => setClearHistoryModalVisible(false)}
+            centered
+            maskClosable={false}
+            footer={[
+              <Button key="cancel" onClick={() => setClearHistoryModalVisible(false)}>
+                Cancel
+              </Button>,
+              <Button
+                key="confirm"
+                type="primary"
+                loading={confirmLoading}
+                onClick={async () => {
+                  setConfirmLoading(true);
+                  const token = sessionStorage.getItem("User");
+                  const result = await deleteHistory(token);
+                  setConfirmLoading(false);
+                  setClearHistoryModalVisible(false);
+                  if (result.success) {
+                    message.success("All deleted items deleted!");
+                    fetchData();
+                  } else {
+                    message.error(result.message);
+                  }
+                }}
+              >
+                Yes, Clear All
+              </Button>,
+      ]}
+    >
+      <p>Are you sure you want to delete all deleted reports? This action cannot be undone.</p>
+    </Modal>
+          
     </>
   );
 };

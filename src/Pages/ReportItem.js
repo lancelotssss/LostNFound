@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Steps, Button, Card, Typography, Input, Select, DatePicker, message, Upload } from "antd";
+import { Steps, Button, Card, Typography, Input, Select, DatePicker, message, Upload, Modal } from "antd";
 import { DownloadOutlined, SearchOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "./styles/ReportItem.css";
@@ -8,6 +8,7 @@ import { createReport } from "../api";
 const { Title } = Typography;
 
 export default function ReportItem() {
+  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [registerData, setRegisterData] = useState({
     reportType: "",
     category: "",
@@ -311,6 +312,7 @@ export default function ReportItem() {
             onChange={handleChange}
             className="field-wide"
             autoComplete="off"
+            style={{fontFamily:"Poppins"}}
           />
         )}
       </div>
@@ -398,6 +400,7 @@ export default function ReportItem() {
           value={registerData.description}
           onChange={handleChange}
           className="field-wide"
+          style={{fontFamily:"Poppins"}}
         />
 
         <Upload
@@ -428,6 +431,8 @@ export default function ReportItem() {
       default: return StepOne;
     }
   }, [current, registerData]);
+
+  
 
   return (
     <form onSubmit={handleSubmit} className="report-wrap">
@@ -487,15 +492,49 @@ export default function ReportItem() {
             <Button
               className="footer-buttons"
               type="primary"
-              htmlType="submit"
               loading={submitting}
               disabled={submitting}
+              onClick={() => setIsConfirmModalVisible(true)}
             >
               {submitting ? "Submitting..." : "Confirm"}
             </Button>
           )}
         </div>
       </Card>
+
+    {/* Confirm Report */}
+    <Modal
+      title="Send Report Confirmation"
+      open={isConfirmModalVisible}
+      onCancel={() => setIsConfirmModalVisible(false)}
+      footer={[
+        <Button key="no" onClick={() => setIsConfirmModalVisible(false)}>
+          No, go back
+        </Button>,
+        <Button
+          key="yes"
+          type="primary"
+          onClick={() => {
+            setIsConfirmModalVisible(false);
+            handleSubmit(new Event("submit")); // manually trigger the submit
+          }}
+          loading={submitting}
+        >
+          Yes, send report
+        </Button>,
+      ]}
+      centered
+      maskClosable={false}
+    >
+      <p>
+        Are you sure you want to send this {registerData.reportType?.toLowerCase()} report? <br />
+      </p>
+    </Modal>
+  
+
     </form>
+    
   );
+
+  
 }
