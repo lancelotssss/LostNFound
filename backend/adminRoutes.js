@@ -1149,6 +1149,54 @@ function verifyToken(request, response, next) {
 }
 
 
+adminRoutes.post("/similar-items", verifyToken, async (req, res) => {
+  try {
+    const db = database.getDb();
+    const studentId = req.user?.studentId;
+
+    const { selectedItemId, category, keyItem, location, startDate, endDate } = req.body;
+
+    if (!selectedItemId || !category) {
+      return res.status(400).json({ success: false, message: "Missing item info" });
+    }
+
+    let start, end;
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      end = new Date(endDate);
+
+      if (isNaN(start) || isNaN(end)) {
+        return res.status(400).json({ success: false, message: "Invalid date format" });
+      }
+
+      start.setUTCHours(0, 0, 0, 0);
+      end.setUTCHours(23, 59, 59, 999);
+    }
+
+    // Build query
+    const query = {
+      reportType: "Found",
+      status: "Listed",
+      _id: { $ne: new ObjectId(selectedItemId) },
+      reportedBy: { $ne: studentId },
+      category,
+    };
+
+    if (keyItem) query.keyItem = { $regex: keyItem, $options: "i" };
+    if (location) query.location = { $regex: location, $options: "i" };
+    if (start && end) query.dateFound = { $gte: start, $lte: end };
+    //Item Brand (optional)
+
+    const similarFound = await db.collection("lost_found_db").find(query).toArray();
+
+    res.json({ success: true, similarFound });
+  } catch (err) {
+    console.error("Error fetching similar items:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
 
 
 module.exports = adminRoutes;

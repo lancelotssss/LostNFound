@@ -772,7 +772,8 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
 
       photoUrl = publicUrlData.publicUrl;
     }
-
+    
+    
     // Create claim record
     const mongoClaim = {
       cid: `C-${Date.now()}`,

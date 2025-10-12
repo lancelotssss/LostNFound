@@ -163,6 +163,21 @@ export async function getSearchReport(report, token) {
   }
 }
   
+export async function getAdminSearchReport(report, token) {
+  try {
+    const response = await axios.post(`${URL}/main/search/item`, report, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error fetching search: ", err.response?.data || err.message);
+    return { success: false, results: [] };
+  }
+}
+
 
 export async function createClaim(formData, token) {
   try {

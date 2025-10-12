@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Table, Button, Modal, Descriptions, Image, message, Input, Select } from "antd";
 import { getLostReport, approveLost } from "../api";
 import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 const { Column } = Table;
 const { Option } = Select;
@@ -16,6 +17,8 @@ export const AdminLost = () => {
   const [user, setUser] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+
+  const navigate = useNavigate();
 
   
   useEffect(() => {
@@ -75,6 +78,19 @@ export const AdminLost = () => {
 
   const handleApprove = () => setApproveModal(true);
   const handleDeny = () => setDenyModal(true);
+
+  const handleRowLostSeeSimilar = () => {
+    if (!selectedItem?._id) return;
+    // store the Mongo _id in localStorage
+    localStorage.setItem("selectedItem", selectedItem._id);
+
+    // keep your existing navigation payload
+    navigate("/main/search/result", { state: { selectedItem } });
+  };
+
+  const normalizeStatus = (s) =>
+    String(s || "").toLowerCase().replace(/[-_]/g, " ").trim();
+
 
   const confirmApprove = async () => {
     setConfirmLoading(true);
@@ -249,6 +265,9 @@ export const AdminLost = () => {
               <Button type="primary" onClick={handleApprove}   disabled={!(selectedItem.status === "Reviewing" || selectedItem.status === "Denied")}>
                 Approve
               </Button>
+              <Button key="find" onClick={handleRowLostSeeSimilar} disabled={normalizeStatus(selectedItem?.status) !== "listed"}>
+                See similar items
+              </Button>,
               <Button danger onClick={handleDeny}  disabled={!(selectedItem.status === "Listed" || selectedItem.status === "Reviewing")}>
                 Deny
               </Button>
@@ -268,6 +287,8 @@ export const AdminLost = () => {
       >
         <p>Are you sure you want to approve this lost report?</p>
       </Modal>
+
+      
 
       
       <Modal
