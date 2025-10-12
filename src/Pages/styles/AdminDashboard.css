@@ -109,10 +109,12 @@
 /* OVERVIEW CARDS <--------- */
 .tile-card{
   box-shadow: 0 0 5px 1px rgba(0,0,0,0.1);
-  border-top: 8px solid #ffff0079 !important;
+  border-top: 8px solid rgba(255, 255, 0, 0.475) !important;
+  border-top: 8px solid rgb(0, 100, 172, 0.475) !important;
   height: 100%;
   display: flex;
   flex-direction: column;
+  
 }
 .tile-card .ant-card-body{
   flex: 1 1 auto;
@@ -167,4 +169,13 @@
 .ant-card-head-title{
   display: flex;
   align-items: center;
+}
+
+
+
+.h1nigga{
+    margin-bottom: 13px;
+}
+.overview-admin{
+    margin-bottom: 13px;
 }
