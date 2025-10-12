@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
-import { Table, Button, Modal, Descriptions, Image, message, Input, Select, Typography, Tag  } from "antd";
-import { getHistory, deleteHistory, approveFound } from "../api";
+import {
+  Table,
+  Button,
+  Modal,
+  Descriptions,
+  Image,
+  message,
+  Input,
+  Select,
+  Typography,
+  Tag,
+  Segmented,
+} from "antd";
+import { getHistory, deleteHistory, deleteClaims } from "../api";
 import { jwtDecode } from "jwt-decode";
 import "./styles/ant-input.css";
 
@@ -9,19 +21,21 @@ const { Option } = Select;
 const { Text } = Typography;
 
 export const AdminHistory = () => {
+  const [view, setView] = useState("Reports"); 
+  const [reports, setReports] = useState([]);
+  const [claims, setClaims] = useState([]);
   const [data, setData] = useState([]);
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [approveModal, setApproveModal] = useState(false);
-  const [denyModal, setDenyModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [user, setUser] = useState(null);
+
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [reportTypeFilter, setReportTypeFilter] = useState("");
   const [clearHistoryModalVisible, setClearHistoryModalVisible] = useState(false);
 
-  
   useEffect(() => {
     const token = sessionStorage.getItem("User");
     if (token) {
@@ -30,39 +44,65 @@ export const AdminHistory = () => {
     }
   }, []);
 
-
   const fetchData = async () => {
     try {
-      const token = sessionStorage.getItem("User"); 
-          if (!token) {
-            alert("You must be logged in");
-            return;
-          }
+      const token = sessionStorage.getItem("User");
+      if (!token) {
+        alert("You must be logged in");
+        return;
+      }
+
       const res = await getHistory(token);
-      if (res && res.results) {
-        const formattedData = res.results.map((item, index) => ({
-        key: item._id ? item._id.toString() : `row-${index}`,
-        _id: item._id ? item._id.toString() : null, 
-        ...item,
-        dateReported: item.dateReported
-          ? new Date(item.dateReported).toLocaleString()
-          : "N/A",
-        dateFound: item.dateFound
-          ? new Date(item.dateFound).toLocaleDateString()
-          : "N/A",
-          approvedBy: item.approvedBy ? item.approvedBy : "No actions yet"
-      }));
-      console.log("Formatted Data: ", formattedData)
-        setData(formattedData);
+      if (res && res.success) {
+        // Format reports
+        const formattedReports = (res.reports || [])
+        .filter((item) => item.status?.toLowerCase() !== "deleted")
+        .map((item, index) => ({
+          key: item._id ? item._id.toString() : `r-${index}`,
+          _id: item._id ? item._id.toString() : null,
+          ...item,
+          dateReported: item.dateReported
+            ? new Date(item.dateReported).toLocaleString()
+            : "N/A",
+          dateFound: item.dateFound
+            ? new Date(item.dateFound).toLocaleDateString()
+            : "N/A",
+          approvedBy: item.approvedBy || "No actions yet",
+        }));
+
+        // Format claims
+        const formattedClaims = (res.claims || [])
+        .filter((item) => item.claimStatus?.toLowerCase() !== "deleted")
+        .map((item, index) => ({
+          key: item._id ? item._id.toString() : `c-${index}`,
+          _id: item._id ? item._id.toString() : null,
+          ...item,
+          createdAt: item.createdAt
+            ? new Date(item.createdAt).toLocaleString()
+            : "N/A",
+          reviewedAt: item.reviewedAt
+            ? new Date(item.reviewedAt).toLocaleString()
+            : "N/A",
+        }));
+
+        setReports(formattedReports);
+        setClaims(formattedClaims);
+        setData(formattedReports); // default view
       }
     } catch (err) {
-      console.error("Error fetching found items:", err);
+      console.error("Error fetching history:", err);
     }
   };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle view change
+  const handleViewChange = (val) => {
+    setView(val);
+    setData(val === "Reports" ? reports : claims);
+  };
 
   const handleRowClick = (record) => {
     setSelectedItem(record);
@@ -74,151 +114,145 @@ export const AdminHistory = () => {
     setSelectedItem(null);
   };
 
-  /*const handleApprove = () => setApproveModal(true);
-  const handleDeny = () => setDenyModal(true); */
-
   const handleDeleteAll = async () => {
-    if (!window.confirm("Are you sure you want to delete all deleted items?")) return;
     const token = sessionStorage.getItem("User");
-    const result = await deleteHistory(token);
-    if (result.success) {
-      message.success("All deleted items deleted!");
-      fetchData();
+    if (view === "Reports") {
+      const result = await deleteHistory(token);
+      if (result.success) {
+        message.success("All deleted reports removed!");
+        fetchData();
+      } else {
+        message.error(result.message);
+      }
     } else {
-      message.error(result.message);
+      const result = await deleteClaims(token);
+      if (result.success) {
+        message.success("All deleted claims removed!");
+        fetchData();
+      } else {
+        message.error(result.message);
+      }
     }
   };
 
+  const filteredData = data.filter((item) => {
+    const search = searchText.toLowerCase();
+    if (view === "Reports") {
+      const matchesSearch =
+        item.tid?.toLowerCase().includes(search) ||
+        item.category?.toLowerCase().includes(search) ||
+        item.keyItem?.toLowerCase().includes(search) ||
+        item.itemBrand?.toLowerCase().includes(search);
 
-  /*const confirmApprove = async () => {
-  setConfirmLoading(true);
-  const token = sessionStorage.getItem("User");
-  try {
-    await approveFound(selectedItem._id, "Active", user.studentId, token);
-    message.success("Item approved successfully!");
-    setApproveModal(false);
-    setIsModalVisible(false);
-    fetchData();
-  } catch (err) {
-    console.error(err);
-    message.error("Failed to approve item.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
+      const matchesStatus = statusFilter ? item.status === statusFilter : true;
+      const matchesReportType = reportTypeFilter ? item.reportType === reportTypeFilter : true;
 
-const confirmDeny = async () => {
-  setConfirmLoading(true);
-  const token = sessionStorage.getItem("User");
-  try {
-    await approveFound(selectedItem._id, "Denied", user.studentId, token); // ✅ use _id here
-    message.success("Item denied successfully!");
-    setDenyModal(false);
-    setIsModalVisible(false);
-    fetchData();
-  } catch (err) {
-    console.error(err);
-    message.error("Failed to deny item.");
-  } finally {
-    setConfirmLoading(false);
-  }
-};
-*/
+      return matchesSearch && matchesStatus && matchesReportType;
+    } else {
+      const matchesSearch =
+        item.cid?.toLowerCase().includes(search) ||
+        item.claimerId?.toLowerCase().includes(search);
+      const matchesStatus = statusFilter ? item.claimStatus === statusFilter : true;
+      return matchesSearch && matchesStatus;
+    }
+  });
 
-const filteredData = data.filter((item) => {
-  const search = searchText.toLowerCase();
-
-  const matchesSearch =
-    item.tid?.toLowerCase().includes(search) ||
-    item.category?.toLowerCase().includes(search) ||
-    item.keyItem?.toLowerCase().includes(search) ||
-    item.itemBrand?.toLowerCase().includes(search);
-
-  const matchesStatus = statusFilter ? item.status === statusFilter : true;
-  const matchesReportType = reportTypeFilter ? item.reportType === reportTypeFilter : true;
-
-  return matchesSearch && matchesStatus && matchesReportType;
-});
-
-
-const STATUS_COLORS = {
+  const STATUS_COLORS = {
     denied: "volcano",
     deleted: "volcano",
     disposed: "volcano",
     pending: "orange",
-    "pending claimed": "orange",
     active: "blue",
     claimed: "green",
     listed: "blue",
     reviewing: "orange",
     returned: "green",
+    completed: "green",
     "reviewing claim": "orange",
     "claim rejected": "volcano",
     "claim approved": "blue",
-    completed: "green",
   };
 
   return (
     <>
-      <Button onClick={fetchData} style={{ marginBottom: 16 }}>
-        Refresh
-      </Button>
-      <Button onClick={() => {
-          const hasDeleted = data.some(item => item.status === "Deleted");
-          if (!hasDeleted) {
-            message.info("No deleted items are present!");
-            return;
-          }
-          setClearHistoryModalVisible(true);
-        }} 
-        style={{ marginBottom: 16 }}
-      >
-        Clear Deleted Reports
-      </Button>
-
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-  <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-  <Input
-    className="poppins-input"
-    placeholder="Search by TID, Category, or Key Item"
-    value={searchText}
-    onChange={(e) => setSearchText(e.target.value)}
-    style={{ width: 300 }}
-    allowClear
-  />
+        <Segmented
+          options={["Reports", "Claims"]}
+          value={view}
+          onChange={handleViewChange}
+          style={{ marginRight: 16 }}
+        />
+        <Button onClick={fetchData}>Refresh</Button>
+        <Button
+          onClick={() => {
+            const hasDeleted = data.some(
+              (item) =>
+                (view === "Reports" && item.status === "Deleted") ||
+                (view === "Claims" && item.claimStatus === "Deleted")
+            );
+            if (!hasDeleted) {
+              message.info(`No deleted ${view.toLowerCase()} found.`);
+              return;
+            }
+            setClearHistoryModalVisible(true);
+          }}
+        >
+          Clear Deleted {view}
+        </Button>
+      </div>
 
-  <Select
-    placeholder="Filter by Report Type"
-    value={reportTypeFilter}
-    onChange={(value) => setReportTypeFilter(value)}
-    style={{ width: 200 }}
-    allowClear
-  >
-    <Option value="">All Report</Option>
-    <Option value="Found">Found</Option>
-    <Option value="Lost">Lost</Option>
-  </Select>
+      <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+        <Input
+          className="poppins-input"
+          placeholder={`Search ${view}`}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 300 }}
+          allowClear
+        />
 
-  <Select
-    placeholder="Filter by Status"
-    value={statusFilter}
-    onChange={(value) => setStatusFilter(value)}
-    style={{ width: 200 }}
-    allowClear
-  >
-    <Option value="">All Status</Option>
-    <Option value="Reviewing">Reviewing</Option>
-    <Option value="Listed">Listed</Option>
-    <Option value="Reviewing Claim">Reviewing Claim</Option>
-    <Option value="Claim Approved">Claim Approved</Option>
-    <Option value="Returned">Returned</Option>
-    <Option value="Claim Rejected">Claim Rejected</Option>
-    <Option value="Denied">Denied</Option>
-    <Option value="Deleted">Deleted</Option>
-  </Select>
-</div>
-  
-</div>
+        {view === "Reports" && (
+          <>
+            <Select
+              placeholder="Filter by Report Type"
+              value={reportTypeFilter}
+              onChange={(v) => setReportTypeFilter(v)}
+              style={{ width: 200 }}
+              allowClear
+            >
+              <Option value="">All Reports</Option>
+              <Option value="Found">Found</Option>
+              <Option value="Lost">Lost</Option>
+            </Select>
+          </>
+        )}
+
+        <Select
+          placeholder="Filter by Status"
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v)}
+          style={{ width: 200 }}
+          allowClear
+        >
+          <Option value="">All Status</Option>
+          {view === "Reports" ? (
+            <>
+              <Option value="Reviewing">Reviewing</Option>
+              <Option value="Listed">Listed</Option>
+              <Option value="Denied">Denied</Option>
+              <Option value="Returned">Returned</Option>
+              <Option value="Deleted">Deleted</Option>
+            </>
+          ) : (
+            <>
+              <Option value="Pending">Pending</Option>
+              <Option value="Completed">Completed</Option>
+              <Option value="Denied">Denied</Option>
+              <Option value="Deleted">Deleted</Option>
+            </>
+          )}
+        </Select>
+      </div>
 
       <Table
         dataSource={filteredData}
@@ -227,151 +261,120 @@ const STATUS_COLORS = {
           style: { cursor: "pointer" },
         })}
       >
-        <Column title="TITLE" dataIndex="title" key="title" />
-        <Column title="REPORT TYPE" dataIndex="reportType" key="reportType" />
-        <Column title="STATUS" dataIndex="status" key="status" render={(status) => {
-              const color = STATUS_COLORS[status?.toLowerCase()] || "default";
-              return (
-                <Tag color={color} style={{ fontWeight: 500, fontFamily: "Poppins, sans-serif" }}>
-                  {status ? status.toUpperCase() : "N/A"}
-                </Tag>
-              );
-            }}/>
-        <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
-        <Column title="APPROVED BY" dataIndex="approvedBy" key="approvedBy" />
-        <Column
-          title="UPDATED AT"
-          dataIndex="updatedAt"
-          key="updatedAt"
-          render={(text) => {
-            if (!text) return "N/A";
-            const date = new Date(text);
-            return date
-              .toLocaleString("en-US", {
-                month: "2-digit",
-                day: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: true,
-              })
-              .replace(",", "");
-          }}
-        />
+        {view === "Reports" ? (
+          <>
+            <Column title="TITLE" dataIndex="title" key="title" />
+            <Column title="REPORT TYPE" dataIndex="reportType" key="reportType" />
+            <Column
+              title="STATUS"
+              dataIndex="status"
+              key="status"
+              render={(status) => {
+                const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+                return <Tag color={color} style={{
+      fontFamily: "Poppins, sans-serif",
+      fontWeight: 500,
+    }} >{status?.toUpperCase() || "N/A"}</Tag>;
+              }}
+            />
+            <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
+            <Column title="APPROVED BY" dataIndex="approvedBy" key="approvedBy" />
+          </>
+        ) : (
+          <>
+            <Column title="CID" dataIndex="cid" key="cid" />
+            <Column title="CLAIMER ID" dataIndex="claimerId" key="claimerId" />
+            <Column
+              title="CLAIM STATUS"
+              dataIndex="claimStatus"
+              key="claimStatus"
+              render={(status) => {
+                const color = STATUS_COLORS[status?.toLowerCase()] || "default";
+                return <Tag color={color} style={{
+      fontFamily: "Poppins, sans-serif",
+      fontWeight: 500,
+    }}>{status?.toUpperCase() || "N/A"}</Tag>;
+              }}
+            />
+            <Column title="CREATED AT" dataIndex="createdAt" key="createdAt" />
+            <Column title="REVIEWED AT" dataIndex="reviewedAt" key="reviewedAt" />
+          </>
+        )}
       </Table>
 
-      {/* Main modal */}
       <Modal
-        title={selectedItem ? selectedItem.title : "Lost Item Details"}
+        title={view === "Reports" ? "Report Details" : "Claim Details"}
         open={isModalVisible}
         onCancel={handleModalClose}
-        footer={null}
+        footer={[<Button onClick={handleModalClose}>OK</Button>]}
         width={700}
         maskClosable={false}
       >
-       {selectedItem && (
-  <>
-    {selectedItem.photoUrl && (
-      <div style={{ textAlign: "center", marginBottom: 16 }}>
-        <Image src={selectedItem.photoUrl} width={250} />
-      </div>
-    )}
+        {selectedItem && (
+          <>
+            {selectedItem.photoUrl && (
+              <div style={{ textAlign: "center", marginBottom: 16 }}>
+                <Image src={selectedItem.photoUrl} width={250} />
+              </div>
+            )}
 
-        {selectedItem.reportType === "Found" ? (
-          
-          <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="TID">
-              <Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.tid}</Text></Descriptions.Item>
-            <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
-            <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
-            <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
-            <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
-            <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
-            <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
-            <Descriptions.Item label="Date Found">{selectedItem.dateFound}</Descriptions.Item>
-            <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
-            <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
-            <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
-            <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
-          </Descriptions>
-        ) : (
-          
-          <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="TID"><Text copyable style={{fontFamily: "Poppins"}}>{selectedItem.tid}</Text></Descriptions.Item>
-            <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
-            <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
-            <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
-            <Descriptions.Item label="Item Brand">{selectedItem.itemBrand}</Descriptions.Item>
-            <Descriptions.Item label="Location">{selectedItem.location}</Descriptions.Item>
-            <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
-            <Descriptions.Item label="Date Range">
-              {selectedItem.startDate || selectedItem.endDate
-                ? `${selectedItem.startDate
-                    ? new Date(selectedItem.startDate).toLocaleDateString("en-US", {
-                        month: "2-digit",
-                        day: "2-digit",
-                        year: "numeric",
-                      })
-                    : "N/A"} - ${
-                    selectedItem.endDate
-                      ? new Date(selectedItem.endDate).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                        })
-                      : "N/A"
-                  }`
-                : "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
-            <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
-            <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
-            <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
-          </Descriptions>
+            {view === "Reports" ? (
+              <Descriptions bordered column={1} size="middle">
+                <Descriptions.Item label="TID">
+                  <Text copyable>{selectedItem.tid}</Text>
+                </Descriptions.Item>
+                <Descriptions.Item label="Title">{selectedItem.title}</Descriptions.Item>
+                <Descriptions.Item label="Category">{selectedItem.category}</Descriptions.Item>
+                <Descriptions.Item label="Key Item">{selectedItem.keyItem}</Descriptions.Item>
+                <Descriptions.Item label="Status">{selectedItem.status}</Descriptions.Item>
+                <Descriptions.Item label="Reported By">{selectedItem.reportedBy}</Descriptions.Item>
+                <Descriptions.Item label="Approved By">{selectedItem.approvedBy}</Descriptions.Item>
+                <Descriptions.Item label="Date Reported">{selectedItem.dateReported}</Descriptions.Item>
+                <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
+              </Descriptions>
+            ) : (
+              <Descriptions bordered column={1} size="middle">
+                <Descriptions.Item label="CID">
+                  <Text copyable>{selectedItem.cid}</Text>
+                </Descriptions.Item>
+                <Descriptions.Item label="Claimer ID">{selectedItem.claimerId}</Descriptions.Item>
+                <Descriptions.Item label="Claim Status">{selectedItem.claimStatus}</Descriptions.Item>
+                <Descriptions.Item label="Created At">{selectedItem.createdAt}</Descriptions.Item>
+                <Descriptions.Item label="Reviewed At">{selectedItem.reviewedAt}</Descriptions.Item>
+                <Descriptions.Item label="Reason">{selectedItem.reason}</Descriptions.Item>
+              </Descriptions>
+            )}
+          </>
         )}
-
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-          <Button onClick={handleModalClose}>OK</Button>
-        </div>
-      </>
-    )}
       </Modal>
-        <Modal
-            title="Confirm Clear History"
-            open={clearHistoryModalVisible}
-            onCancel={() => setClearHistoryModalVisible(false)}
-            centered
-            maskClosable={false}
-            footer={[
-              <Button key="cancel" onClick={() => setClearHistoryModalVisible(false)}>
-                Cancel
-              </Button>,
-              <Button
-                key="confirm"
-                type="primary"
-                loading={confirmLoading}
-                onClick={async () => {
-                  setConfirmLoading(true);
-                  const token = sessionStorage.getItem("User");
-                  const result = await deleteHistory(token);
-                  setConfirmLoading(false);
-                  setClearHistoryModalVisible(false);
-                  if (result.success) {
-                    message.success("All deleted items deleted!");
-                    fetchData();
-                  } else {
-                    message.error(result.message);
-                  }
-                }}
-              >
-                Yes, Clear All
-              </Button>,
-      ]}
-    >
-      <p>Are you sure you want to delete all deleted reports? This action cannot be undone.</p>
-    </Modal>
-          
+
+      <Modal
+        title={`Confirm Clear ${view}`}
+        open={clearHistoryModalVisible}
+        onCancel={() => setClearHistoryModalVisible(false)}
+        centered
+        maskClosable={false}
+        footer={[
+          <Button key="cancel" onClick={() => setClearHistoryModalVisible(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            loading={confirmLoading}
+            onClick={async () => {
+              setConfirmLoading(true);
+              await handleDeleteAll();
+              setConfirmLoading(false);
+              setClearHistoryModalVisible(false);
+            }}
+          >
+            Yes, Clear All
+          </Button>,
+        ]}
+      >
+        <p>Are you sure you want to delete all deleted {view.toLowerCase()}? This action cannot be undone.</p>
+      </Modal>
     </>
   );
 };

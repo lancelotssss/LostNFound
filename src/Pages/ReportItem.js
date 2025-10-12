@@ -470,18 +470,26 @@ export default function ReportItem() {
             <Button
               className="footer-buttons"
               type="primary"
-              disabled={!canGoNextFrom3}
+              disabled={
+                !canGoNextFrom3 ||
+                (
+                  registerData.category !== "Identification Card" && 
+                  (
+                    !registerData.itemBrand?.trim() ||
+                    !registerData.keyItem?.trim()
+                  )
+                )
+              }
               onClick={() => setCurrent(3)}
             >
               Next
             </Button>
           )}
-
           {current === 3 && (
             <Button
               className="footer-buttons"
               type="primary"
-              disabled={!canGoNextFrom4}
+              disabled={!canGoNextFrom4  }
               onClick={() => setCurrent(4)}
             >
               Next
@@ -494,8 +502,8 @@ export default function ReportItem() {
               type="primary"
               loading={submitting}
               disabled={submitting ||
-                !registerData.itemBrand?.trim() || !registerData.keyItem?.trim() 
-              }
+              !registerData.description?.trim() ||
+              !registerData.file}
               onClick={() => setIsConfirmModalVisible(true)}
             >
               {submitting ? "Submitting..." : "Confirm"}

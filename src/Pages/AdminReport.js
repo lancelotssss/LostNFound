@@ -313,7 +313,7 @@ export const AdminReport = () => {
         {registerData.category !== "Identification Card" && (
           <Input
             name="itemBrand"
-            placeholder="ITEM NAME (required)"
+            placeholder="Item Name"
             value={registerData.itemBrand}
             onChange={handleChange}
             className="field-wide"
@@ -482,7 +482,16 @@ const StepFive = (
             <Button
               className="footer-buttons"
               type="primary"
-              disabled={!canGoNextFrom3}
+              disabled={
+                !canGoNextFrom3 ||
+                (
+                  registerData.category !== "Identification Card" && 
+                  (
+                    !registerData.itemBrand?.trim() ||
+                    !registerData.keyItem?.trim()
+                  )
+                )
+              }
               onClick={() => setCurrent(3)}
             >
               Next
@@ -505,7 +514,9 @@ const StepFive = (
             className="footer-buttons"
             type="primary"
             loading={submitting}
-            disabled={submitting}
+            disabled={submitting ||
+              !registerData.description?.trim() ||
+              !registerData.file}
             onClick={() => setIsConfirmModalVisible(true)}
             >
             {submitting ? "Submitting..." : "Confirm"}

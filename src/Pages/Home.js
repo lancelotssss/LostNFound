@@ -195,17 +195,18 @@ export const Home = () => {
 
         // ---- FOUND ----
         const foundFormatted = (reportRes.foundReports || [])
-          .map((item, index) => ({
-            key: item._id || `found-${index}`,
-            ...item,
-            dateReported: formatDate(item.dateReported),
-            dateFound: formatDate(item.dateFound),
-          }))
-          .sort(
-            (a, b) =>
-              foundStatusOrder.indexOf(a.status) -
-              foundStatusOrder.indexOf(b.status)
-          );
+        .filter((item) => item.status?.toLowerCase() !== "deleted")
+        .map((item, index) => ({
+          key: item._id || `found-${index}`,
+          ...item,
+          dateReported: formatDate(item.dateReported),
+          dateFound: formatDate(item.dateFound),
+        }))
+        .sort(
+          (a, b) =>
+            foundStatusOrder.indexOf(a.status) -
+            foundStatusOrder.indexOf(b.status)
+        );
 
         setLost(lostFormatted);
         setFound(foundFormatted);
@@ -850,7 +851,7 @@ const handleCancel = async (id, type) => {
               selectedFound?._id && handleDispose(selectedFound._id, "found")
             }
             disabled={
-                ![ "Reviewing"].includes(selectedFound?.status || "")
+                ![ "Reviewing", "Denied"].includes(selectedFound?.status || "")
               }
           >
             Delete
