@@ -241,7 +241,7 @@ return (
       <Column title="BRAND" dataIndex="itemBrand" key="itemBrand" />
       <Column title="LOCATION" dataIndex="location" key="location" />
       <Column
-        title="Status"
+        title="STATUS"
         dataIndex="status"
         key="status"
         render={(status) => {
@@ -253,7 +253,7 @@ return (
           );
         }}
       />
-      <Column title="Date Reported" dataIndex="dateReported" key="dateReported" />
+      <Column title="DATE REPORTED" dataIndex="dateReported" key="dateReported" />
       <Column
         title="DATE RANGE"
         key="dateRange"
