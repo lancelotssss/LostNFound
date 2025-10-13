@@ -216,7 +216,7 @@ return (
             >
               <Statistic
                 title="Approved Claims"
-                value={statusCounts?.reviewClaimsCount || 0}
+                value={statusCounts?.approvedClaims || 0}
                 formatter={(value) => (
                   <CountUp end={Number(value)} duration={1.5} separator="," />
                 )}
