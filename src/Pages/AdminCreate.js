@@ -40,6 +40,8 @@ export const  AdminCreate = () => {
   const [isTermsVisible, setIsTermsVisible] = useState(false);
   const [isPrivacyVisible, setIsPrivacyVisible] = useState(false);
 
+
+
   const [registerData, setRegisterData] = useState({
     fname: "", mname: "", lname: "", suffix: "", name: "",
     studentId: "", phone: "", email: "",
@@ -136,16 +138,15 @@ export const  AdminCreate = () => {
     clearGeneral();
     try {
       const token = sessionStorage.getItem("User");
-      const { data } = await createAdmin(payload, token);
+      const res = await createAdmin(payload, token);
+      if (res.success) {
+        setSuccessPulse(true);
+        showCenteredSuccess("Admin account created successfully!");
+        setTimeout(() => navigate("/main/dashboard"), 500);
+        return;
+      }
 
-    if (data?.success) {
-      setSuccessPulse(true);
-      showCenteredSuccess("Admin account created successfully!");
-      setTimeout(() => navigate("/main/dashboard"), 500);
-      return;
-    }
-
-    setErrors((p) => ({ ...p, general: data?.message || "Registration failed." }));
+      setErrors((p) => ({ ...p, general: res.message || "Registration failed." }));
     } catch (err) {
       console.error("AdminCreate error:", err);
 
@@ -188,7 +189,7 @@ return (
 
 
   <div className="settings-wrap">
-    {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- HEADERRRRRRR =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
+    {contextHolder}{/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- HEADERRRRRRR =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
     <div style={{ marginBottom: 8 }}> 
       <Typography.Title level={4} style={{ margin: 0 }}> 
         Create a new admin 
