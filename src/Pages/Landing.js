@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "../Pages/styles/landing.css";
+import { useNavigate } from "react-router-dom";
 
 import bgWave from "../assets/bbg.png";
 import heroImg from "../assets/cpp.png";
@@ -41,7 +42,7 @@ function Landing() {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [activeFAQ, setActiveFAQ] = useState(null);
-
+  const navigate = useNavigate();
  
   useEffect(() => {
     const interval = setInterval(() => {
@@ -65,6 +66,11 @@ function Landing() {
       prevIndex === 0 ? carouselImages.length - 1 : prevIndex - 1
     );
   };
+
+  const handleGetStarted = () => {
+    navigate("/login"); 
+  };
+
 
  
   const toggleFAQ = (index) => {
@@ -99,7 +105,7 @@ function Landing() {
             EVERY ITEM, IN ONE PLACE.
           </h1>
           <p>A helpful solution for you and your community.</p>
-          <button className="get-started">GET STARTED</button>
+          <button className="get-started" onClick={handleGetStarted}>GET STARTED</button>
         </div>
         <div className="hero-image">
           <img src={heroImg} alt="Hero Visual" />
