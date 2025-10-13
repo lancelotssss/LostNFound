@@ -420,33 +420,33 @@ const handleCancel = async (id, type) => {
         const SHOW_CAROUSEL = true;
         if (SHOW_CAROUSEL) {
           return (
-            <div className="hero">
+            <div className="heros">
               {/* DESKTOP CAROUSEL --------------------------------------------------------- */}
               <div className="carousel-desktop">
                 <Carousel
                   autoplay
                   autoplaySpeed={3500}
                   dots
-                  className="hero-carousel"
+                  className="heros-carousel"
                   draggable
                 >
                   <div>
                     <div
-                      className="hero-slide"
+                      className="heros-slide"
                       style={{ backgroundImage: "url(/assets/caro1.png)" }}
                     />
                   </div>
                   <div>
                     <div
-                      className="hero-slide"
+                      className="heros-slide"
                       style={{ backgroundImage: "url(/assets/caro2.png)" }}
                     >
-                      <div className="hero-cta"></div>
+                      <div className="heros-cta"></div>
                     </div>
                   </div>
                   <div>
                     <div
-                      className="hero-slide"
+                      className="heros-slide"
                       style={{ backgroundImage: "url(/assets/caro3.png)" }}
                     />
                   </div>
@@ -459,12 +459,12 @@ const handleCancel = async (id, type) => {
                   autoplay
                   autoplaySpeed={3500}
                   dots
-                  className="hero-carousel"
+                  className="heros-carousel"
                   draggable
                 >
                   <div>
                     <div
-                      className="hero-slide"
+                      className="heros-slide"
                       style={{
                         backgroundImage: "url(/assets/caro1-mobile.png)",
                       }}
@@ -472,17 +472,17 @@ const handleCancel = async (id, type) => {
                   </div>
                   <div>
                     <div
-                      className="hero-slide"
+                      className="heros-slide"
                       style={{
                         backgroundImage: "url(/assets/caro2-mobile.png)",
                       }}
                     >
-                      <div className="hero-cta"></div>
+                      <div className="heros-cta"></div>
                     </div>
                   </div>
                   <div>
                     <div
-                      className="hero-slide"
+                      className="heros-slide"
                       style={{
                         backgroundImage: "url(/assets/caro3-mobile.png)",
                       }}

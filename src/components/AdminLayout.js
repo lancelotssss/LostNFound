@@ -6,21 +6,17 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { NavBarAdmin } from "./NavBarAdmin";
 import "../../src/Pages/styles/Layout.css"; // <--- CSS GALING SA LAYOUT.JS PREEEEEE
 
-import { Menu } from "antd";
-import { FolderOpenOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-
 
 const { Header, Sider, Content } = AntLayout;
 const { Title } = Typography;
 
+
+
 const getInitials = (fname = "", lname = "") => {
-      const first = fname?.trim()?.charAt(0) || "";
-      const last = lname?.trim()?.charAt(0) || "";
-      return (first + last).toUpperCase();
-    };
-
-
+    const first = fname?.trim()?.charAt(0) || "";
+    const last = lname?.trim()?.charAt(0) || "";
+    return (first + last).toUpperCase();
+  };
 
 
 
@@ -31,13 +27,13 @@ export function AdminLayout() {
 
     useEffect(() => {
     const token = sessionStorage.getItem("User");
-    if (!token) return navigate("/");
+    if (!token) return navigate("/login");
     try {
         const decoded = jwtDecode(token);
         setUser(decoded);
-        if (decoded?.role !== "admin") navigate("/"); // non-admins
+        if (decoded?.role !== "admin") navigate("/login"); // non-admins
     } catch {
-        navigate("/");
+        navigate("/login");
     }
     }, [navigate]);
 

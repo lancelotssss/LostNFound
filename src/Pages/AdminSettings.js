@@ -190,7 +190,7 @@ export function AdminSettings() {
             setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
             setIsPasswordEditing(false);
             sessionStorage.removeItem("User");
-            nav("/");
+            nav("/login");
           }
         } catch (err) {
           console.error("Error updating password:", err);

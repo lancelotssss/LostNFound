@@ -15,8 +15,10 @@ html, body, #root {
   padding: clamp(64px, 8vh, 96px) 16px 40px;  /* PANG top gap */
   margin: 0 auto;
 
-  background: url("../../../public/assets/background-register.png") center / cover no-repeat;
+  background: url("../../../public/assets/background-login2.png") center / cover no-repeat;
   background-color: #f3f4f6;
+  /* background-color: red !important; */
+  
 }
 @media (max-width: 992px){
   .register-container{ background: none; }

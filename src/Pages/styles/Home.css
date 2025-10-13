@@ -71,14 +71,14 @@
 /* ==============================
    HERO / CAROUSEL
 ============================== */
-.hero {
+.heros {
   width: 100%;
   margin: 8px 0 18px;
   border-radius: 50px;
   background: transparent;
 }
 
-.hero-slide {
+.heros-slide {
   height: 300px;
   border-radius: 16px;
   padding: 22px;
@@ -92,21 +92,21 @@
   overflow: hidden;
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
-.hero-slide::before {
+.heros-slide::before {
   content: "";
   position: absolute;
   inset: 0;
 }
-.hero-slide > * { 
+.heros-slide > * { 
   position: relative; z-index: 1; 
 }
 
-.hero-carousel .slick-slide {
+.heros-carousel .slick-slide {
   background: transparent !important;
   padding: 0 6px;
   box-sizing: border-box;
 }
-.hero-carousel .slick-list { 
+.heros-carousel .slick-list { 
   margin: 0 -6px; 
 }
 
@@ -312,7 +312,7 @@
     display: none; 
   }
 
-  .hero-slide { 
+  .heros-slide { 
     height: 200px; padding: 16px; 
   }
   .carousel-desktop { 

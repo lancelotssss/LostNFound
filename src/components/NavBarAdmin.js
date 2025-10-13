@@ -163,7 +163,7 @@ useEffect(() => {
     const res = await logOutUser(token);
     if (res?.success) {
       sessionStorage.removeItem("User");
-      navigate("/");
+      navigate("/login");
     } else {
       alert("Logout failed");
     }

@@ -57,7 +57,6 @@ export const AdminHistory = () => {
       const res = await getHistory(token);
       if (res && res.success) {
         const formattedReports = (res.reports || [])
-          .filter((item) => item.status?.toLowerCase() !== "deleted")
           .map((item, index) => ({
             key: item._id ? item._id.toString() : `r-${index}`,
             _id: item._id ? item._id.toString() : null,
@@ -72,7 +71,6 @@ export const AdminHistory = () => {
           }));
 
         const formattedClaims = (res.claims || [])
-          .filter((item) => item.claimStatus?.toLowerCase() !== "deleted")
           .map((item, index) => ({
             key: item._id ? item._id.toString() : `c-${index}`,
             _id: item._id ? item._id.toString() : null,

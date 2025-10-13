@@ -1,15 +1,16 @@
 // src/components/NavBar.js
 import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-  HomeOutlined,
-  FileAddOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-} from "@ant-design/icons";
+import { HomeOutlined, FileAddOutlined, SettingOutlined, LogoutOutlined } from "@ant-design/icons";
 import { logOutUser } from "../api";
 import { Menu, Modal, Button } from "antd";
 import "../../src/Pages/styles/NavBar.css";
+
+
+
+
+
+
 
 export const pageDataClient = [
   { key: "home", name: "Home", path: "/cli/home", icon: <HomeOutlined /> },
@@ -17,6 +18,12 @@ export const pageDataClient = [
   { key: "settings", name: "User Settings", path: "/cli/settings", icon: <SettingOutlined /> },
   { key: "logout", name: "Logout", icon: <LogoutOutlined /> }, 
 ];
+
+
+
+
+
+
 
 export function NavBar() {
   const navigate = useNavigate();
@@ -30,7 +37,7 @@ export function NavBar() {
     const res = await logOutUser(token);
     if (res?.success) {
       sessionStorage.removeItem("User");
-      navigate("/");
+      navigate("/login");
     } else {
       alert("Logout failed");
     }
@@ -76,6 +83,9 @@ export function NavBar() {
         className="NavBarMenu menu-top"
       />
 
+      
+
+      {/* Fixed bottom section with Button */}
       <div className="menu-bottom">
         <Button
           block
