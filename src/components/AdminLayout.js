@@ -6,19 +6,17 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { NavBarAdmin } from "./NavBarAdmin";
 import "../../src/Pages/styles/Layout.css"; // <--- CSS GALING SA LAYOUT.JS PREEEEEE
 
-import { Menu } from "antd";
-import { FolderOpenOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-
 
 const { Header, Sider, Content } = AntLayout;
 const { Title } = Typography;
 
-const getInitials = (fname = "", lname = "") => {
-      const first = fname?.trim()?.charAt(0) || "";
-      const last = lname?.trim()?.charAt(0) || "";
-      return (first + last).toUpperCase();
-    };
+const initials = (name) =>
+  (name || "")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
 
 
@@ -35,7 +33,7 @@ export function AdminLayout() {
     try {
         const decoded = jwtDecode(token);
         setUser(decoded);
-        if (decoded?.role !== "admin") navigate("/"); // non-admins
+        if (decoded?.role !== "admin") navigate("/"); // block non-admins
     } catch {
         navigate("/");
     }
@@ -62,7 +60,7 @@ return (
 
       <Space size="middle" align="center">
         <Title className="goodday" level={5} style={{ margin: 0, textTransform: "uppercase" }}>
-          GOOD DAY, {user?.fname || "Admin"}!
+          GOOD DAY, {user?.name || "Admin"}!
         </Title>
 
         {user?.name ? (
@@ -72,7 +70,7 @@ return (
             onClick={() => navigate("/main/settings")}
             title="Go to Settings"
           >
-            {getInitials(user.fname, user.lname)}
+            {initials(user.name)}
           </Avatar>
         ) : (
           <Avatar
