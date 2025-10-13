@@ -168,7 +168,9 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 phone: user.phone,
                 password: user.password,
                 lname: user.lname,
-                fname: user.fname
+                fname: user.fname,
+                mname: user.mname,
+                suffix: user.suffix
             }
             const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
 
