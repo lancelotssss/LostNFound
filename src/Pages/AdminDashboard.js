@@ -56,11 +56,12 @@ export const AdminDashboard = () => {
     }
   };
 
+
   if (loading) return (
-    <div style={{ textAlign: "center", marginTop: 50 }}>
-      <Spin size="large" tip="Loading dashboard..." />
-    </div>
-  );
+  <div className="centered-spin">
+    <Spin size="large" tip="Loading dashboard..." />
+  </div>
+);
 
   if (!data) return <p style={{ textAlign: "center" }}>Failed to load dashboard data.</p>;
 

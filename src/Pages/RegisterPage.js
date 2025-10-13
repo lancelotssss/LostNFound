@@ -197,7 +197,7 @@ export default function RegisterPage2() {
     return (
       <div className="loading-container">
         <Spin
-          indicator={<LoadingOutlined spin />}
+          
           size="large"
           tip="Loading..."
         />

@@ -105,6 +105,7 @@ const accountChildren = useMemo(
   [dashboardItem, reviewChildren, accountChildren, restTopPages]
 );
 
+  // Flatten for matching path -> ke
   const flatItems = useMemo(() => {
   const flat = [
     dashboardItem,
@@ -115,7 +116,7 @@ const accountChildren = useMemo(
   return flat.filter(Boolean);
 }, [dashboardItem, reviewChildren, accountChildren, restTopPages]); 
 
-  // determine selected key by current URL
+  // Determine selected key by current URL (prefix match like client
   const selectedKeys = useMemo(() => {
     const match =
       flatItems.find((it) => it.path && location.pathname.startsWith(it.path)) ??
@@ -123,11 +124,11 @@ const accountChildren = useMemo(
     return [match.key];
   }, [flatItems, dashboardItem, location.pathname]);
 
-  // keep review submenu open when a review child is active
+  // Keep Review submenu open when a review child is activ
   const reviewChildKeys = useMemo(() => reviewChildren.map((c) => c.key), [reviewChildren]);
   const isReviewActive = reviewChildKeys.includes(selectedKeys[0]);
 
-  // expand on desktop and avoid flicker on mobile 
+  // ---------- Expand on desktop, avoid flicker on mobile ---------
   const [isNarrow, setIsNarrow] = useState(() =>
     window.matchMedia("(max-width: 992px)").matches
   );
@@ -142,28 +143,21 @@ const accountChildren = useMemo(
     };
   }, []);
 
-  // controlled open state on desktop; auto-open review if a child is selecte
+  // Controlled open state on desktop; auto-open review if a child is selecte
   const [openKeys, setOpenKeys] = useState(["review"]);
   const accountChildKeys = useMemo(() => accountChildren.map((c) => c.key), [accountChildren]);
   const isAccountActive = accountChildKeys.includes(selectedKeys[0]);
 
-useEffect(() => {
-  if (!isNarrow) {
-    const newOpenKeys = [];
-    if (isReviewActive) newOpenKeys.push("review");
-    if (isAccountActive) newOpenKeys.push("accounts");
-    setOpenKeys(newOpenKeys);
-  }
-}, [isReviewActive, isAccountActive, isNarrow]);
 
-  // logout with confirm 
+
+  // --- Logout with confirm (same as client) --
   async function handleLogout() {
     const token = sessionStorage.getItem("User");
     if (!token) return;
     const res = await logOutUser(token);
     if (res?.success) {
       sessionStorage.removeItem("User");
-      navigate("/login");
+      navigate("/");
     } else {
       alert("Logout failed");
     }

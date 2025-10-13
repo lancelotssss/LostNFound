@@ -31,7 +31,7 @@ const LoginPage = () => {
     if (loading) {
         return (
         <div className="loading-container">
-            <Spin indicator={<LoadingOutlined spin />} size="large" tip="Loading..." />
+            <Spin  size="large" tip="Loading..." />
         </div>
         );
     }
