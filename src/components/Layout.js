@@ -165,6 +165,10 @@ export function Layout() {
 
           {/* AVATAR / DROP DOWN >>>> ________________________________________________________________________________ */}
           <div className="header-right">
+
+                    <Title className="goodday" level={5} style={{ margin: 0, textTransform: "uppercase" }}>
+          GOOD DAY, {user?.fname || "Admin"}!
+        </Title>
             <Dropdown
               trigger={["click"]}
               placement="bottomRight"

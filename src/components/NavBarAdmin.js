@@ -185,19 +185,7 @@ const accountChildren = useMemo(
         items={items}
       />
 
-      <div className="menu-bottom">
-        <Button
-          block
-          size="large"
-          type="default"
-          danger
-          icon={<LogoutOutlined />}
-          onClick={showLogoutConfirm}
-          className="logout-btn"
-        >
-          <span className="logout-text">Logout</span>
-        </Button>
-      </div>
+
     </div>
   );
 }

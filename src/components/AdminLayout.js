@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Layout as AntLayout, Avatar, Space, Typography, Image } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { Layout as AntLayout, Avatar, Space, Typography, Image, Dropdown, Modal } from "antd";
+import { UserOutlined, SettingOutlined, LogoutOutlined } from "@ant-design/icons";
+
 import { jwtDecode } from "jwt-decode";
 import { useNavigate, Outlet } from "react-router-dom";
 import { NavBarAdmin } from "./NavBarAdmin";
 import "../../src/Pages/styles/Layout.css"; // <--- CSS GALING SA LAYOUT.JS PREEEEEE
-
+import { logOutUser } from "../api";
 
 const { Header, Sider, Content } = AntLayout;
 const { Title } = Typography;
@@ -36,6 +37,48 @@ export function AdminLayout() {
         navigate("/login");
     }
     }, [navigate]);
+// Modal confirm
+const { confirm } = Modal;
+
+async function handleLogout() {
+  const token = sessionStorage.getItem("User");
+  if (!token) return;
+  try {
+    const res = await logOutUser(token);
+    if (res?.success) {
+      sessionStorage.removeItem("User");
+      navigate("/login");
+    } else {
+      // fallback if API returns error
+      sessionStorage.removeItem("User");
+      navigate("/login");
+    }
+  } catch {
+    sessionStorage.removeItem("User");
+    navigate("/login");
+  }
+}
+
+function showLogoutConfirm() {
+  confirm({
+    title: "Are you sure you want to log out?",
+    okText: "Log out",
+    cancelText: "Cancel",
+    centered: true,
+    onOk: handleLogout,
+  });
+}
+
+const userMenuItems = [
+  { key: "settings", label: "User Settings", icon: <SettingOutlined /> },
+  { type: "divider" },
+  { key: "logout", label: "Logout", danger: true, icon: <LogoutOutlined /> },
+];
+
+const onUserMenuClick = ({ key }) => {
+  if (key === "settings") navigate("/main/settings");
+  if (key === "logout") showLogoutConfirm();
+};
 
 
 return (
@@ -61,24 +104,31 @@ return (
           GOOD DAY, {user?.fname || "Admin"}!
         </Title>
 
-        {user?.name ? (
-          <Avatar
-            size="large"
-            style={{ backgroundColor: "#014F86", cursor: "pointer" }}
-            onClick={() => navigate("/main/settings")}
-            title="Go to Settings"
-          >
-            {getInitials(user.fname, user.lname)}
-          </Avatar>
-        ) : (
-          <Avatar
-            size="large"
-            icon={<UserOutlined />}
-            style={{ cursor: "pointer" }}
-            onClick={() => navigate("/main/settings")}
-            title="Go to Settings"
-          />
-        )}
+<Dropdown
+  trigger={["click"]}
+  placement="bottomRight"
+  menu={{ items: userMenuItems, onClick: onUserMenuClick }}
+>
+  {user?.fname || user?.lname ? (
+    <Avatar
+      className="avatar-pill"
+      size="large"
+      style={{ backgroundColor: "#014F86", cursor: "pointer" }}
+      title="Account"
+    >
+      {getInitials(user.fname, user.lname)}
+    </Avatar>
+  ) : (
+    <Avatar
+      className="avatar-pill"
+      size="large"
+      icon={<UserOutlined />}
+      style={{ cursor: "pointer" }}
+      title="Account"
+    />
+  )}
+</Dropdown>
+
       </Space>
     </Header>
 
