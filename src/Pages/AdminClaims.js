@@ -205,20 +205,7 @@ return (
             <span>Refresh</span>
           </Button>
 
-          <Button
-            className="btn-with-icons btn-danger-outline"
-            onClick={() => {
-              const hasDeleted = data.some((item) => item.claimStatus === "Deleted" || item.claimStatus === "Claim Deleted");
-              if (!hasDeleted) {
-                message.info("No deleted items are present!");
-                return;
-              }
-              setClearClaimsModalVisible(true);
-            }}
-          >
-            <CloseCircleOutlined />
-            <span>Clear Deleted Claims</span>
-          </Button>
+          
         </div>
       </div>
     </div>

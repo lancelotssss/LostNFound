@@ -1298,7 +1298,11 @@ adminRoutes.route("/admin").post(async (req, res) => {
     const mongoObject = {
       sid: `S-${Date.now()}`,
       role: "admin",
-      name: req.body.name || "Unknown",
+      name: req.body.name || "",
+      fname: req.body.fname || "",
+      mname: req.body.mname || "",
+      lname: req.body.lname || "",
+      suffix: req.body.suffix || "",
       email: req.body.email || "unknown@example.com",
       password: hash,
       studentId: req.body.studentId || "",

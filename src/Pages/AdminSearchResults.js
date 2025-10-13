@@ -118,7 +118,7 @@ export function AdminSearchResults() {
           onClick={() => navigate(-1)}
           className="usr-back-btn"
         >
-          Back to Home
+          Back to Review
         </Button>
       <div className="usr-header">
 
