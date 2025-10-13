@@ -6,21 +6,17 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { NavBarAdmin } from "./NavBarAdmin";
 import "../../src/Pages/styles/Layout.css"; // <--- CSS GALING SA LAYOUT.JS PREEEEEE
 
-import { Menu } from "antd";
-import { FolderOpenOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-
 
 const { Header, Sider, Content } = AntLayout;
 const { Title } = Typography;
 
+
+
 const getInitials = (fname = "", lname = "") => {
-      const first = fname?.trim()?.charAt(0) || "";
-      const last = lname?.trim()?.charAt(0) || "";
-      return (first + last).toUpperCase();
-    };
-
-
+    const first = fname?.trim()?.charAt(0) || "";
+    const last = lname?.trim()?.charAt(0) || "";
+    return (first + last).toUpperCase();
+  };
 
 
 
