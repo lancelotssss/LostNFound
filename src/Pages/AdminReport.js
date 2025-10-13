@@ -459,13 +459,14 @@ const StepFive = (
 
         {/* Single, shared footer fixes the “mispositioned Next” */}
         <div className="footer-actions">
-          <Button
-            className="footer-buttons"
-            disabled={current === 0}
-            onClick={() => setCurrent((p) => Math.max(p - 1, 0))}
-          >
-            Back
-          </Button>
+          {current > 0 && (
+            <Button
+              className="footer-buttons"
+              onClick={() => setCurrent((p) => Math.max(p - 1, 0))}
+            >
+              Back
+            </Button>
+          )}
 
           {current === 1 && (
             <Button

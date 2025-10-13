@@ -132,7 +132,7 @@ export const  AdminCreate = () => {
       return;
     }
 
-    const payload = { ...registerData, name: [fname, mname, lname, suffix].filter(Boolean).join(" ") };
+    const payload = { ...registerData, name: [fname, mname, lname, suffix].filter(Boolean).join(" ")};
 
     setSubmitting(true);
     clearGeneral();

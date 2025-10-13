@@ -29,6 +29,7 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       totalClaims,
       reviewLostCount,
       reviewFoundCount,
+      approvedClaims
     ] = await Promise.all([
       db
         .collection("lost_found_db")
@@ -42,12 +43,13 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       db
         .collection("lost_found_db")
         .countDocuments({ reportType: "Lost", status: "Listed" }),
-      db.collection("claims_db").countDocuments({ claimStatus: "Claim Approved" }),
+      db.collection("claims_db").countDocuments({ claimStatus: "Reviewing Claim" }),
       db.collection("claims_db").countDocuments({ claimStatus: "Completed" }),
       db.collection("lost_found_db").countDocuments({ status: "Listed" }),
       db.collection("claims_db").countDocuments({claimStatus: { $nin: ["Claim Rejected", "Claim Cancelled", "Claim Deleted"]}}),
       db.collection("lost_found_db").countDocuments({ reportType: "Lost", status: "Reviewing"}),
-      db.collection("lost_found_db").countDocuments({ reportType: "Found", status: "Reviewing"})
+      db.collection("lost_found_db").countDocuments({ reportType: "Found", status: "Reviewing"}),
+      db.collection("claims_db").countDocuments({ claimStatus: "Claim Approved" }),
     ])
 
     
@@ -151,7 +153,8 @@ const returnRate = totalLost
         totalStorageCount,
         totalClaims,
         reviewLostCount,
-        reviewFoundCount
+        reviewFoundCount,
+        approvedClaims
       },
       ratios: { returnRate },
       mostCommon: {
@@ -172,7 +175,8 @@ const returnRate = totalLost
         totalClaims +
         reviewLostCount +
         reviewFoundCount +
-        claimReturnedCount,
+        claimReturnedCount +
+        approvedClaims,
         
       reportsToday,
       auditLogs,
@@ -1294,7 +1298,11 @@ adminRoutes.route("/admin").post(async (req, res) => {
     const mongoObject = {
       sid: `S-${Date.now()}`,
       role: "admin",
-      name: req.body.name || "Unknown",
+      name: req.body.name || "",
+      fname: req.body.fname || "",
+      mname: req.body.mname || "",
+      lname: req.body.lname || "",
+      suffix: req.body.suffix || "",
       email: req.body.email || "unknown@example.com",
       password: hash,
       studentId: req.body.studentId || "",
