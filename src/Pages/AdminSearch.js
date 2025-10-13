@@ -45,7 +45,6 @@ export function UserSearch() {
     <form onSubmit={handleSubmit}>
       <h1>Search for your Item</h1>
 
-      {/* Category */}
       <div>
         <p>
           Category{" "}
@@ -65,7 +64,6 @@ export function UserSearch() {
         </p>
       </div>
 
-      {/* KeyItem + Brand (only show if category is chosen) */}
       {registerData.category && (
         <>
           <div>
@@ -96,7 +94,6 @@ export function UserSearch() {
         </>
       )}
 
-      {/* Location (only if keyItem filled) */}
       {registerData.keyItem && (
         <div>
           <p>
@@ -112,7 +109,7 @@ export function UserSearch() {
         </div>
       )}
 
-      {/* Start + End Dates (only if location filled) */}
+
       {registerData.location && (
         <div>
           <p>

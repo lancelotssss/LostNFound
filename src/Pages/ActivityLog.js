@@ -54,7 +54,6 @@ export const ActivityLog = () => {
 
   //-----------------------------------DO NOT DELETE-----------------------------------
   useEffect(() => {
-    // ✅ If no filters, show all data
     if (!selectedAction && !searchText.trim()) {
       setFilteredData(data);
       return;

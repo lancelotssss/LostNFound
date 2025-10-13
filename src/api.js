@@ -12,15 +12,11 @@ export async function createUser(user) {
 export async function verifyUser(user) {
   try {
     const response = await axios.post(`${URL}/users/login`, user);
-    console.log("Raw response:", response);
-    console.log("Response data:", response.data);
 
-    // Always return the response object
     return response.data; 
   } catch (err) {
     console.error("verifyUser error:", err);
 
-    // Return structured error if possible
     if (err.response?.data) return err.response.data;
     return { success: false, message: err.message || "Network error" };
   }
@@ -51,7 +47,6 @@ export async function getAllReport(token) {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("Axios response:", response);
     return response.data; // { count, results }
   } catch (err) {
     console.error("Error fetching reports:", err);
@@ -87,7 +82,6 @@ export async function getAllClaim(token){
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("Axios response:", response);
     return response.data;
   } catch (err) {
     console.error("Error fetching reports:", err);
@@ -102,7 +96,6 @@ export async function editClient(data, token) {
         Authorization: `Bearer ${token}`
       },
     });
-    console.log("Axios response: ", response)
     return response.data;
   } catch (err){
     console.error("Error fetching reports:", err);
@@ -209,7 +202,6 @@ export async function getFoundReport(token) {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("Axios response:", response);
     return response.data; // { count, results }
   } catch (err) {
     console.error("Error fetching reports:", err);
@@ -251,7 +243,6 @@ export async function getLostReport(token) {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("Axios response:", response);
     return response.data; // { count, results }
   } catch (err) {
     console.error("Error fetching reports:", err);
@@ -266,7 +257,6 @@ export async function getStorage(token) {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("Axios response:", response);
     return response.data; // { count, results }
   } catch (err) {
     console.error("Error fetching reports:", err);
@@ -297,7 +287,6 @@ export async function getHistory(token) {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("Axios response:", response);
     return response.data; // { count, results }
   } catch (err) {
     console.error("Error fetching reports:", err);
@@ -324,7 +313,6 @@ export async function editAdmin(data, token) {
         Authorization: `Bearer ${token}`
       },
     });
-    console.log("Axios response: ", response)
     return response.data;
   } catch (err){
     console.error("Error fetching reports:", err);
@@ -339,7 +327,6 @@ export async function editPasswordAdmin(data, token) {
         Authorization: `Bearer ${token}`
       },
     });
-    console.log("Axios response: ", response)
     return response.data;
   } catch (err){
     console.error("Error fetching reports:", err);

@@ -25,7 +25,7 @@ import { useNavigate } from "react-router-dom";
 
 
 
-// Helper: get initials from a full name
+//get initials from a full name
 const getInitials = (fname = "", lname = "") => {
   const first = fname?.trim()?.charAt(0) || "";
   const last = lname?.trim()?.charAt(0) || "";
@@ -167,29 +167,6 @@ export function UserSettings() {
   });
 }
 
-/*
-  const handleDeleteUser = async () => {
-    if (!window.confirm("Are you sure you want to delete your account?")) return;
- 
-    try {
-      const token = sessionStorage.getItem("User");
-      if (!token) return alert("User not logged in.");
- 
-      const response = await deleteUser(token);
- 
-      if (response.success) {
-        alert("User deleted successfully!");
-        sessionStorage.removeItem("User");
-        nav("/");
-      } else {
-        alert(response.message || "Failed to delete user.");
-      }
-    } catch (err) {
-      console.error("Error deleting user:", err);
-      alert("Error deleting user");
-    }
-  };
-*/
   const joined = user?.createdAt
     ? new Date(user.createdAt)
         .toLocaleString("en-US", {
@@ -270,7 +247,6 @@ export function UserSettings() {
 
             <Divider />
 
-            {/* Always visible, disabled until Edit; explicit Apply button */}
             <div className="settings-form">
               <label className="settings-label" htmlFor="oldPassword">
                 Old Password

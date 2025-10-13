@@ -20,14 +20,13 @@ const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
 
 
-// Helper: parse title format like "Found Item: Gadgets: Mobile Device, iPhone 15"
+//"found Item: Gadgets: Mobile Device, iPhone 15"
 function parseTitle(title) {
   if (!title) return { category: "N/A", type: "N/A", name: "N/A" };
 
-  // Remove "Found Item:" or "Lost Item:" prefix if present
+  //remove "Found Item:" or "Lost Item:" 
   const cleaned = title.replace(/^Found Item:\s*|^Lost Item:\s*/i, "").trim();
 
-  // Split by ":" and ","
   const parts = cleaned.split(":").map(p => p.trim());
   let category = parts[0] || "";
   let type = "";
@@ -102,7 +101,7 @@ export function UserSearchResults() {
     fetchRecommendations();
   }, [selectedItem]);
 
-  // After a successful claim, remove the item from the grid
+  // after a successful claim, remove the item from the grid
   const handleClaimSuccess = (claimedId) => {
     setRecommendations((prev) => prev.filter((item) => item._id !== claimedId));
     // message.success("Item claimed successfully!");

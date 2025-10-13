@@ -12,13 +12,13 @@ function LoginForm() {
     password: "",
   });
 
-  const [errors, setErrors] = useState({}); // NEW: for inline validation errors
+  const [errors, setErrors] = useState({}); 
   const navigate = useNavigate();
 
   function handleChange(e) {
     const { name, value } = e.target;
     setLoginData({ ...loginData, [name]: value });
-    setErrors((prev) => ({ ...prev, [name]: "" })); // clear specific error as user types
+    setErrors((prev) => ({ ...prev, [name]: "" })); 
   }
 
   async function handleSubmit(e) {
@@ -27,7 +27,6 @@ function LoginForm() {
     const { email, password } = loginData;
     const newErrors = {};
 
-    // 🔍 Frontend validation
     if (!email.trim()) newErrors.email = "Email is required.";
     if (!password.trim()) newErrors.password = "Password is required.";
 
@@ -37,7 +36,6 @@ function LoginForm() {
     }
 
     try {
-      // do not touch backend logic
       let response = await verifyUser(loginData);
 
 
@@ -59,12 +57,12 @@ function LoginForm() {
           setErrors({ general: "Unknown user role." });
         }
       } else {
-        // Login failed (no token returned)
+        // login failed (no token returned)
         setErrors({ general: "Incorrect email or password." });
         setLoginData({ ...loginData, password: "" }); // clear password
       }
     } catch (err) {
-      // Handle backend or network errors
+      // handle backend or network errors
       if (err.response?.status === 401) {
         setErrors({ general: "Invalid email or password." });
       } else {
@@ -79,10 +77,9 @@ function LoginForm() {
     <>
       <Card className="container-card">
         <div className="login-container">
-          {/* TITLE */}
+
           <p className="login-title">SIGN IN YOUR ACCOUNT</p>
 
-          {/* LOGIN INPUTS */}
           <form className="login-form" onSubmit={handleSubmit}>
             <p className="label-email">E-MAIL</p>
             <Input
@@ -115,7 +112,6 @@ function LoginForm() {
             )}
           </form>
             
-          {/* REMEMBER ME + FORGOT PASSWORD */}
           <div className="login-chk-forgot">
             <Checkbox id="login-remember">
               <p id="chkbox-p">REMEMBER ME</p>
@@ -125,7 +121,6 @@ function LoginForm() {
             </p>
           </div>
 
-          {/* SUBMIT BUTTON */}
           <Button
             id="login-btn"
             size="large"
@@ -137,7 +132,6 @@ function LoginForm() {
             LOGIN
           </Button>
 
-          {/* GENERAL ERROR MESSAGE */}
           {errors.general && (
             <div
               style={{
@@ -151,7 +145,6 @@ function LoginForm() {
             </div>
           )}
 
-          {/* SIGN UP LINK */}
           <p className="login-to-register">
             Don't have an account? <Link to="/register">SIGN UP HERE</Link>
           </p>

@@ -59,7 +59,6 @@ export const AdminUsers = () => {
 
   useEffect(() => {
     fetchData(viewRole);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewRole]);
 
   const handleRowClick = (record) => {
@@ -255,7 +254,7 @@ export const AdminUsers = () => {
 
                   {selectedItem.lastLogin
                   ? isNaN(Date.parse(selectedItem.lastLogin))
-                    ? selectedItem.lastLogin // it's just a string, show as-is
+                    ? selectedItem.lastLogin
                     : new Date(selectedItem.lastLogin).toLocaleString(undefined, {
                         year: "numeric",
                         month: "2-digit",

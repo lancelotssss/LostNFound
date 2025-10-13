@@ -89,7 +89,6 @@ const STATUS_COLORS = {
     returned: "green",
     "reviewing claim": "orange",
     "claim rejected": "volcano",
-    // 🟢 NEW CLAIM STATUS COLORS
     "claim approved": "blue",
     completed: "green",
   };
@@ -401,7 +400,6 @@ return (
       </Card>
       </div>
 
-      {/* RIGHT: Audit Logs */}
       <div
         className="today-stat"
         onClick={() => handleNavigate("/main/logs")}

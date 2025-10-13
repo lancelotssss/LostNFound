@@ -119,7 +119,6 @@ export const Home = () => {
       const decoded = jwtDecode(token);
       setUser(decoded);
     } catch (_) {
-      // ignore decode failure
     }
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     fetchData(token);
@@ -130,11 +129,9 @@ export const Home = () => {
     try {
       setLoading(true);
 
-      // Only fetch reports (lost, found, and claimReports come from here)
       const reportRes = await getAllReport(tkn);
 
       if (reportRes && reportRes.success) {
-        // ---- CLAIMS (from reportRes.claimReports) ----
         const claimFormatted = (reportRes.claimReports || [])
           .map((item, index) => {
             const cid =
@@ -162,7 +159,6 @@ export const Home = () => {
             return {
               key: item._id || `claim-${index}`,
               ...item,
-              // normalized fields for the table
               cid,
               claimerId,
               claimStatus,
@@ -225,7 +221,6 @@ export const Home = () => {
     }
   };
 
-  // Pagination (keep your UX copy)
   const paginationConfig = {
     pageSize: 10,
     showSizeChanger: true,
@@ -233,7 +228,6 @@ export const Home = () => {
       `Showing ${range[1] - range[0] + 1} of ${total} records`,
   };
 
-  // LOST handlers
   const handleLostClick = (record) => {
     setSelectedLost(record);
     setSelectedItem(record); 
@@ -245,7 +239,6 @@ export const Home = () => {
     setSelectedItem(null);
   };
 
-  // FOUND handlers
   const handleFoundClick = (record) => {
     setSelectedFound(record);
     setSelectedItem(record);
@@ -257,7 +250,6 @@ export const Home = () => {
     setSelectedItem(null);
   };
 
-  // Navigate to similar for LOST (preserve your classnames/route)
   const handleRowLostSeeSimilar = () => {
     if (!selectedLost?._id) return;
     // store the Mongo _id in localStorage
@@ -268,7 +260,6 @@ export const Home = () => {
     handleLostModalClose();
   };
 
-  // Dispose (friend’s “soft delete” update + your endpoint)
   const handleDispose = async (id, type) => {
   try {
     const response = await axios.put(
@@ -280,10 +271,8 @@ export const Home = () => {
     if (response?.data?.success) {
       message.success(response.data.message);
 
-      // ✅ re-fetch to update tables (lost/found)
       await fetchData(token);
 
-      // close modals if currently open
       if (type === "lost" && selectedLost?._id === id) handleLostModalClose();
       if (type === "found" && selectedFound?._id === id) handleFoundModalClose();
     } else {
@@ -305,10 +294,8 @@ const handleDeleted = async (id) => {
 
     if (response.data.success) {
       message.success(response.data.message);
-      // Refresh claims table
       await fetchData(token);
 
-      // Close claim modal if open
       handleClaimModalClose();
     } else {
       message.error(response.data.message || "Failed to delete claim");
@@ -329,10 +316,8 @@ const handleCancel = async (id, type) => {
 
     if (response.data.success) {
       message.success(response.data.message);
-      // Refresh claims table
       await fetchData(token);
 
-      // Close claim modal if open
       handleClaimModalClose();
     } else {
       message.error(response.data.message || "Failed to cancel claim");
@@ -345,7 +330,6 @@ const handleCancel = async (id, type) => {
 
 
   
-  // CLAIM handlers
   const handleClaimRowClick = async (record) => {
     try {
       setSelectedClaim(record);

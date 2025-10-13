@@ -21,7 +21,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { createClaim } from "../api"; // adjust path if needed
+import { createClaim } from "../api"; 
 
 const { useBreakpoint } = Grid;
 const { TextArea } = Input;
@@ -56,7 +56,7 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
   const [form] = Form.useForm();
   const [user, setUser] = useState(null);
 
-  // Guard: only send IDs that look like Mongo ObjectIds
+  // only send IDs that look like Mongo ObjectIds
   const isValidObjectId = (v) =>
     typeof v === "string" && /^[a-f\d]{24}$/i.test(v);
 
@@ -75,7 +75,7 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
     loadUserData();
   }, []);
 
-  // Friend's naming: open modal
+  //open modal
   const showModal = () => {
     setOpen(true);
     if (item?._id && isValidObjectId(item._id)) {
@@ -85,21 +85,21 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
     }
   };
 
-  // Friend's naming: close modal
+  //close modal
   const handleCancel = () => {
     localStorage.removeItem("lostReferenceFound");
     setOpen(false);
     form.resetFields();
   };
 
-  // Friend's naming: (kept for compatibility; proof is already visible)
+  // kept for compatibility; proof is already visible
   const handleClaim = () => {
     if (item?._id && isValidObjectId(item._id)) {
       localStorage.setItem("lostReferenceFound", item._id);
     }
   };
 
-  // Parse title like: "Found Item: Gadgets: Mobile Device, iPhone 15"
+  // "Found Item: Gadgets: Mobile Device, iPhone 15"
   const parseTitle = (title) => {
     if (!title) return { category: "N/A", type: "N/A", name: "N/A" };
     const cleaned = title.replace(/^Found Item:\s*|^Lost Item:\s*/i, "").trim();
@@ -119,7 +119,7 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
   const statusColor = STATUS_COLORS[statusKey] || "default";
   const { category, type, name } = parseTitle(item?.title || "");
 
-  // Friend's naming: submit handler
+  // submit handler
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -135,10 +135,10 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
 
       const formData = new FormData();
 
-      // IDs (append only if valid to avoid Mongo ObjectId errors)
+      // IDs 
       if (item?._id && isValidObjectId(item._id)) {
-        formData.append("itemId", item._id); // friend's key
-        formData.append("foundId", item._id); // compatibility
+        formData.append("itemId", item._id); 
+        formData.append("foundId", item._id); 
       }
 
       if (lostId && isValidObjectId(lostId)) {
@@ -259,14 +259,14 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
             type="primary"
             icon={<CheckCircleOutlined />}
             loading={claimLoading}
-            onClick={() => setConfirmVisible(true)}  // ✅ show confirmation modal first
+            onClick={() => setConfirmVisible(true)}  
           >
             Submit claim
           </Button>,
         ]}
         styles={{ body: { padding: 16 } }}
       >
-        {/* Fixed-size image block */}
+  
         <div className="fixed-photo-wrapper">
           <div className="photo-wrap fixed-photo">
             {item?.photoUrl ? (
@@ -317,7 +317,7 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
           </Descriptions.Item>
         </Descriptions>
 
-        {/* Proof section is ALWAYS visible */}
+
         <Form
           form={form}
           layout="vertical"
@@ -372,7 +372,6 @@ export function SearchResultCardModal({ item, lostId, onClaimSuccess }) {
         </Form>
       </Modal>
       
-      {/*Confirm Modal*/}
       <Modal
         title="Confirm Claim Submission"
         open={confirmVisible}

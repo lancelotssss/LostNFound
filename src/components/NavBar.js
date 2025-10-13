@@ -46,7 +46,7 @@ export function NavBar() {
     });
   }
 
-  // Split menus (top excludes logout)
+  // split menus (top excludes logout)
   const topPages = pageDataClient.filter((m) => m.key !== "logout");
   const itemsTop = useMemo(
     () =>
@@ -58,7 +58,7 @@ export function NavBar() {
     []
   );
 
-  // Highlight active item based on URL
+  // highlight active item based on URL
   const selectedKeys = useMemo(() => {
     const match = topPages.find((m) => m.path && location.pathname.startsWith(m.path));
     return [match?.key ?? topPages[0].key];
@@ -66,7 +66,6 @@ export function NavBar() {
 
   return (
     <div className="sider-rail">
-      {/* Scrollable top menu */}
       <Menu
         mode="inline"
         items={itemsTop}
@@ -77,7 +76,6 @@ export function NavBar() {
         className="NavBarMenu menu-top"
       />
 
-      {/* Fixed bottom section with Button */}
       <div className="menu-bottom">
         <Button
           block

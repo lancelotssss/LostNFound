@@ -114,18 +114,6 @@ export const AdminClaims = () => {
     setConfirmLoading(false);
   };
 
-   const handleDeleteAll = async () => {
-      if (!window.confirm("Are you sure you want to delete all deleted items?")) return;
-      const token = sessionStorage.getItem("User");
-      const result = await deleteClaims(token);
-      if (result.success) {
-        message.success("All deleted items deleted!");
-        fetchData();
-      } else {
-        message.error(result.message);
-      }
-    };
-
   const confirmComplete = async () => {
     setCompleteLoading(true);
     const token = sessionStorage.getItem("User");
@@ -172,11 +160,6 @@ export const AdminClaims = () => {
 
 return (
   <>
-
-
-
-
-  
     
     <div className="table-controls">
       {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- LEFT SIDE 'TO =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}

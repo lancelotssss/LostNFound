@@ -87,10 +87,10 @@ export const AdminLost = () => {
 
   const handleRowLostSeeSimilar = () => {
     if (!selectedItem?._id) return;
-    // store the Mongo _id in localStorage
+    // storing the Mongo _id in localStorage
     localStorage.setItem("selectedItem", selectedItem._id);
 
-    // keep your existing navigation payload
+    // keep existing navigation payload
     navigate("/main/search/result", { state: { selectedItem } });
   };
 

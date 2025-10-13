@@ -96,7 +96,6 @@ export const AdminStorage = () => {
     }
   }, [searchText, data]);
 
-  // ---------------- Modal logic ----------------
   const handleRowClick = (record) => {
     setSelectedItem(record);
     setIsModalVisible(true);
@@ -109,7 +108,6 @@ export const AdminStorage = () => {
     form.resetFields();
   };
 
-  // Submit button -> validate first; if valid open confirm
   const handleSubmitClick = async () => {
     try {
       await form.validateFields();
@@ -120,7 +118,6 @@ export const AdminStorage = () => {
   };
 
   const confirmApprove = async () => {
-    // Close confirm immediately to avoid it lingering during validation/API
     setApproveModal(false);
     setConfirmLoading(true);
 
@@ -143,7 +140,6 @@ export const AdminStorage = () => {
           values.image?.[0]?.originFileObj
             ? URL.createObjectURL(values.image[0].originFileObj)
             : "",
-        // kept for compatibility
         selectedLostId: selectedItem._id,
         lostReferenceFound: selectedItem._id,
       };
@@ -317,7 +313,6 @@ export const AdminStorage = () => {
         {/* =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- CONTENT NG MODAL =-=-=-==-=-=-=-=-=-=-=-=-==-=-=-=-=-=- */}
         {selectedItem && (
           <>
-            {/* Fixed-size image */}
             <div
               className="photo-wrap fixed-photo"
               style={{ maxWidth: 180, height: 200, margin: "8px auto 16px" }}
@@ -355,7 +350,6 @@ export const AdminStorage = () => {
               <Descriptions.Item label="Description">{selectedItem.description}</Descriptions.Item>
             </Descriptions>
 
-            {/* Proof Form (always visible) */}
             <Form
               form={form}
               layout="vertical"

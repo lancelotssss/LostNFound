@@ -99,7 +99,6 @@ export const AdminHistory = () => {
     fetchData();
   }, []);
 
-  // Handle view change
   const handleViewChange = (val) => {
     setView(val);
     setData(val === "Reports" ? reports : claims);

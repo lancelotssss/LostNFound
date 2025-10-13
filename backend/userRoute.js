@@ -41,7 +41,7 @@ function verifyToken(request, response, next){
 userRoutes.route("/register").post(async (req, res) => {
   const db = database.getDb();
   try {
-    // Check for duplicate email or studentId
+    // check for duplicate email or studentId
     const existingUser = await db.collection("student_db").findOne({
       $or: [
         { email: req.body.email },
@@ -58,7 +58,7 @@ userRoutes.route("/register").post(async (req, res) => {
         }
         }
 
-    // Hash password
+    // hash password
     const hash = await bcrypt.hash(req.body.password, SALT_ROUNDS);
 
     const mongoObject = {
@@ -144,7 +144,6 @@ userRoutes.route("/users/login").post(async (request, response) => {
     if (user){
         console.log("User found:", user.studentId);
 
-
         if (user.status && user.status.toLowerCase() === "suspended") {
           return response.status(403).json({
             success: false,
@@ -154,7 +153,7 @@ userRoutes.route("/users/login").post(async (request, response) => {
 
         let confirmation = await bcrypt.compare(request.body.password, user.password)
         if (confirmation) {
-            console.log("Password correct, issuing token...");
+            console.log("Password correct, issuing token..."); 
 
             const tokenPayLoad = {
                 id: user._id,
@@ -172,7 +171,7 @@ userRoutes.route("/users/login").post(async (request, response) => {
                 mname: user.mname,
                 suffix: user.suffix
             }
-            const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY)
+            const token = jwt.sign(tokenPayLoad, process.env.SECRETKEY) // nilalaman ng JWT token is yang tokenPayload
 
             const mongoAuditObject = {
                 aid: `A-${Date.now()}`,
@@ -225,9 +224,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
       .toArray();
 
    
-    const claimReports = await db.collection("claims_db")
-    //.find ({claimerId: studentId})
-    
+    const claimReports = await db.collection("claims_db")    
       .aggregate([
         {
           $match: {
@@ -244,9 +241,9 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
             localField: "selectedLostId",
             foreignField: "_id",
             as: "lostItemDetails"
-          }
+          } //pagsasama sama niya ung claim and lostItem details to an array
         },
-        { $unwind: { path: "$lostItemDetails", preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: "$lostItemDetails", preserveNullAndEmptyArrays: true } }, //gagawin niyang single object ung lostItemDetails
         {
           $addFields: {
             title: "$lostItemDetails.title",
@@ -263,7 +260,7 @@ userRoutes.get("/home", verifyToken, async (req, res) => {
             tid: "$lostItemDetails.tid",
             reportedBy: "$lostItemDetails.reportedBy",
             approvedBy: "$lostItemDetails.approvedBy",
-          }
+          } //m-merge nila yung related infos (pwede na natin directly makuha ung mga bagay nayan)
         },
         {
           $sort: {
@@ -304,7 +301,7 @@ userRoutes.put("/home/:id/dispose", verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: "Report not found or not owned by you" });
     }
 
-    // Update status to "Disposed"
+    // update status to "Deleted"
     await db.collection("lost_found_db").updateOne(
       { _id: new ObjectId(reportId) },
       { $set: { status: "Deleted", updatedAt: new Date() } }
@@ -335,7 +332,7 @@ userRoutes.put("/home/:id/delete", verifyToken, async (req, res) => {
     const claimId = req.params.id;
     const studentId = req.user?.studentId;
 
-    // Find claim owned by the user
+    // find claim owned by the user
     const claim = await db.collection("claims_db").findOne({
       _id: new ObjectId(claimId),
       claimerId: studentId,
@@ -348,13 +345,12 @@ userRoutes.put("/home/:id/delete", verifyToken, async (req, res) => {
       });
     }
 
-    // Soft delete → update status to "Deleted"
+    // update status to "Deleted"
     await db.collection("claims_db").updateOne(
       { _id: new ObjectId(claimId) },
       { $set: { claimStatus: "Deleted", updatedAt: new Date() } }
     );
 
-    // Add audit log
     const audit = {
       aid: `A-${Date.now()}`,
       action: "DELETE_CLAIM",
@@ -380,7 +376,7 @@ userRoutes.put("/home/:id/cancel", verifyToken, async (req, res) => {
     const claimId = req.params.id;
     const studentId = req.user?.studentId;
 
-    // Find claim owned by the user
+    // find claim owned by the user
     const claim = await db.collection("claims_db").findOne({
       _id: new ObjectId(claimId),
       claimerId: studentId,
@@ -393,7 +389,7 @@ userRoutes.put("/home/:id/cancel", verifyToken, async (req, res) => {
       });
     }
 
-    // Soft delete → update status to "Deleted"
+    //update status to "Claim Cancelled"
     await db.collection("claims_db").updateOne(
       { _id: new ObjectId(claimId) },
       { $set: { claimStatus: "Claim Cancelled", updatedAt: new Date() } }
@@ -420,7 +416,6 @@ userRoutes.put("/home/:id/cancel", verifyToken, async (req, res) => {
     await Promise.all(updates);
 
 
-    // Add audit log
     const audit = {
       aid: `A-${Date.now()}`,
       action: "CANCELLED_CLAIM",
@@ -445,8 +440,6 @@ userRoutes.get("/claim-items/:id", verifyToken, async (req, res) => {
   try {
     const db = database.getDb();
     const claimId = req.params.id;
-
-    
     const claim = await db.collection("claims_db").findOne({ _id: new ObjectId(claimId) });
 
     if (!claim) {
@@ -454,18 +447,16 @@ userRoutes.get("/claim-items/:id", verifyToken, async (req, res) => {
         success: false,
         message: "Claim not found.",
       });
-    }
+    } 
 
-    
-    const lostItem = claim.selectedLostId
-      ? await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.selectedLostId) })
+    const lostItem = claim.selectedLostId //titignan niya if yung claim may field siyang selectedLostId
+      ? await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.selectedLostId) }) 
       : null;
 
     const foundItem = claim.lostReferenceFound
       ? await db.collection("lost_found_db").findOne({ _id: new ObjectId(claim.lostReferenceFound) })
       : null;
 
-    // 3️⃣ Return combined data
     res.json({
       success: true,
       claim,
@@ -490,7 +481,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
     let photoUrl = req.body.photoUrl || "";
 
     
-    //Preparing the file
+    //preparing the file
     if (req.file) {
       const { originalname, buffer, mimetype } = req.file;
 
@@ -587,7 +578,7 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
    
 
     if (result.modifiedCount === 0) {
-      return res.status(400).json({ success: false, message: "No changes were made" });
+      return res.status(400).json({ success: false, message: "No changes were made" }); //modifiedCount is a built in feature of mongoDB
     }
      const reportAuditMongo = {
         aid: `A-${Date.now()}`,
@@ -624,19 +615,19 @@ userRoutes.route("/report").post(verifyToken, upload.single("file"), async (req,
       return res.status(400).json({ success: false, message: "Missing fields" });
     }
 
-    // Find user
+    // find user
     const user = await db.collection("student_db").findOne({ studentId });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Check old password
+    // check old password
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ success: false, message: "Old password is incorrect" });
     }
 
-    // Hash new password
+    // hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     const result = await db.collection("student_db").updateOne(
@@ -721,7 +712,7 @@ userRoutes.post("/similar-items", verifyToken, async (req, res) => {
       end.setUTCHours(23, 59, 59, 999);
     }
 
-    // Build query
+    // build query
     const query = {
       reportType: "Found",
       status: "Listed",
@@ -733,7 +724,6 @@ userRoutes.post("/similar-items", verifyToken, async (req, res) => {
     if (keyItem) query.keyItem = { $regex: keyItem, $options: "i" };
     if (location) query.location = { $regex: location, $options: "i" };
     if (start && end) query.dateFound = { $gte: start, $lte: end };
-    //Item Brand (optional)
 
     const similarFound = await db.collection("lost_found_db").find(query).toArray();
 
@@ -759,7 +749,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    // Upload claim photo to Supabase
+    // upload claim photo to Supabase
     if (req.file) {
       const { originalname, buffer, mimetype } = req.file;
       const { data, error } = await supabase.storage
@@ -776,7 +766,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
     }
     
     
-    // Create claim record
+    // create claim record
     const mongoClaim = {
       cid: `C-${Date.now()}`,
       itemId: itemId,
@@ -792,13 +782,13 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
 
     await db.collection("claims_db").insertOne(mongoClaim);
 
-    // Update the original item status
+    // update item status to "Pending Claim"
     await db.collection("lost_found_db").updateOne(
       { _id: new ObjectId(itemId) },
       { $set: { claimedBy: studentId, status: "Pending Claim" } }
     );
 
-    // Update selectedLostId and lostReferenceFound status to "Reviewing Claim"
+    // update selectedLostId and lostReferenceFound status to "Reviewing Claim"
     const updates = [];
     if (selectedLostId) {
       updates.push(
@@ -820,12 +810,11 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
 
     await Promise.all(updates);
 
-    let itemTid = itemId; // fallback to ID
+    let itemTid = itemId;
     const item = await db.collection("lost_found_db").findOne({ _id: new ObjectId(itemId) });
     if (item) itemTid = item.tid || itemId;
 
 
-    // Log audit
     const auditMongo = {
       aid: `A-${Date.now()}`,
       action: "SUBMIT_CLAIM",
@@ -840,7 +829,7 @@ userRoutes.route("/claim").post(verifyToken, upload.single("photo"), async (req,
     res.json({ success: true, claim: mongoClaim, audit: auditMongo });
 
   } catch (err) {
-    console.error("❌ Error submitting claim:", err);
+    console.error("Error submitting claim:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

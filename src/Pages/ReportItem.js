@@ -13,7 +13,7 @@ export default function ReportItem() {
     reportType: "",
     category: "",
     keyItem: "",
-    itemBrand: "",   // keep this (optional) and change placeholder in UI
+    itemBrand: "",   
     location: "",
     startDate: "",
     endDate: "",
@@ -133,9 +133,8 @@ export default function ReportItem() {
     if (value <= current) setCurrent(value);
   };
 
-  // Step gates
   const canGoNextFrom2 = Boolean(registerData.category?.trim());
-  // For Step 3, only the key item is required (brand is optional, hidden for ID cards)
+
   const canGoNextFrom3 = Boolean(registerData.keyItem?.trim());
 
   const canGoNextFrom4 = (() => {
@@ -201,9 +200,9 @@ export default function ReportItem() {
             ...prev,
             category: val,
             keyItem: "",
-            itemBrand: "", // clear when category changes
+            itemBrand: "", 
           }));
-          // no setCurrent(2) — user must click Next
+        
         }}
         className="field-wide"
         options={[
@@ -227,7 +226,7 @@ export default function ReportItem() {
       </Title>
 
       <div className="field-col">
-        {/* Category-based item selection */}
+
         {registerData.category === "Others" ? (
           <Input
             name="keyItem"
@@ -405,9 +404,9 @@ export default function ReportItem() {
 
         <Upload
           name="file"
-          listType="text"                // filename only
+          listType="text"             
           maxCount={1}
-          beforeUpload={() => false}     // prevent auto upload
+          beforeUpload={() => false}     
           accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.heic,.heif"
           onChange={(info) => {
             const file = info.fileList[0]?.originFileObj || null;
@@ -526,7 +525,7 @@ export default function ReportItem() {
           type="primary"
           onClick={() => {
             setIsConfirmModalVisible(false);
-            handleSubmit(new Event("submit")); // manually trigger the submit
+            handleSubmit(new Event("submit")); 
           }}
           loading={submitting}
         >

@@ -137,7 +137,7 @@ export const AdminReport = () => {
     if (value <= current) setCurrent(value);
   };
 
-  // ---- Step gates (same logic as client) ----
+  // step gates
   const canGoNextFrom2 = Boolean(registerData.category?.trim());
   const canGoNextFrom3 = Boolean(registerData.keyItem?.trim());
   const canGoNextFrom4 = (() => {
@@ -151,7 +151,7 @@ export const AdminReport = () => {
 
   const disableFuture = (cur) => cur && cur > dayjs().endOf("day");
 
-  // -------------------- Step content --------------------
+  // step content
   const StepOne = (
     <div className="step-one">
       <Title level={4} className="step-title">WHAT DO YOU WANT TO REPORT</Title>
@@ -211,7 +211,7 @@ export const AdminReport = () => {
             keyItem: "",
             itemBrand: "",
           }));
-          // NOTE: do NOT auto-advance. Let the footer Next handle it.
+
         }}
         className="field-wide"
         options={[
@@ -413,7 +413,7 @@ const StepFive = (
         name="file"
         listType="text"                // show filename only
         maxCount={1}
-        beforeUpload={() => false}     // prevent auto upload; we'll submit via FormData
+        beforeUpload={() => false}     // preventing auto upload
         accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.heic,.heif"
         onChange={(info) => {
           const file = info.fileList[0]?.originFileObj || null;
@@ -525,7 +525,6 @@ const StepFive = (
         </div>
       </Card>
 
-    {/* Confirm Report */}
     <Modal
       title="Send Report Confirmation"
       open={isConfirmModalVisible}
@@ -539,7 +538,7 @@ const StepFive = (
           type="primary"
           onClick={() => {
             setIsConfirmModalVisible(false);
-            handleSubmit(new Event("submit")); // manually trigger the submit
+            handleSubmit(new Event("submit"));
           }}
           loading={submitting}
         >

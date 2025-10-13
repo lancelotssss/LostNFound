@@ -27,10 +27,9 @@ const { Title } = Typography;
 
 export function Layout() {
 
-const navigate = useNavigate(); // add this near top of component
+const navigate = useNavigate();
 
 const [collapsed, setCollapsed] = useState(false);
-
 
     // PANG KUHA NG USER NAME =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     const [user, setUser] = useState(null);
