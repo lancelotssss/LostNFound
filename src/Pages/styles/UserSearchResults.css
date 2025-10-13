@@ -230,3 +230,37 @@
     gap: 10px;
     /* background-color: red; */
 }
+
+
+/* ==== Recommended Items card cover ==== */
+.usr-card .result-thumb {
+  height: 220px;                /* adjust to taste */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* image should fill and center (zoom a bit if needed) */
+.usr-card .result-thumb .ant-image,
+.usr-card .result-thumb img,
+.usr-card .result-thumb .ant-image-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;            /* <-- fills the space */
+  object-position: center;      /* <-- keeps it centered */
+}
+
+/* optional: smaller cover height on mobile */
+@media (max-width: 576px) {
+  .usr-card .result-thumb { height: 180px; }
+}
+
+/* keep the modal image behavior as "contain" (no crop) */
+.fixed-photo .ant-image-img { 
+  object-fit: contain !important;
+}

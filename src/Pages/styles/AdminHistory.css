@@ -179,3 +179,99 @@
 .field > label { font-size: 12px; color: rgba(0,0,0,.55); margin-bottom: 6px; }
 .field-error { min-height: 18px; font-size: 12px; color: #ff4d4f; margin-top: 4px; }
 .fullwidth { width: 100%; }
+
+
+/* Center & contain images inside the modal cards */
+.fixed-photo-wrapper {
+  width: 100%;
+}
+
+.photo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 4 / 3;               /* keeps a tidy box; remove if you want auto-height */
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* AntD Image inside the box should scale nicely and stay centered */
+.photo-wrap .ant-image,
+.photo-wrap .ant-image-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+}
+
+/* Center AntD Card cover images on the search results page */
+.cli-search-results .ant-card-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  overflow: hidden;
+  height: 200px;            /* tweak for your design */
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
+}
+
+.cli-search-results .ant-card-cover img,
+.cli-search-results .ant-card .ant-image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;       /* no cropping; keeps image centered */
+  display: block;
+}
+
+
+/* fallback (global) — prefer scoping with .cli-search-results if you can */
+.ant-card-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ant-card-cover img,
+.ant-card .ant-image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+
+/* Default: make card covers fill their box (zoom+center) */
+.ant-card-cover {
+  height: 220px;                 /* tweak height to taste */
+}
+
+.ant-card-cover img,
+.ant-card-cover .ant-image-img,
+.ant-card .ant-image-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;             /* fills the container */
+  object-position: center;       /* centered, not top-left */
+}
+
+/* Keep search results as "contain" (no crop) — your existing scope */
+.cli-search-results .ant-card-cover {
+  height: 200px;                 /* your earlier value */
+}
+
+.cli-search-results .ant-card-cover img,
+.cli-search-results .ant-card .ant-image-img {
+  object-fit: contain;           /* overrides the default cover */
+}
+
+.ant-card-cover img,
+.ant-card .ant-image-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
