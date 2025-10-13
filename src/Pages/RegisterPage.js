@@ -126,7 +126,7 @@ export default function RegisterPage2() {
       if (response?.success) {
         setSuccessPulse(true);
         showCenteredSuccess("Account created! You can sign in now.");
-        setTimeout(() => { navigate("/"); }, 500);
+        setTimeout(() => { navigate("/login"); }, 500);
         return;
       }
       setErrors((prev) => ({ ...prev, general: response?.message || "Registration failed." }));
@@ -338,7 +338,7 @@ export default function RegisterPage2() {
             </p>
 
             <p className="register-auth">
-              Already have an account? <Link to="/">SIGN IN</Link>
+              Already have an account? <Link to="/login">SIGN IN</Link>
             </p>
           </div>
         </form>

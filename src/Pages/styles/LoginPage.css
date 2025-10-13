@@ -59,3 +59,21 @@ html, body, #root {
   font-size: 14px;
   color: #111827;           
 }
+
+@keyframes floatUpDown {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-15px); } 
+  100% { transform: translateY(0); }
+}
+
+.left img.floating {
+  animation: floatUpDown 3s ease-in-out infinite;
+  cursor: pointer;
+  max-width: 80%; /* adjust size */
+  height: auto;
+  transition: transform 0.2s;
+}
+
+.left img.floating:hover {
+  transform: scale(1.05); 
+}

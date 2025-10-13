@@ -31,13 +31,13 @@ export function AdminLayout() {
 
     useEffect(() => {
     const token = sessionStorage.getItem("User");
-    if (!token) return navigate("/");
+    if (!token) return navigate("/login");
     try {
         const decoded = jwtDecode(token);
         setUser(decoded);
-        if (decoded?.role !== "admin") navigate("/"); // non-admins
+        if (decoded?.role !== "admin") navigate("/login"); // non-admins
     } catch {
-        navigate("/");
+        navigate("/login");
     }
     }, [navigate]);
 

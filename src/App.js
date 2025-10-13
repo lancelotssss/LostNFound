@@ -28,6 +28,7 @@ import { AdminReport } from "./Pages/AdminReport";
 import { AdminUsers } from "./Pages/AdminUsers";
 import { AdminCreate }from "./Pages/AdminCreate";
 import {AdminSearchResults} from "./Pages/AdminSearchResults";
+import  Landing  from "./Pages/Landing"
 
 function App() {
   useEffect(() => {
@@ -41,7 +42,7 @@ function App() {
     const token = sessionStorage.getItem("User");
 
     if (!token) {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/login" replace />;
     }
 
     let userRole;
@@ -50,14 +51,14 @@ function App() {
       userRole = decoded.role;
     } catch (err) {
       console.error("Invalid token", err);
-      return <Navigate to="/" replace />;
+      return <Navigate to="/login" replace />;
     }
 
     if (allowedRoles && !allowedRoles.includes(userRole)) {
       if (userRole === "student") {
         return <Navigate to="/cli/home" replace />;
       } else if (userRole === "admin") {
-        return <Navigate to="/main/lost-items" replace />;
+        return <Navigate to="/main/dashboard" replace />;
       } else {
         alert({ message: "Unknown User" });
       }
@@ -70,7 +71,8 @@ function App() {
     <>
       <Router>
         <Routes>
-          <Route path="/" element={<LoginPage />} />
+          <Route path="/" element={<Landing/>} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route element={<Layout />}>
             <Route
