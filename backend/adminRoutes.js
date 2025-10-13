@@ -49,7 +49,7 @@ adminRoutes.route("/dashboard").get(verifyToken, async (req, res) => {
       db.collection("claims_db").countDocuments({claimStatus: { $nin: ["Claim Rejected", "Claim Cancelled", "Claim Deleted"]}}),
       db.collection("lost_found_db").countDocuments({ reportType: "Lost", status: "Reviewing"}),
       db.collection("lost_found_db").countDocuments({ reportType: "Found", status: "Reviewing"}),
-      db.collection("claims_db").countDocuments({ claimStatus: "Approved Claims" }),
+      db.collection("claims_db").countDocuments({ claimStatus: "Claim Approved" }),
     ])
 
     

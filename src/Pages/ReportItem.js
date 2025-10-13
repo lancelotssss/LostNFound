@@ -446,13 +446,14 @@ export default function ReportItem() {
         <div className="step-content">{content}</div>
 
         <div className="footer-actions">
+          {current > 0 && (
           <Button
             className="footer-buttons"
-            disabled={current === 0}
             onClick={() => setCurrent(p => Math.max(p - 1, 0))}
           >
             Back
           </Button>
+        )}
 
           {current === 1 && (
             <Button
