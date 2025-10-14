@@ -11,17 +11,17 @@ import connectIcon from "../assets/4.png";
 import logo from "../assets/blue.png";
 
 
-import carouselImg1 from "../assets/10.jpg";
-import carouselImg2 from "../assets/11.jpg";
-import carouselImg3 from "../assets/12.jpg";
-import carouselImg4 from "../assets/13.jpg";
-import carouselImg5 from "../assets/14.jpg";
-import carouselImg6 from "../assets/15.jpg";
+import carouselImg1 from "../assets/car1.jpg";
+import carouselImg2 from "../assets/car2.jpg";
+import carouselImg3 from "../assets/car3.jpg";
+import carouselImg4 from "../assets/car4.jpg";
+import carouselImg5 from "../assets/car5.jpg";
+import carouselImg6 from "../assets/car6.jpg";
 
-import teamPhoto1 from "../assets/rick.png"; 
-import teamPhoto2 from "../assets/lance.png";
-import teamPhoto3 from "../assets/cob.png";
-import teamPhoto4 from "../assets/zhai.png";
+import teamPhoto1 from "../assets/erick_new.jpg"; 
+import teamPhoto2 from "../assets/lance_new.jpg";
+import teamPhoto3 from "../assets/jacob_new.jpg";
+import teamPhoto4 from "../assets/zhai_new.jpg";
 
 import visionIcon from "../assets/Vision.png";
 import missionIcon from "../assets/Mission.png";
