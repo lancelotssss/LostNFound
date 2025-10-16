@@ -82,9 +82,9 @@ export function AdminSearchResults() {
             selectedItemId: selectedItem._id,
             category: selectedItem.category,
             keyItem: selectedItem.keyItem || "",
-            location: selectedItem.location || "",
-            startDate,
-            endDate,
+            //location: selectedItem.location || "",
+            //startDate,
+            //endDate,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );

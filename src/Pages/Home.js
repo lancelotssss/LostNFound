@@ -255,7 +255,7 @@ export const Home = () => {
     // store the Mongo _id in localStorage
     localStorage.setItem("selectedLostId", selectedLost._id);
 
-    // keep your existing navigation payload
+    // keep existing navigation payload
     navigate("/cli/search/result", { state: { selectedItem: selectedLost } });
     handleLostModalClose();
   };
